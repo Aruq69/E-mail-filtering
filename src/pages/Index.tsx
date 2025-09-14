@@ -318,60 +318,23 @@ const Index = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button className="w-full">
-                    <Mail className="h-4 w-4 mr-2" />
-                    Connect Gmail Account
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center space-x-2">
-                      <Eye className="h-5 w-5 text-primary" />
-                      <span>Gmail Access Permission</span>
-                    </DialogTitle>
-                    <DialogDescription className="space-y-4">
-                      <p>
-                        We need read-only access to your Gmail account to analyze your emails for security threats and spam.
-                      </p>
-                      <div className="bg-muted/50 p-4 rounded-lg space-y-2">
-                        <h4 className="font-semibold text-primary">What we do:</h4>
-                        <ul className="space-y-1 text-sm">
-                          <li>• Read and analyze emails for security threats</li>
-                          <li>• Classify emails as spam, phishing, or legitimate</li>
-                          <li>• Provide threat level assessments</li>
-                        </ul>
-                      </div>
-                      <div className="bg-muted/50 p-4 rounded-lg space-y-2">
-                        <h4 className="font-semibold text-accent">What we don't do:</h4>
-                        <ul className="space-y-1 text-sm">
-                          <li>• Send emails on your behalf</li>
-                          <li>• Delete or modify your emails</li>
-                          <li>• Share your data with third parties</li>
-                        </ul>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        This access is only used for email analysis and security purposes.
-                      </p>
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="flex space-x-3 pt-4">
-                    <Button onClick={(e) => {
-                      e.preventDefault();
-                      connectGmail();
-                    }} className="flex-1">
-                      <Shield className="h-4 w-4 mr-2" />
-                      Sync Gmail
-                    </Button>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className="flex-1">
-                        Cancel
-                      </Button>
-                    </DialogTrigger>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Click the button below to connect your Gmail account and start analyzing your emails.
+                </p>
+                <Button 
+                  onClick={(e) => {
+                    console.log('Gmail connect button clicked directly!');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    connectGmail();
+                  }} 
+                  className="w-full"
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  Connect Gmail Account
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
