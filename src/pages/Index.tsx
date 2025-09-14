@@ -23,7 +23,11 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    fetchEmails();
+    // Defer API call to move it out of critical rendering path
+    const timer = setTimeout(() => {
+      fetchEmails();
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const fetchEmails = async () => {
