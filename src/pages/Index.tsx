@@ -133,7 +133,7 @@ const Index = () => {
         .from('gmail_tokens')
         .select('id')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
       setGmailConnected(!!data && !error);
     } catch (error) {
