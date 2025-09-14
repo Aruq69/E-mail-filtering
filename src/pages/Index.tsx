@@ -230,7 +230,7 @@ const Index = () => {
             {gmailConnected && (
               <Button onClick={fetchGmailEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50">
                 <Activity className="h-4 w-4 mr-2" />
-                Sync Gmail
+                Refresh Gmail
               </Button>
             )}
             <Button onClick={fetchEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50">
@@ -293,7 +293,10 @@ const Index = () => {
 
         {/* Gmail Connection */}
         {!gmailConnected && (
-          <GmailConnect onConnected={() => setGmailConnected(true)} />
+          <GmailConnect onConnected={() => {
+            setGmailConnected(true);
+            fetchGmailEmails();
+          }} />
         )}
 
         {/* Email Submission Form */}
