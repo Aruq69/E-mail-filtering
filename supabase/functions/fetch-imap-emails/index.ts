@@ -87,35 +87,48 @@ serve(async (req) => {
 
     console.log('🔧 Using IMAP config:', { host: imapConfig.host, port: imapConfig.port });
 
-    // Simulate IMAP connection and email fetching
-    // Note: For a real implementation, you'd use an IMAP library like npm:imap
-    // For this demo, we'll create sample emails to show the flow works
+    // TODO: Implement real IMAP connection
+    // For real implementation, you would use a library like:
+    // import { IMAPClient } from "npm:imap@0.8.19"
+    // const imap = new IMAPClient({
+    //   host: imapConfig.host,
+    //   port: imapConfig.port,
+    //   secure: imapConfig.secure,
+    //   auth: { user: email, pass: password }
+    // });
     
-    console.log('🔗 Connecting to IMAP server...');
-    console.log('📬 Fetching recent emails...');
+    console.log('🔗 Simulating IMAP connection (demo mode)...');
+    console.log('📬 Generating demo emails for testing...');
     
-    // Simulate fetched emails (in real implementation, this would come from IMAP)
+    // Demo emails with realistic security scenarios
     const simulatedEmails = [
       {
         id: `imap_${Date.now()}_1`,
-        subject: 'Important Security Alert',
+        subject: 'Urgent: Verify Your Account Now',
         from: 'security@suspicious-bank.com',
-        body: 'Your account has been compromised. Click here to verify your identity immediately!',
+        body: 'Your account has been compromised. Click here to verify your identity immediately! Act now or your account will be suspended.',
         date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
       },
       {
         id: `imap_${Date.now()}_2`,
-        subject: 'Meeting Reminder',
-        from: 'colleague@company.com',
-        body: 'Don\'t forget about our meeting tomorrow at 2 PM.',
+        subject: 'Re: Meeting Tomorrow',
+        from: 'colleague@yourcompany.com',
+        body: 'Hi, just confirming our meeting tomorrow at 2 PM in the conference room. Looking forward to discussing the project updates.',
         date: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
       },
       {
         id: `imap_${Date.now()}_3`,
-        subject: 'You\'ve Won $1,000,000!',
-        from: 'lottery@fake-lottery.com',
-        body: 'Congratulations! You have won our international lottery. Send us your bank details to claim your prize.',
+        subject: 'Congratulations! You\'ve Won $1,000,000!',
+        from: 'lottery@fake-winnings.com',
+        body: 'CONGRATULATIONS! You have won our international lottery. Send us your bank details immediately to claim your prize of $1,000,000!',
         date: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+      },
+      {
+        id: `imap_${Date.now()}_4`,
+        subject: 'Invoice #12345 - Payment Due',
+        from: 'billing@legitimate-service.com',
+        body: 'Thank you for your business. Please find attached invoice #12345 with payment due in 30 days. Contact us if you have any questions.',
+        date: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
       },
     ];
 
@@ -147,12 +160,14 @@ serve(async (req) => {
         From: ${emailData.from}
         Body: ${emailData.body}
         
-        Return a JSON response with:
-        - classification: "spam", "phishing", "suspicious", or "legitimate"
+        Return ONLY a JSON response (no markdown formatting) with:
+        - classification: "spam", "legitimate", or "pending" (only these values are allowed)
         - threat_level: "high", "medium", "low", or null
         - confidence: number between 0-1
         - keywords: array of suspicious keywords found
         - reasoning: brief explanation
+        
+        IMPORTANT: Return raw JSON only, no \`\`\`json wrapper.
         `;
 
         const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -183,10 +198,30 @@ serve(async (req) => {
         if (openaiResponse.ok) {
           const openaiData = await openaiResponse.json();
           try {
-            analysis = JSON.parse(openaiData.choices[0].message.content);
+            let responseContent = openaiData.choices[0].message.content;
+            
+            // Clean up markdown formatting if present
+            if (responseContent.includes('```json')) {
+              responseContent = responseContent.replace(/```json\n?/g, '').replace(/\n?```/g, '');
+            }
+            
+            analysis = JSON.parse(responseContent);
+            
+            // Ensure classification is valid
+            const validClassifications = ['spam', 'legitimate', 'pending'];
+            if (!validClassifications.includes(analysis.classification)) {
+              // Map invalid classifications to valid ones
+              if (analysis.classification === 'phishing' || analysis.classification === 'suspicious') {
+                analysis.classification = 'spam';
+              } else {
+                analysis.classification = 'pending';
+              }
+            }
+            
             console.log(`✅ Analysis complete for ${emailData.id}:`, analysis.classification);
           } catch (parseError) {
             console.error('❌ Failed to parse OpenAI response:', parseError);
+            console.error('❌ Raw response:', openaiData.choices[0].message.content);
           }
         } else {
           console.error('❌ OpenAI API error:', await openaiResponse.text());
