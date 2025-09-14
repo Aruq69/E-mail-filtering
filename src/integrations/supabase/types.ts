@@ -20,6 +20,7 @@ export type Database = {
           confidence: number | null
           content: string | null
           created_at: string
+          gmail_id: string | null
           id: string
           keywords: string[] | null
           message_id: string
@@ -37,6 +38,7 @@ export type Database = {
           confidence?: number | null
           content?: string | null
           created_at?: string
+          gmail_id?: string | null
           id?: string
           keywords?: string[] | null
           message_id: string
@@ -54,6 +56,7 @@ export type Database = {
           confidence?: number | null
           content?: string | null
           created_at?: string
+          gmail_id?: string | null
           id?: string
           keywords?: string[] | null
           message_id?: string
