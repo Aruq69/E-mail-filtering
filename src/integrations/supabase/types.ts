@@ -30,6 +30,7 @@ export type Database = {
           subject: string
           threat_level: string | null
           updated_at: string
+          user_id: string
         }
         Insert: {
           classification?: string | null
@@ -46,6 +47,7 @@ export type Database = {
           subject: string
           threat_level?: string | null
           updated_at?: string
+          user_id: string
         }
         Update: {
           classification?: string | null
@@ -62,6 +64,7 @@ export type Database = {
           subject?: string
           threat_level?: string | null
           updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

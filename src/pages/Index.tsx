@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search } from "lucide-react";
+import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, LogOut, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useToast } from "@/hooks/use-toast";
 
 interface Email {
   id: string;
@@ -21,6 +24,16 @@ const Index = () => {
   const [emails, setEmails] = useState<Email[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const { user, signOut, loading: authLoading } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     // Defer API call to move it out of critical rendering path
@@ -31,6 +44,8 @@ const Index = () => {
   }, []);
 
   const fetchEmails = async () => {
+    if (!user) return;
+    
     try {
       const { data, error } = await supabase
         .from('emails')
@@ -38,12 +53,41 @@ const Index = () => {
         .order('received_date', { ascending: false })
         .limit(50);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching emails:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch emails. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
       setEmails(data || []);
     } catch (error) {
       console.error('Error fetching emails:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Signed out",
+        description: "You have been successfully signed out.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -76,6 +120,23 @@ const Index = () => {
     return acc;
   }, {} as Record<string, number>);
 
+  // Show loading spinner while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Shield className="h-12 w-12 text-primary mx-auto mb-4 animate-pulse" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render anything if not authenticated (will redirect)
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="mx-auto max-w-7xl space-y-6">
@@ -88,10 +149,20 @@ const Index = () => {
               <p className="text-muted-foreground">Email Security & Threat Analysis</p>
             </div>
           </div>
-          <Button onClick={fetchEmails} disabled={loading}>
-            <Mail className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <User className="h-4 w-4" />
+              <span>{user.email}</span>
+            </div>
+            <Button onClick={fetchEmails} disabled={loading} variant="outline">
+              <Mail className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+            <Button onClick={handleSignOut} variant="outline">
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
