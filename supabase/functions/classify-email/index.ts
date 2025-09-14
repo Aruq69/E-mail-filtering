@@ -32,18 +32,29 @@ serve(async (req) => {
 
     // Use OpenAI to classify the email based on your ML approach
     const classificationPrompt = `
-    Analyze this email for spam classification:
+    Analyze this email for spam/phishing classification:
     
     Subject: ${subject}
     Sender: ${sender}
     Content: ${content}
     
-    Based on common spam indicators like:
-    - Suspicious sender patterns
-    - Subject line characteristics (excessive caps, urgent language, offers)
-    - Content analysis (phishing attempts, malicious links, suspicious attachments)
-    - Grammar and spelling patterns
-    - Promotional/marketing language
+    CRITICAL SECURITY INDICATORS (automatically classify as spam/high threat):
+    - Crypto wallet compromise claims
+    - Urgent financial security warnings
+    - Requests for immediate action on accounts
+    - Suspicious domains (not official company domains)
+    - Threats of account suspension/termination
+    - Requests to verify/update payment information
+    - Prize/lottery notifications
+    - IRS/tax-related urgent notices
+    - Banking security alerts from non-bank domains
+    - Antivirus warnings from unknown sources
+    
+    ANALYSIS RULES:
+    1. If sender domain doesn't match the claimed organization (e.g., "system@fraudulent-service.info" claiming to be legitimate), classify as spam/high threat
+    2. If subject contains urgent crypto/financial warnings, classify as spam/high threat  
+    3. If sender uses suspicious/generic domains for financial/security claims, classify as spam/high threat
+    4. Be especially strict with financial, crypto, banking, and security-related emails
     
     Classify this email and respond with a JSON object containing:
     {
@@ -55,7 +66,7 @@ serve(async (req) => {
     }
     
     For threat_level:
-    - high: Clear spam/phishing with malicious intent
+    - high: Clear spam/phishing with malicious intent, crypto scams, financial fraud
     - medium: Suspicious characteristics but not clearly malicious
     - low: Likely legitimate with minimal risk
     `;

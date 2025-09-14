@@ -677,11 +677,29 @@ serve(async (req) => {
 
         // Analyze with OpenAI
         const analysisPrompt = `
-        Analyze this email for security threats and spam detection:
+        Analyze this email for security threats and spam/phishing detection:
         
         Subject: ${emailData.subject}
         From: ${emailData.from}
         Body: ${emailData.body}
+        
+        CRITICAL SECURITY INDICATORS (automatically classify as spam/high threat):
+        - Crypto wallet compromise claims
+        - Urgent financial security warnings  
+        - Requests for immediate action on accounts
+        - Suspicious domains (not official company domains)
+        - Threats of account suspension/termination
+        - Requests to verify/update payment information
+        - Prize/lottery notifications
+        - IRS/tax-related urgent notices
+        - Banking security alerts from non-bank domains
+        - Antivirus warnings from unknown sources
+        
+        ANALYSIS RULES:
+        1. If sender domain doesn't match claimed organization, classify as spam/high threat
+        2. If subject contains urgent crypto/financial warnings, classify as spam/high threat  
+        3. If sender uses suspicious/generic domains for financial/security claims, classify as spam/high threat
+        4. Be especially strict with financial, crypto, banking, and security-related emails
         
         Return ONLY a JSON response (no markdown formatting) with:
         - classification: "spam", "legitimate", or "pending" (only these values are allowed)
