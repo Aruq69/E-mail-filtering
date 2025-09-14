@@ -16,9 +16,12 @@ const GmailCallback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       if (!user) {
+        console.log('No user found, redirecting to auth...');
         navigate('/auth');
         return;
       }
+
+      console.log('User found:', user.id, 'Processing Gmail callback...');
 
       try {
         const code = searchParams.get('code');
