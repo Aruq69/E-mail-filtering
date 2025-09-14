@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import EmailSubmissionForm from "@/components/EmailSubmissionForm";
 import ChatAssistant from "@/components/ChatAssistant";
-import NylasConnect from "@/components/NylasConnect";
+import IMAPConnect from "@/components/IMAPConnect";
 
 interface Email {
   id: string;
@@ -45,7 +45,7 @@ const Index = () => {
     }
     
     if (user) {
-      checkNylasConnection();
+      checkEmailConnection();
       const timer = setTimeout(() => {
         fetchEmails();
       }, 0);
@@ -86,97 +86,21 @@ const Index = () => {
     }
   };
 
-  const fetchNylasEmails = async () => {
+  const fetchIMAPEmails = async () => {
     if (!user) {
-      console.log('❌ No user found for Nylas fetch');
+      console.log('❌ No user found for IMAP fetch');
       return;
     }
     
     setLoading(true);
-    console.log('🚀 STARTING NYLAS EMAIL FETCH for user:', user.id);
-    try {
-      // First check if we have Nylas tokens
-      const { data: tokenCheck, error: tokenError } = await supabase
-        .from('nylas_tokens')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      console.log('🔍 Nylas token check result:', { tokenCheck, tokenError });
-      console.log('📅 Token expires at:', tokenCheck?.expires_at);
-      
-      if (tokenError) {
-        console.error('❌ Token check database error:', tokenError);
-        toast({
-          title: "Database error",
-          description: "Failed to check email connection.",
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
-      }
-      
-      if (!tokenCheck) {
-        console.log('❌ No Nylas tokens found - user needs to connect email first');
-        toast({
-          title: "Email not connected",
-          description: "Please connect your email account first.",
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase.functions.invoke('fetch-nylas-emails', {
-        body: { user_id: user.id },
-      });
-
-      console.log('📊 Nylas fetch response data:', data);
-      console.log('⚠️ Nylas fetch response error:', error);
-
-      if (error) {
-        console.error('🚨 Nylas fetch function error details:', error);
-        toast({
-          title: "Email fetch failed",
-          description: error.message || "Failed to fetch emails. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (data && data.error) {
-        console.error('🚨 Nylas fetch returned application error:', data.error);
-        toast({
-          title: "Email fetch failed",
-          description: data.error,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      console.log('🎉 Nylas fetch successful! Total emails processed:', data?.total || 0);
-      console.log('📧 Email processing summary:', data?.summary || 'No summary available');
-      
-      toast({
-        title: "Email sync complete!",
-        description: `Successfully analyzed ${data?.total || 0} emails from ${data?.provider || 'your email account'}`,
-      });
-
-      // Refresh the local email list
-      console.log('🔄 Refreshing local email list...');
-      fetchEmails();
-
-    } catch (error) {
-      console.error('🚨 CRITICAL NYLAS FETCH ERROR:', error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred while fetching emails.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-      console.log('✅ Nylas email fetch process completed');
-    }
+    console.log('🚀 STARTING IMAP EMAIL FETCH for user:', user.id);
+    
+    toast({
+      title: "Manual IMAP Connection",
+      description: "Please use the Connect Email Account form to fetch emails via IMAP.",
+    });
+    
+    setLoading(false);
   };
 
   // Add test data function for debugging
@@ -223,17 +147,18 @@ const Index = () => {
     }
   };
 
-  const checkNylasConnection = async () => {
+  const checkEmailConnection = async () => {
     if (!user) return;
     
     try {
+      // Check if user has analyzed any emails (indicates they've connected an account)
       const { data, error } = await supabase
-        .from('nylas_tokens')
+        .from('emails')
         .select('id')
         .eq('user_id', user.id)
-        .maybeSingle();
+        .limit(1);
       
-      setGmailConnected(!!data && !error);
+      setGmailConnected(!!(data && data.length > 0) && !error);
     } catch (error) {
       setGmailConnected(false);
     }
@@ -243,21 +168,24 @@ const Index = () => {
     if (!user) return;
     
     try {
-      // Remove Nylas tokens
+      // Clear all analyzed emails (since IMAP doesn't store persistent tokens)
       await supabase
-        .from('nylas_tokens')
+        .from('emails')
         .delete()
         .eq('user_id', user.id);
       
       setGmailConnected(false);
       toast({
-        title: "Unsynced",
-        description: "Email connection removed successfully.",
+        title: "Cleared",
+        description: "Email analysis history cleared successfully.",
       });
+      
+      // Refresh to show empty state
+      fetchEmails();
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to unsync. Please try again.",
+        description: "Failed to clear email data. Please try again.",
         variant: "destructive",
       });
     }
@@ -361,9 +289,9 @@ const Index = () => {
           </div>
           <div className="flex items-center space-x-4">
             {gmailConnected && (
-              <Button onClick={fetchNylasEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50 hover-button">
+              <Button onClick={fetchIMAPEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50 hover-button">
                 <Activity className="h-4 w-4 mr-2" />
-                Refresh Emails
+                Connect New Account
               </Button>
             )}
             <Button onClick={fetchEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50 hover-button">
@@ -377,7 +305,7 @@ const Index = () => {
             {gmailConnected && (
               <Button onClick={handleUnsync} variant="outline" className="border-destructive/30 hover:border-destructive/50 hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 hover-button">
                 <Lock className="h-4 w-4 mr-2" />
-                Unsync
+                Clear Data
               </Button>
             )}
             <Button onClick={signOut} variant="outline" className="border-muted-foreground/30 hover:border-destructive hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 hover-button">
@@ -436,7 +364,7 @@ const Index = () => {
 
         {/* Email Connection */}
         {!gmailConnected && (
-          <NylasConnect onConnected={checkNylasConnection} />
+          <IMAPConnect onConnected={checkEmailConnection} />
         )}
 
         {/* Email Submission Form */}
