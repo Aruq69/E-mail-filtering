@@ -70,8 +70,9 @@ serve(async (req) => {
     }
 
     // Handle token exchange
-
-    if (!code) {
+    if (action === 'exchange_token') {
+      console.log('Starting token exchange with code:', !!code);
+      if (!code) {
       return new Response(
         JSON.stringify({ error: 'Missing authorization code' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -133,6 +134,13 @@ serve(async (req) => {
         message: 'Gmail access token stored successfully'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // If neither action matches
+    return new Response(
+      JSON.stringify({ error: 'Invalid action. Use "get_auth_url" or "exchange_token"' }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {

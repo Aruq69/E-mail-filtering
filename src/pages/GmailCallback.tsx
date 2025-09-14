@@ -31,6 +31,7 @@ const GmailCallback = () => {
         // Exchange the code for access token
         const { data, error: exchangeError } = await supabase.functions.invoke('gmail-auth', {
           body: { 
+            action: 'exchange_token',
             code
           },
         });
