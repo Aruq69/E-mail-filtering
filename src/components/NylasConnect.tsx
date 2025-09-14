@@ -18,6 +18,7 @@ export default function NylasConnect({ onConnected }: NylasConnectProps) {
 
   const connectEmail = async () => {
     if (!user) {
+      console.error("❌ No user found for email connection");
       toast({
         title: "Authentication required",
         description: "Please sign in to connect your email account.",
@@ -28,27 +29,35 @@ export default function NylasConnect({ onConnected }: NylasConnectProps) {
 
     setIsConnecting(true);
     try {
-      console.log("🚀 Initiating Nylas email connection...");
+      console.log("🚀 Starting Nylas email connection for user:", user.id);
+      console.log("🔗 Calling nylas-auth function...");
       
       const { data, error } = await supabase.functions.invoke("nylas-auth", {
         body: { action: "get_auth_url" },
       });
 
+      console.log("📊 Nylas auth response:", { data, error });
+
       if (error) {
-        console.error("❌ Failed to get auth URL:", error);
+        console.error("❌ Supabase function call failed:", error);
         throw new Error(error.message);
       }
 
       if (data?.error) {
-        console.error("❌ Auth URL error:", data.error);
+        console.error("❌ Nylas auth function returned error:", data.error);
         throw new Error(data.error);
       }
 
-      console.log("✅ Redirecting to Nylas OAuth...");
+      if (!data?.auth_url) {
+        console.error("❌ No auth URL received from function");
+        throw new Error("No authorization URL received");
+      }
+
+      console.log("✅ Got auth URL, redirecting to:", data.auth_url);
       window.location.href = data.auth_url;
       
     } catch (error) {
-      console.error("🚨 Connection error:", error);
+      console.error("🚨 Email connection error:", error);
       toast({
         title: "Connection failed",
         description: error instanceof Error ? error.message : "Failed to initiate email connection",
