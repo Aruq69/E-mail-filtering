@@ -28,6 +28,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
+    let hasInitialized = false;
+
+    // Check for existing session first
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (mounted && !hasInitialized) {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+        hasInitialized = true;
+      }
+    });
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -35,19 +46,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (mounted) {
           setSession(session);
           setUser(session?.user ?? null);
-          setLoading(false);
+          if (hasInitialized) {
+            setLoading(false);
+          }
         }
       }
     );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (mounted) {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    });
 
     return () => {
       mounted = false;
