@@ -45,10 +45,10 @@ serve(async (req) => {
     // Handle auth URL generation
     if (action === 'get_auth_url') {
       console.log('Generating auth URL...');
-      if (!googleClientId) {
-        console.error('Google Client ID not found');
+      if (!googleClientId || !googleClientSecret) {
+        console.error('Google Client ID or Secret not found');
         return new Response(
-          JSON.stringify({ error: 'Google OAuth not configured. Please set GOOGLE_CLIENT_ID.' }),
+          JSON.stringify({ error: 'Google OAuth not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -75,12 +75,25 @@ serve(async (req) => {
     // Handle token exchange
     if (action === 'exchange_token') {
       console.log('Starting token exchange with code:', !!code);
+      
+      if (!googleClientId || !googleClientSecret) {
+        console.error('Google OAuth credentials not configured');
+        return new Response(
+          JSON.stringify({ error: 'Google OAuth not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       if (!code) {
         return new Response(
           JSON.stringify({ error: 'Missing authorization code' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+
+      const redirectUri = `${origin}/gmail-callback`;
+      console.log('Using redirect URI for token exchange:', redirectUri);
+      console.log('Using Client ID:', googleClientId?.substring(0, 20) + '...');
 
       // Exchange authorization code for access token
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
@@ -89,18 +102,36 @@ serve(async (req) => {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-          client_id: googleClientId!,
-          client_secret: googleClientSecret!,
+          client_id: googleClientId,
+          client_secret: googleClientSecret,
           code,
           grant_type: 'authorization_code',
-          redirect_uri: `${origin}/gmail-callback`,
+          redirect_uri: redirectUri,
         }),
       });
 
       if (!tokenResponse.ok) {
         const errorText = await tokenResponse.text();
         console.error('Token exchange error:', errorText);
-        throw new Error(`Failed to exchange code for token: ${tokenResponse.status}`);
+        console.error('Response status:', tokenResponse.status);
+        console.error('Response headers:', Object.fromEntries(tokenResponse.headers.entries()));
+        
+        let errorDetails;
+        try {
+          errorDetails = JSON.parse(errorText);
+          console.error('Parsed error details:', errorDetails);
+        } catch (e) {
+          console.error('Could not parse error response as JSON');
+        }
+        
+        return new Response(
+          JSON.stringify({ 
+            error: `Token exchange failed: ${tokenResponse.status}`,
+            details: errorDetails || errorText,
+            redirect_uri_used: redirectUri
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
 
       const tokenData = await tokenResponse.json();
