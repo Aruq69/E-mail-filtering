@@ -26,6 +26,13 @@ const GmailCallback = () => {
       try {
         const code = searchParams.get('code');
         const error = searchParams.get('error');
+        
+        console.log('Callback params:', { 
+          code: code ? code.substring(0, 10) + '...' : null, 
+          error,
+          hasUser: !!user,
+          userId: user?.id 
+        });
 
         if (error) {
           throw new Error(`OAuth error: ${error}`);
@@ -36,6 +43,8 @@ const GmailCallback = () => {
         }
 
         setMessage('Exchanging authorization code for access token...');
+        console.log('Attempting token exchange with code:', code.substring(0, 10) + '...');
+        console.log('User ID:', user.id);
 
         // Exchange the code for access token
         const { data, error: exchangeError } = await supabase.functions.invoke('gmail-auth', {
@@ -45,6 +54,8 @@ const GmailCallback = () => {
             user_id: user.id
           },
         });
+
+        console.log('Exchange response:', { data, error: exchangeError });
 
         if (exchangeError) {
           throw new Error(exchangeError.message);
