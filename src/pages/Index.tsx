@@ -21,6 +21,9 @@ interface Email {
   threat_level: string | null;
   confidence: number | null;
   keywords: string[] | null;
+  message_id: string;
+  content: string | null;
+  raw_content: string | null;
 }
 
 const Index = () => {
@@ -559,7 +562,6 @@ const Index = () => {
           {/* Right Column - Chat Assistant */}
           <div className="lg:col-span-1">
             <ChatAssistant selectedEmail={selectedEmail} />
-          </div>
           </div>
         </div>
 
