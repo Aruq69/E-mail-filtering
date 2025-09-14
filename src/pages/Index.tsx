@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import EmailSubmissionForm from "@/components/EmailSubmissionForm";
 import ChatAssistant from "@/components/ChatAssistant";
+import GmailConnect from "@/components/GmailConnect";
 
 interface Email {
   id: string;
@@ -423,36 +424,7 @@ const Index = () => {
 
         {/* Gmail Connection */}
         {!gmailConnected && (
-          <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Mail className="h-5 w-5 text-primary" />
-                <span>Connect Gmail Account</span>
-              </CardTitle>
-              <CardDescription>
-                Connect your Gmail account to automatically analyze your emails for threats and security risks.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Click the button below to connect your Gmail account and start analyzing your emails.
-                </p>
-                <Button 
-                  onClick={(e) => {
-                    console.log('Gmail connect button clicked directly!');
-                    e.preventDefault();
-                    e.stopPropagation();
-                    connectGmail();
-                  }} 
-                  className="w-full"
-                >
-                  <Mail className="h-4 w-4 mr-2" />
-                  Connect Gmail Account
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <GmailConnect onConnected={checkGmailConnection} />
         )}
 
         {/* Email Submission Form */}
