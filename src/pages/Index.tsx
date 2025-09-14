@@ -561,7 +561,7 @@ const Index = () => {
 
           {/* Right Column - Chat Assistant */}
           <div className="lg:col-span-1">
-            <ChatAssistant selectedEmail={selectedEmail} />
+            <ChatAssistant selectedEmail={selectedEmail} emails={emails} />
           </div>
         </div>
 

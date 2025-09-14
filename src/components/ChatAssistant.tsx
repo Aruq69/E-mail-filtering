@@ -3,7 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bot, Send, User, MessageSquare, Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Bot, Send, User, MessageSquare, Loader2, Shield, AlertTriangle, Activity, Eye, Brain, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -26,9 +28,18 @@ interface Email {
 
 interface ChatAssistantProps {
   selectedEmail?: Email | null;
+  emails?: Email[];
 }
 
-const ChatAssistant = ({ selectedEmail }: ChatAssistantProps) => {
+interface ThreatStats {
+  total: number;
+  high: number;
+  medium: number;
+  low: number;
+  scanned: number;
+}
+
+const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -40,8 +51,59 @@ const ChatAssistant = ({ selectedEmail }: ChatAssistantProps) => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [animatedStats, setAnimatedStats] = useState<ThreatStats>({ total: 0, high: 0, medium: 0, low: 0, scanned: 0 });
+  const [systemStatus, setSystemStatus] = useState<'active' | 'scanning' | 'idle'>('active');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  // Calculate threat statistics from emails
+  const calculateThreatStats = (): ThreatStats => {
+    const stats = emails.reduce((acc, email) => {
+      acc.total++;
+      if (email.threat_level === 'high') acc.high++;
+      else if (email.threat_level === 'medium') acc.medium++;
+      else if (email.threat_level === 'low') acc.low++;
+      return acc;
+    }, { total: 0, high: 0, medium: 0, low: 0, scanned: emails.length });
+    return stats;
+  };
+
+  // Animate stats on email updates
+  useEffect(() => {
+    const newStats = calculateThreatStats();
+    
+    // Animate numbers counting up
+    const animateValue = (start: number, end: number, setter: (value: number) => void) => {
+      const duration = 1000;
+      const increment = Math.ceil((end - start) / (duration / 50));
+      let current = start;
+      
+      const timer = setInterval(() => {
+        current += increment;
+        if (current >= end) {
+          current = end;
+          clearInterval(timer);
+        }
+        setter(current);
+      }, 50);
+    };
+
+    // Set system status based on activity
+    setSystemStatus(isLoading ? 'scanning' : emails.length > 0 ? 'active' : 'idle');
+
+    // Animate stats
+    setTimeout(() => {
+      setAnimatedStats(prev => {
+        const stats = { ...prev };
+        animateValue(prev.total, newStats.total, (val) => setAnimatedStats(s => ({ ...s, total: val })));
+        animateValue(prev.high, newStats.high, (val) => setAnimatedStats(s => ({ ...s, high: val })));
+        animateValue(prev.medium, newStats.medium, (val) => setAnimatedStats(s => ({ ...s, medium: val })));
+        animateValue(prev.low, newStats.low, (val) => setAnimatedStats(s => ({ ...s, low: val })));
+        animateValue(prev.scanned, newStats.scanned, (val) => setAnimatedStats(s => ({ ...s, scanned: val })));
+        return stats;
+      });
+    }, 100);
+  }, [emails, isLoading]);
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
@@ -142,25 +204,100 @@ const ChatAssistant = ({ selectedEmail }: ChatAssistantProps) => {
   };
 
   return (
-    <Card className="cyber-card h-[600px] flex flex-col">
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Bot className="h-5 w-5 text-primary cyber-text-glow" />
-          <span className="cyber-text-glow">MAIL GUARD ASSISTANT</span>
+    <Card className="cyber-card h-[700px] flex flex-col overflow-hidden">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="relative">
+              <Bot className="h-5 w-5 text-primary cyber-text-glow" />
+              <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${
+                systemStatus === 'active' ? 'bg-green-500' :
+                systemStatus === 'scanning' ? 'bg-yellow-500 animate-pulse' :
+                'bg-gray-500'
+              }`} />
+            </div>
+            <div>
+              <span className="cyber-text-glow">MAIL GUARD ASSISTANT</span>
+              <div className="flex items-center space-x-2 mt-1">
+                <Badge variant={systemStatus === 'active' ? 'default' : systemStatus === 'scanning' ? 'secondary' : 'outline'} className="text-xs">
+                  {systemStatus === 'active' ? '🟢 ACTIVE' : systemStatus === 'scanning' ? '🟡 SCANNING' : '⚪ IDLE'}
+                </Badge>
+                <span className="text-xs text-muted-foreground flex items-center">
+                  <Activity className="h-3 w-3 mr-1" />
+                  {animatedStats.scanned} emails analyzed
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-xs text-muted-foreground">Threat Detection</div>
+            <div className="text-lg font-bold cyber-text-glow">
+              {((animatedStats.high + animatedStats.medium) / Math.max(animatedStats.total, 1) * 100).toFixed(1)}%
+            </div>
+          </div>
         </CardTitle>
-        <CardDescription>
-          Ask me about email classifications, spam indicators, and security best practices
+        
+        {/* Dynamic Threat Statistics */}
+        <div className="grid grid-cols-3 gap-2 mt-3">
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-2 text-center">
+            <div className="text-xs text-destructive font-semibold">HIGH RISK</div>
+            <div className="text-lg font-bold text-destructive">{animatedStats.high}</div>
+            <AlertTriangle className="h-3 w-3 mx-auto mt-1 text-destructive" />
+          </div>
+          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2 text-center">
+            <div className="text-xs text-yellow-600 font-semibold">MEDIUM</div>
+            <div className="text-lg font-bold text-yellow-600">{animatedStats.medium}</div>
+            <Shield className="h-3 w-3 mx-auto mt-1 text-yellow-600" />
+          </div>
+          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2 text-center">
+            <div className="text-xs text-green-600 font-semibold">LOW RISK</div>
+            <div className="text-lg font-bold text-green-600">{animatedStats.low}</div>
+            <Eye className="h-3 w-3 mx-auto mt-1 text-green-600" />
+          </div>
+        </div>
+
+        {/* Real-time Analysis Progress */}
+        <div className="mt-3 space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground flex items-center">
+              <Brain className="h-3 w-3 mr-1" />
+              AI Analysis Progress
+            </span>
+            <span className="text-primary">
+              {animatedStats.total > 0 ? Math.round((animatedStats.scanned / animatedStats.total) * 100) : 0}%
+            </span>
+          </div>
+          <Progress 
+            value={animatedStats.total > 0 ? (animatedStats.scanned / animatedStats.total) * 100 : 0} 
+            className="h-2 cyber-progress"
+          />
+        </div>
+
+        <CardDescription className="text-xs mt-2">
+          Real-time email threat analysis and security consultation
         </CardDescription>
+        
         {selectedEmail && (
-          <Button 
-            onClick={askAboutEmail}
-            size="sm"
-            variant="outline"
-            className="border-primary/30 hover:border-primary/50 text-xs"
-          >
-            <MessageSquare className="h-3 w-3 mr-1" />
-            Explain Selected Email
-          </Button>
+          <div className="flex flex-wrap gap-2 mt-2">
+            <Button 
+              onClick={askAboutEmail}
+              size="sm"
+              variant="outline"
+              className="border-primary/30 hover:border-primary/50 text-xs flex-1"
+            >
+              <MessageSquare className="h-3 w-3 mr-1" />
+              Analyze Selected Email
+            </Button>
+            <Button 
+              onClick={() => setInput("What are the latest email security threats I should be aware of?")}
+              size="sm"
+              variant="outline"
+              className="border-secondary/30 hover:border-secondary/50 text-xs"
+            >
+              <TrendingUp className="h-3 w-3 mr-1" />
+              Security Brief
+            </Button>
+          </div>
         )}
       </CardHeader>
       
