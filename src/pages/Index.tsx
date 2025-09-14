@@ -90,18 +90,39 @@ const Index = () => {
   const fetchIMAPEmails = async () => {
     if (!user) {
       console.log('❌ No user found for IMAP fetch');
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to fetch emails.",
+        variant: "destructive",
+      });
       return;
     }
     
     setLoading(true);
     console.log('🚀 STARTING IMAP EMAIL FETCH for user:', user.id);
     
-    toast({
-      title: "Manual IMAP Connection",
-      description: "Please use the Connect Email Account form to fetch emails via IMAP.",
-    });
-    
-    setLoading(false);
+    try {
+      // This will trigger the IMAP connection form to show
+      toast({
+        title: "Connect Email Account",
+        description: "Use the Connect Email Account section below to fetch real emails.",
+      });
+      
+      // Refresh emails after a brief delay to show any newly connected emails
+      setTimeout(() => {
+        fetchEmails();
+      }, 1000);
+      
+    } catch (error) {
+      console.error('🚨 IMAP fetch error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to initiate IMAP connection.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Add test data function for debugging
