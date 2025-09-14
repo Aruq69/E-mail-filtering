@@ -41,12 +41,9 @@ const IMAP_CONFIGS = {
   },
 };
 
-// Simplified email connection test and demo data generator
+// Real IMAP email fetcher using native Deno capabilities
 async function fetchRealEmails(email: string, password: string, imapConfig: any): Promise<any[]> {
-  console.log('🔍 Testing email connection...');
-  
-  // For now, we'll simulate connection validation and return demo emails
-  // In a production environment, you would implement proper IMAP connection here
+  console.log('🔍 Connecting to real IMAP server...');
   
   // Basic validation
   if (!email || !password) {
@@ -61,62 +58,108 @@ async function fetchRealEmails(email: string, password: string, imapConfig: any)
   if (!['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com'].includes(domain)) {
     throw new Error(`Unsupported email provider: ${domain}`);
   }
-  
-  // Simulate connection delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  console.log('✅ Email connection validated');
-  
-  // Return realistic demo emails based on the provider
-  const providerSpecificEmails = [
-    {
-      id: `real_${domain}_${Date.now()}_1`,
-      subject: `${domain === 'gmail.com' ? '[Gmail] ' : ''}Security Alert: Login from new device`,
-      from: `security-noreply@${domain === 'gmail.com' ? 'accounts.google.com' : domain}`,
-      to: email,
-      date: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-      body: `We noticed a new sign-in to your ${domain} account from a device we don't recognize. If this was you, you can ignore this email. If not, please secure your account immediately.`,
-      uid: Math.random().toString(36).substr(2, 9)
-    },
-    {
-      id: `real_${domain}_${Date.now()}_2`,
-      subject: 'Urgent: Verify your account within 24 hours',
-      from: 'verification@suspicious-service.com',
-      to: email,
-      date: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-      body: 'Your account will be suspended if you do not verify your identity. Click here now: http://fake-verification-link.com',
-      uid: Math.random().toString(36).substr(2, 9)
-    },
-    {
-      id: `real_${domain}_${Date.now()}_3`,
-      subject: 'Weekly team standup notes',
-      from: 'team-lead@yourcompany.com',
-      to: email,
-      date: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-      body: 'Hi team, here are the notes from our weekly standup: Project A is on track, Project B needs review, and we have the quarterly review next week.',
-      uid: Math.random().toString(36).substr(2, 9)
-    },
-    {
-      id: `real_${domain}_${Date.now()}_4`,
-      subject: 'You have won $500,000 in our lottery!',
-      from: 'winnings@international-lottery.scam',
-      to: email,
-      date: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-      body: 'CONGRATULATIONS! You are our lucky winner. To claim your prize, please send us your banking details, social security number, and a processing fee of $500.',
-      uid: Math.random().toString(36).substr(2, 9)
-    },
-    {
-      id: `real_${domain}_${Date.now()}_5`,
-      subject: 'Monthly newsletter - Company updates',
-      from: 'newsletter@legitimate-company.com',
-      to: email,
-      date: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-      body: 'Dear subscriber, here are this month\'s updates: new product launches, upcoming events, and important policy changes. Thank you for being a valued customer.',
-      uid: Math.random().toString(36).substr(2, 9)
+
+  try {
+    // Create TLS connection to IMAP server
+    const conn = await Deno.connectTls({
+      hostname: imapConfig.host,
+      port: imapConfig.port,
+    });
+
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+
+    // Helper function to send IMAP command and read response
+    async function sendCommand(command: string): Promise<string> {
+      await conn.write(encoder.encode(command + '\r\n'));
+      const buffer = new Uint8Array(4096);
+      const bytesRead = await conn.read(buffer);
+      return decoder.decode(buffer.subarray(0, bytesRead || 0));
     }
-  ];
-  
-  return providerSpecificEmails;
+
+    // IMAP Authentication Flow
+    console.log('🔐 Authenticating with IMAP server...');
+    
+    // Read initial greeting
+    let response = await sendCommand('');
+    console.log('Server greeting:', response);
+    
+    // Login
+    response = await sendCommand(`A001 LOGIN "${email}" "${password}"`);
+    console.log('Login response:', response);
+    
+    if (response.includes('A001 NO') || response.includes('A001 BAD')) {
+      throw new Error('Authentication failed. Please check your email and password.');
+    }
+
+    // Select INBOX
+    response = await sendCommand('A002 SELECT INBOX');
+    console.log('SELECT response:', response);
+
+    // Search for recent emails (last 10)
+    response = await sendCommand('A003 SEARCH RECENT');
+    console.log('Search response:', response);
+    
+    // Parse message numbers from search response
+    const messageNumbers = response.match(/\* SEARCH ([\d\s]+)/)?.[1]?.trim().split(' ').filter(n => n) || [];
+    console.log('Found message numbers:', messageNumbers);
+
+    const emails = [];
+    const maxEmails = Math.min(10, messageNumbers.length);
+    
+    for (let i = 0; i < maxEmails; i++) {
+      const msgNum = messageNumbers[i];
+      if (!msgNum) continue;
+
+      try {
+        // Fetch email headers and body
+        const headerResponse = await sendCommand(`A00${4 + i} FETCH ${msgNum} (ENVELOPE BODY[TEXT])`);
+        console.log(`Email ${msgNum} response:`, headerResponse.substring(0, 200) + '...');
+        
+        // Parse envelope information
+        const envelopeMatch = headerResponse.match(/ENVELOPE \("([^"]*)"[^(]*"([^"]*)"[^(]*"([^"]*)"[^(]*"([^"]*)"/);
+        const bodyMatch = headerResponse.match(/BODY\[TEXT\]\s*\{[\d]+\}\s*([^A].*?)(?=A00)/s);
+        
+        if (envelopeMatch) {
+          const [, date, subject, fromName, fromEmail] = envelopeMatch;
+          const body = bodyMatch?.[1]?.trim() || 'No body content available';
+          
+          emails.push({
+            id: `imap_${domain}_${Date.now()}_${msgNum}`,
+            subject: subject || 'No Subject',
+            from: fromEmail || `unknown@${domain}`,
+            to: email,
+            date: date ? new Date(date).toISOString() : new Date().toISOString(),
+            body: body.substring(0, 1000), // Limit body length
+            uid: msgNum
+          });
+        }
+      } catch (emailError) {
+        console.error(`Error fetching email ${msgNum}:`, emailError);
+      }
+    }
+
+    // Logout
+    await sendCommand('A999 LOGOUT');
+    conn.close();
+
+    console.log(`✅ Successfully fetched ${emails.length} real emails from IMAP server`);
+    return emails;
+
+  } catch (error) {
+    console.error('❌ IMAP connection error:', error);
+    
+    // Provide specific error messages
+    if (error.message?.includes('authentication') || error.message?.includes('LOGIN')) {
+      throw new Error('Authentication failed. Please check your email and password. For Gmail, Yahoo, and iCloud, you need an app-specific password.');
+    } else if (error.message?.includes('ENOTFOUND') || error.message?.includes('ECONNREFUSED')) {
+      throw new Error('Cannot connect to email server. Please check your internet connection and try again.');
+    } else if (error.message?.includes('timeout')) {
+      throw new Error('Connection timeout. The email server is not responding.');
+    } else {
+      throw new Error(`Email connection failed: ${error.message}`);
+    }
+  }
 }
 
 serve(async (req) => {
