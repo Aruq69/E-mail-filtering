@@ -30,7 +30,7 @@ serve(async (req) => {
       }
 
       const scope = 'https://www.googleapis.com/auth/gmail.readonly';
-      const redirectUri = `${supabaseUrl}/auth/v1/callback`;
+      const redirectUri = `https://preview--whereabouts-tracker-pro.lovable.app/gmail-callback`;
       
       const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
       authUrl.searchParams.set('client_id', googleClientId);
@@ -67,7 +67,7 @@ serve(async (req) => {
         client_secret: googleClientSecret!,
         code,
         grant_type: 'authorization_code',
-        redirect_uri: `${supabaseUrl}/auth/v1/callback`,
+        redirect_uri: `https://preview--whereabouts-tracker-pro.lovable.app/gmail-callback`,
       }),
     });
 

@@ -1,0 +1,144 @@
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useToast } from "@/hooks/use-toast";
+import { Shield, CheckCircle, AlertTriangle } from "lucide-react";
+
+const GmailCallback = () => {
+  const [searchParams] = useSearchParams();
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [message, setMessage] = useState('Processing Gmail connection...');
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const handleCallback = async () => {
+      try {
+        const code = searchParams.get('code');
+        const state = searchParams.get('state'); // This should be the userId
+        const error = searchParams.get('error');
+
+        if (error) {
+          throw new Error(`OAuth error: ${error}`);
+        }
+
+        if (!code || !state) {
+          throw new Error('Missing authorization code or state parameter');
+        }
+
+        if (!user || user.id !== state) {
+          throw new Error('Invalid user session or state mismatch');
+        }
+
+        setMessage('Exchanging authorization code for access token...');
+
+        // Exchange the code for access token
+        const { data, error: exchangeError } = await supabase.functions.invoke('gmail-auth', {
+          body: { 
+            code, 
+            userId: user.id 
+          },
+        });
+
+        if (exchangeError) {
+          throw new Error(exchangeError.message);
+        }
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        setStatus('success');
+        setMessage('Gmail connected successfully!');
+        
+        toast({
+          title: "Gmail Connected",
+          description: "Your Gmail account has been connected successfully. Redirecting...",
+        });
+
+        // Redirect to main page after 2 seconds
+        setTimeout(() => {
+          navigate('/');
+        }, 2000);
+
+      } catch (error) {
+        console.error('Gmail callback error:', error);
+        setStatus('error');
+        setMessage(error instanceof Error ? error.message : 'Failed to connect Gmail');
+        
+        toast({
+          title: "Connection Failed",
+          description: "Failed to connect Gmail. Please try again.",
+          variant: "destructive",
+        });
+
+        // Redirect to main page after 3 seconds
+        setTimeout(() => {
+          navigate('/');
+        }, 3000);
+      }
+    };
+
+    handleCallback();
+  }, [searchParams, user, navigate, toast]);
+
+  return (
+    <div className="min-h-screen bg-background matrix-bg flex items-center justify-center">
+      <div className="max-w-md w-full mx-auto p-6">
+        <div className="cyber-card p-8 text-center space-y-6">
+          <div className="relative">
+            <Shield className="h-16 w-16 text-primary mx-auto cyber-text-glow cyber-pulse" />
+            <div className="absolute inset-0 h-16 w-16 border border-primary/30 rounded-full animate-ping mx-auto" />
+          </div>
+          
+          <div className="space-y-4">
+            <h1 className="text-2xl font-bold cyber-text-glow bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              GMAIL CONNECTION
+            </h1>
+            
+            <div className="flex items-center justify-center space-x-2">
+              {status === 'loading' && (
+                <>
+                  <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <span className="text-primary">Processing...</span>
+                </>
+              )}
+              {status === 'success' && (
+                <>
+                  <CheckCircle className="h-4 w-4 text-accent" />
+                  <span className="text-accent">Success!</span>
+                </>
+              )}
+              {status === 'error' && (
+                <>
+                  <AlertTriangle className="h-4 w-4 text-destructive" />
+                  <span className="text-destructive">Error</span>
+                </>
+              )}
+            </div>
+            
+            <p className="text-muted-foreground text-sm">
+              {message}
+            </p>
+            
+            {status === 'success' && (
+              <p className="text-xs text-muted-foreground">
+                Redirecting to dashboard in a few seconds...
+              </p>
+            )}
+            
+            {status === 'error' && (
+              <p className="text-xs text-muted-foreground">
+                Redirecting back in a few seconds...
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default GmailCallback;
