@@ -241,7 +241,7 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
 
   return (
     <div className="h-[700px] flex flex-col">
-      <Card className="border-border/20 bg-card/50 backdrop-blur-sm flex-1 flex flex-col overflow-hidden">
+      <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card flex-1 flex flex-col overflow-hidden">
         <CardHeader className="pb-2 flex-shrink-0">
           <CardTitle className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -399,7 +399,7 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
           <Button
             onClick={sendMessage}
             disabled={!input.trim() || isLoading}
-            className="px-3"
+            className="px-3 hover-button"
           >
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />

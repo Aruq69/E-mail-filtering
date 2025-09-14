@@ -110,15 +110,23 @@
 }
 
 @layer components {
+  .hover-card {
+    @apply transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 hover:border-primary/40 hover:-translate-y-1;
+  }
+  
+  .hover-button {
+    @apply transition-all duration-200 hover:shadow-md hover:shadow-primary/30 hover:scale-105 active:scale-95;
+  }
+  
   .threat-high {
-    @apply border-destructive/30;
+    @apply border-destructive/30 hover:border-destructive/60 hover:shadow-destructive/20;
   }
   
   .threat-medium {
-    @apply border-yellow-500/30;
+    @apply border-yellow-500/30 hover:border-yellow-500/60 hover:shadow-yellow-500/20;
   }
   
   .threat-low {
-    @apply border-accent/30;
+    @apply border-accent/30 hover:border-accent/60 hover:shadow-accent/20;
   }
 }

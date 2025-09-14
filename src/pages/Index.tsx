@@ -348,26 +348,26 @@ const Index = () => {
           </div>
           <div className="flex items-center space-x-4">
             {gmailConnected && (
-              <Button onClick={fetchGmailEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50">
+              <Button onClick={fetchGmailEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50 hover-button">
                 <Activity className="h-4 w-4 mr-2" />
                 Refresh Gmail
               </Button>
             )}
-            <Button onClick={fetchEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50">
+            <Button onClick={fetchEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50 hover-button">
               <Mail className="h-4 w-4 mr-2" />
               Refresh
             </Button>
-            <Button onClick={addTestEmails} variant="outline" className="border-accent/30 hover:border-accent/50">
+            <Button onClick={addTestEmails} variant="outline" className="border-accent/30 hover:border-accent/50 hover-button">
               <Plus className="h-4 w-4 mr-2" />
               Add Test Emails
             </Button>
             {gmailConnected && (
-              <Button onClick={handleUnsync} variant="outline" className="border-destructive/30 hover:border-destructive/50 hover:bg-destructive hover:text-destructive-foreground transition-all duration-300">
+              <Button onClick={handleUnsync} variant="outline" className="border-destructive/30 hover:border-destructive/50 hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 hover-button">
                 <Lock className="h-4 w-4 mr-2" />
                 Unsync
               </Button>
             )}
-            <Button onClick={signOut} variant="outline" className="border-muted-foreground/30 hover:border-muted-foreground/50">
+            <Button onClick={signOut} variant="outline" className="border-muted-foreground/30 hover:border-muted-foreground/50 hover-button">
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
             </Button>
@@ -376,7 +376,7 @@ const Index = () => {
 
         {/* Threat Level Dashboard */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="border-border/20 bg-card/50 backdrop-blur-sm">
+          <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">TOTAL EMAILS</CardTitle>
               <Mail className="h-4 w-4 text-primary" />
@@ -387,7 +387,7 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          <Card className="threat-high border-border/20 bg-card/50 backdrop-blur-sm">
+          <Card className="threat-high border-border/20 bg-card/50 backdrop-blur-sm hover-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">HIGH THREATS</CardTitle>
               <AlertTriangle className="h-4 w-4 text-destructive" />
@@ -398,7 +398,7 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          <Card className="threat-medium border-border/20 bg-card/50 backdrop-blur-sm">
+          <Card className="threat-medium border-border/20 bg-card/50 backdrop-blur-sm hover-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">MEDIUM THREATS</CardTitle>
               <Clock className="h-4 w-4 text-yellow-500" />
@@ -409,7 +409,7 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          <Card className="threat-low border-border/20 bg-card/50 backdrop-blur-sm">
+          <Card className="threat-low border-border/20 bg-card/50 backdrop-blur-sm hover-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">SAFE EMAILS</CardTitle>
               <CheckCircle className="h-4 w-4 text-accent" />
@@ -423,7 +423,7 @@ const Index = () => {
 
         {/* Gmail Connection */}
         {!gmailConnected && (
-          <Card className="border-border/20 bg-card/50 backdrop-blur-sm">
+          <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Mail className="h-5 w-5 text-primary" />
@@ -463,7 +463,7 @@ const Index = () => {
           {/* Left Column - Email Analysis */}
           <div className="lg:col-span-2 space-y-6">
             {/* Search Interface */}
-            <Card className="border-border/20 bg-card/50 backdrop-blur-sm">
+            <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
               <CardContent className="pt-6">
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-primary" />
@@ -479,7 +479,7 @@ const Index = () => {
             </Card>
 
             {/* Threat Analysis Dashboard */}
-            <Card className="border-border/20 bg-card/50 backdrop-blur-sm">
+            <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Zap className="h-5 w-5 text-primary" />
@@ -513,7 +513,7 @@ const Index = () => {
                       return (
                         <div 
                           key={email.id} 
-                          className={`${threatClass} p-4 hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-border/20 bg-card/50 backdrop-blur-sm rounded-lg ${
+                          className={`${threatClass} p-4 hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-border/20 bg-card/50 backdrop-blur-sm rounded-lg hover-card ${
                             selectedEmail?.id === email.id ? 'ring-2 ring-primary' : ''
                           }`}
                           onClick={() => {
@@ -630,7 +630,7 @@ const Index = () => {
                 {/* Email Details Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Email Info */}
-                  <Card className="border-border/20 bg-card/50 backdrop-blur-sm">
+                  <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
                     <CardHeader>
                       <CardTitle className="text-sm text-primary">📧 EMAIL DETAILS</CardTitle>
                     </CardHeader>
@@ -655,7 +655,7 @@ const Index = () => {
                   </Card>
 
                   {/* Analysis Results */}
-                  <Card className="border-border/20 bg-card/50 backdrop-blur-sm">
+                  <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
                     <CardHeader>
                       <CardTitle className="text-sm text-primary">🔍 ANALYSIS RESULTS</CardTitle>
                     </CardHeader>
@@ -691,7 +691,7 @@ const Index = () => {
 
                 {/* Keywords */}
                 {selectedEmail.keywords && selectedEmail.keywords.length > 0 && (
-                  <Card className="border-border/20 bg-card/50 backdrop-blur-sm">
+                  <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
                     <CardHeader>
                       <CardTitle className="text-sm text-primary">🔍 DETECTED KEYWORDS</CardTitle>
                     </CardHeader>
@@ -711,7 +711,7 @@ const Index = () => {
                 )}
 
                 {/* Email Content */}
-                <Card className="border-border/20 bg-card/50 backdrop-blur-sm">
+                <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
                   <CardHeader>
                     <CardTitle className="text-sm text-primary">📄 EMAIL CONTENT</CardTitle>
                   </CardHeader>
@@ -741,7 +741,7 @@ const Index = () => {
                   </Button>
                   <Button
                     onClick={() => setShowEmailDialog(false)}
-                    className=""
+                    className="hover-button"
                   >
                     Close Viewer
                   </Button>
