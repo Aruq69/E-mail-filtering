@@ -276,16 +276,188 @@ async function fetchRealEmails(email: string, password: string, imapConfig: any)
     await client.close();
     
     if (emails.length === 0) {
-      console.log('⚠️ No real emails found, generating one demo email for testing');
-      return [{
-        id: `demo_no_real_emails_${Date.now()}`,
-        subject: '📧 Demo: Welcome to Mail Guard',
-        from: 'welcome@mailguard.app',
-        to: email,
-        date: new Date().toISOString(),
-        body: 'Welcome to Mail Guard! This is a demo email to show that the system is working. Try adding some real emails to your inbox to see threat analysis in action.',
-        uid: 'demo_welcome'
-      }];
+      console.log('⚠️ No real emails found, generating 100 sample emails for testing');
+      
+      const sampleEmails = [];
+      const currentTime = Date.now();
+      
+      // Generate 100 diverse, realistic emails
+      const subjects = [
+        'Your order has shipped',
+        'Weekly newsletter from TechCorp',
+        'Meeting reminder: Q4 Planning',
+        'Password reset requested',
+        'Your subscription is expiring',
+        'Invoice #12345 is ready',
+        'New message from LinkedIn',
+        'Flight confirmation for tomorrow',
+        'Bank statement available',
+        'Software update available',
+        'Your package has been delivered',
+        'Welcome to our service',
+        'Survey: How did we do?',
+        'Monthly report attached',
+        'Event reminder: Company picnic',
+        'Security alert for your account',
+        'Your purchase receipt',
+        'Newsletter: Industry trends',
+        'Meeting notes from yesterday',
+        'Document shared with you',
+        'Important policy update',
+        'Your reward points balance',
+        'Appointment confirmation',
+        'Photo memories from last month',
+        'System maintenance scheduled',
+        'New feature announcement',
+        'Your tax documents are ready',
+        'Weather alert for your area',
+        'Course completion certificate',
+        'Budget approval needed',
+        'Performance review scheduled',
+        'Travel itinerary attached',
+        'Your booking confirmation',
+        'New comment on your post',
+        'Monthly summary report',
+        'Software license renewal',
+        'Project deadline approaching',
+        'Your download is ready',
+        'Account verification required',
+        'Special offer just for you',
+        'Team building event invitation',
+        'Your profile was viewed',
+        'Data backup completed',
+        'New employee orientation',
+        'Quarterly goals review',
+        'Your presentation feedback',
+        'Conference registration open',
+        'Payment processed successfully',
+        'Your survey results',
+        'Network maintenance notice'
+      ];
+      
+      const senders = [
+        'notifications@amazon.com',
+        'newsletter@techcrunch.com',
+        'calendar@company.com',
+        'security@paypal.com',
+        'billing@netflix.com',
+        'invoices@stripe.com',
+        'notifications@linkedin.com',
+        'confirmations@delta.com',
+        'statements@bankofamerica.com',
+        'updates@microsoft.com',
+        'shipping@fedex.com',
+        'welcome@slack.com',
+        'feedback@surveymonkey.com',
+        'reports@salesforce.com',
+        'events@eventbrite.com',
+        'alerts@google.com',
+        'receipts@apple.com',
+        'news@bloomberg.com',
+        'documents@dropbox.com',
+        'sharing@googledrive.com',
+        'updates@github.com',
+        'rewards@starbucks.com',
+        'appointments@healthcare.com',
+        'memories@photos.google.com',
+        'maintenance@hosting.com',
+        'features@zoom.com',
+        'taxes@turbotax.com',
+        'weather@weather.com',
+        'certificates@coursera.com',
+        'finance@quickbooks.com',
+        'hr@company.com',
+        'travel@expedia.com',
+        'bookings@airbnb.com',
+        'social@facebook.com',
+        'analytics@googleanalytics.com',
+        'licensing@adobe.com',
+        'projects@asana.com',
+        'downloads@spotify.com',
+        'verification@instagram.com',
+        'offers@retailer.com',
+        'team@company.com',
+        'recruiting@linkedin.com',
+        'backups@cloudservice.com',
+        'onboarding@company.com',
+        'goals@okr.com',
+        'presentations@canva.com',
+        'conference@eventorg.com',
+        'payments@square.com',
+        'results@typeform.com',
+        'network@isp.com'
+      ];
+      
+      const bodyTemplates = [
+        'Your recent order has been processed and is on its way. Track your package using the link provided.',
+        'Thank you for subscribing to our newsletter. Stay updated with the latest industry news and insights.',
+        'This is a friendly reminder about your upcoming meeting scheduled for tomorrow at 2 PM.',
+        'A password reset was requested for your account. If this was not you, please contact support.',
+        'Your subscription will expire in 7 days. Renew now to continue enjoying our services.',
+        'Your monthly invoice is now available for download in your account dashboard.',
+        'You have a new connection request and 3 messages waiting for your review.',
+        'Your flight departure is confirmed for tomorrow morning. Check-in is now available online.',
+        'Your monthly statement is ready for review in your online banking portal.',
+        'A new software update is available with important security improvements and bug fixes.',
+        'Great news! Your package has been successfully delivered to your specified address.',
+        'Welcome to our platform! We are excited to have you as part of our community.',
+        'We value your opinion. Please take a moment to share your experience with our service.',
+        'Please find attached the monthly performance report for your review and analysis.',
+        'You are invited to join us for our annual company picnic next Friday at the park.',
+        'We detected unusual activity on your account. Please verify your recent transactions.',
+        'Thank you for your purchase. Your receipt and warranty information are attached.',
+        'Stay ahead of the curve with our latest industry analysis and market trends.',
+        'Here are the key takeaways and action items from our meeting yesterday.',
+        'A new document has been shared with you. Click the link to view and collaborate.',
+        'Important changes to our terms of service will take effect next month.',
+        'You have earned 250 reward points this month. Check your balance and redeem rewards.',
+        'Your appointment has been confirmed for next Tuesday at 10:30 AM.',
+        'Take a trip down memory lane with your photo highlights from last month.',
+        'Scheduled maintenance will occur this weekend. Services may be briefly unavailable.',
+        'Discover our exciting new features designed to improve your productivity.',
+        'Your tax documents for this year are now available for download.',
+        'Severe weather alert: Heavy rain expected in your area tonight.',
+        'Congratulations! You have successfully completed the certification course.',
+        'The proposed budget requires your approval before we can proceed with implementation.',
+        'Your annual performance review has been scheduled for next week.',
+        'Your complete travel itinerary with flight and hotel details is attached.',
+        'Your reservation has been confirmed. We look forward to hosting you.',
+        'Your recent post received several new comments and engagement.',
+        'Here is your comprehensive monthly activity summary and key metrics.',
+        'Your software license will expire soon. Renew now to avoid service interruption.',
+        'The project deadline is approaching quickly. Please review the current status.',
+        'Your requested file download has been prepared and is ready for you.',
+        'Please verify your account to continue using all features of our platform.',
+        'Exclusive offer: Save 20% on your next purchase with this limited-time deal.',
+        'Join us for our upcoming team building event and strengthen workplace relationships.',
+        'Your professional profile was viewed by several potential connections today.',
+        'Your scheduled data backup has been completed successfully without any issues.',
+        'Welcome to the team! Your orientation session is scheduled for Monday morning.',
+        'Time to review and update your quarterly goals and objectives.',
+        'We have compiled feedback on your recent presentation for your review.',
+        'Early bird registration is now open for our annual industry conference.',
+        'Your payment has been processed successfully. Thank you for your business.',
+        'The survey results are in! See how your responses compare to others.',
+        'Planned network maintenance will affect services briefly this evening.'
+      ];
+      
+      for (let i = 0; i < 100; i++) {
+        const subjectIndex = i % subjects.length;
+        const senderIndex = i % senders.length;
+        const bodyIndex = i % bodyTemplates.length;
+        
+        sampleEmails.push({
+          id: `sample_${currentTime + i}`,
+          subject: subjects[subjectIndex],
+          from: senders[senderIndex],
+          to: email,
+          date: new Date(currentTime - (i * 3600000)).toISOString(), // Each email 1 hour apart
+          body: bodyTemplates[bodyIndex],
+          uid: `sample_${i + 1}`
+        });
+      }
+      
+      return sampleEmails;
     }
     
     console.log(`✅ Successfully fetched ${emails.length} real emails from ${domain}`);
