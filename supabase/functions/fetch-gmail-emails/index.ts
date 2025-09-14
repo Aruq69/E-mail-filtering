@@ -17,22 +17,12 @@ serve(async (req) => {
   }
 
   try {
-    const { userId } = await req.json();
-
-    if (!userId) {
-      return new Response(
-        JSON.stringify({ error: 'Missing userId' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
-    // Get user's Gmail token
+    // Get Gmail token (without user filtering since we removed auth)
     const { data: tokenData, error: tokenError } = await supabase
       .from('gmail_tokens')
       .select('access_token, refresh_token')
-      .eq('user_id', userId)
       .single();
 
     if (tokenError || !tokenData) {
@@ -161,7 +151,6 @@ serve(async (req) => {
           .from('emails')
           .select('id')
           .eq('gmail_id', message.id)
-          .eq('user_id', userId)
           .single();
 
         if (!existingEmail) {
@@ -169,7 +158,6 @@ serve(async (req) => {
           const { error: insertError } = await supabase
             .from('emails')
             .insert({
-              user_id: userId,
               gmail_id: message.id,
               subject,
               sender,

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, CheckCircle, AlertTriangle } from "lucide-react";
 
@@ -10,7 +9,6 @@ const GmailCallback = () => {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Processing Gmail connection...');
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -24,12 +22,8 @@ const GmailCallback = () => {
           throw new Error(`OAuth error: ${error}`);
         }
 
-        if (!code || !state) {
-          throw new Error('Missing authorization code or state parameter');
-        }
-
-        if (!user || user.id !== state) {
-          throw new Error('Invalid user session or state mismatch');
+        if (!code) {
+          throw new Error('Missing authorization code');
         }
 
         setMessage('Exchanging authorization code for access token...');
@@ -37,8 +31,7 @@ const GmailCallback = () => {
         // Exchange the code for access token
         const { data, error: exchangeError } = await supabase.functions.invoke('gmail-auth', {
           body: { 
-            code, 
-            userId: user.id 
+            code
           },
         });
 
@@ -82,7 +75,7 @@ const GmailCallback = () => {
     };
 
     handleCallback();
-  }, [searchParams, user, navigate, toast]);
+  }, [searchParams, navigate, toast]);
 
   return (
     <div className="min-h-screen bg-background matrix-bg flex items-center justify-center">

@@ -18,7 +18,7 @@ serve(async (req) => {
   }
 
   try {
-    const { action, code, userId } = await req.json();
+    const { action, code } = await req.json();
 
     // Handle auth URL generation
     if (action === 'get_auth_url') {
@@ -39,7 +39,7 @@ serve(async (req) => {
       authUrl.searchParams.set('scope', scope);
       authUrl.searchParams.set('access_type', 'offline');
       authUrl.searchParams.set('prompt', 'consent');
-      authUrl.searchParams.set('state', userId);
+      authUrl.searchParams.set('state', 'anonymous');
 
       return new Response(
         JSON.stringify({ auth_url: authUrl.toString() }),
@@ -49,9 +49,9 @@ serve(async (req) => {
 
     // Handle token exchange
 
-    if (!code || !userId) {
+    if (!code) {
       return new Response(
-        JSON.stringify({ error: 'Missing authorization code or userId' }),
+        JSON.stringify({ error: 'Missing authorization code' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -88,14 +88,11 @@ serve(async (req) => {
     const { error: upsertError } = await supabase
       .from('gmail_tokens')
       .upsert({
-        user_id: userId,
         access_token: tokenData.access_token,
         refresh_token: tokenData.refresh_token,
         expires_at: new Date(Date.now() + (tokenData.expires_in * 1000)).toISOString(),
         token_type: tokenData.token_type || 'Bearer',
         scope: tokenData.scope || 'https://www.googleapis.com/auth/gmail.readonly',
-      }, {
-        onConflict: 'user_id'
       });
 
     if (upsertError) {
