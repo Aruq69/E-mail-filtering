@@ -1,6 +1,8 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import Imap from 'npm:imap@0.8.19';
+import { simpleParser } from 'npm:mailparser@3.7.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -40,6 +42,121 @@ const IMAP_CONFIGS = {
     requiresAppPassword: true,
   },
 };
+
+// Function to fetch real emails from IMAP server
+async function fetchRealEmails(email: string, password: string, imapConfig: any): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    const imap = new Imap({
+      user: email,
+      password: password,
+      host: imapConfig.host,
+      port: imapConfig.port,
+      tls: imapConfig.secure,
+      tlsOptions: { rejectUnauthorized: false },
+      authTimeout: 10000,
+      connTimeout: 15000,
+    });
+
+    const emails: any[] = [];
+
+    function openInbox(cb: (err: any, box?: any) => void) {
+      imap.openBox('INBOX', true, cb);
+    }
+
+    imap.once('ready', function() {
+      console.log('📡 IMAP connection ready');
+      openInbox(function(err, box) {
+        if (err) {
+          console.error('❌ Error opening inbox:', err);
+          reject(err);
+          return;
+        }
+
+        console.log('📬 Inbox opened, total messages:', box.messages.total);
+
+        // Fetch last 10 emails
+        const fetchCount = Math.min(10, box.messages.total);
+        if (fetchCount === 0) {
+          console.log('📭 No emails found in inbox');
+          resolve([]);
+          return;
+        }
+
+        const range = `${Math.max(1, box.messages.total - fetchCount + 1)}:${box.messages.total}`;
+        console.log('🔍 Fetching email range:', range);
+
+        const f = imap.fetch(range, {
+          bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'],
+          struct: true
+        });
+
+        let emailCount = 0;
+        const totalEmails = fetchCount;
+
+        f.on('message', function(msg, seqno) {
+          console.log('📧 Processing message #' + seqno);
+          let headers: any = {};
+          let body = '';
+          
+          msg.on('body', function(stream, info) {
+            let buffer = '';
+            stream.on('data', function(chunk) {
+              buffer += chunk.toString('ascii');
+            });
+            stream.once('end', function() {
+              if (info.which === 'TEXT') {
+                body = buffer;
+              } else {
+                headers = Imap.parseHeader(buffer);
+              }
+            });
+          });
+
+          msg.once('attributes', function(attrs) {
+            const uid = attrs.uid;
+            emailCount++;
+            
+            const emailData = {
+              id: `imap_${uid}`,
+              subject: headers.subject ? headers.subject[0] : 'No Subject',
+              from: headers.from ? headers.from[0] : 'Unknown Sender',
+              to: headers.to ? headers.to[0] : email,
+              date: headers.date ? new Date(headers.date[0]).toISOString() : new Date().toISOString(),
+              body: body || 'No content available',
+              uid: uid
+            };
+            emails.push(emailData);
+            
+            console.log(`✉️ Processed email ${emailCount}/${totalEmails}: ${emailData.subject}`);
+          });
+        });
+
+        f.once('error', function(err) {
+          console.error('❌ Fetch error:', err);
+          reject(err);
+        });
+
+        f.once('end', function() {
+          console.log('✅ Done fetching email headers');
+          imap.end();
+        });
+      });
+    });
+
+    imap.once('error', function(err) {
+      console.error('❌ IMAP connection error:', err);
+      reject(err);
+    });
+
+    imap.once('end', function() {
+      console.log('🔌 IMAP connection ended');
+      resolve(emails);
+    });
+
+    console.log('🔌 Connecting to IMAP server...');
+    imap.connect();
+  });
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -87,56 +204,52 @@ serve(async (req) => {
 
     console.log('🔧 Using IMAP config:', { host: imapConfig.host, port: imapConfig.port });
 
-    // TODO: Implement real IMAP connection
-    // For real implementation, you would use a library like:
-    // import { IMAPClient } from "npm:imap@0.8.19"
-    // const imap = new IMAPClient({
-    //   host: imapConfig.host,
-    //   port: imapConfig.port,
-    //   secure: imapConfig.secure,
-    //   auth: { user: email, pass: password }
-    // });
+    // Real IMAP connection with fallback
+    console.log('🔗 Connecting to IMAP server...');
     
-    console.log('🔗 Simulating IMAP connection (demo mode)...');
-    console.log('📬 Generating demo emails for testing...');
-    
-    // Demo emails with realistic security scenarios
-    const simulatedEmails = [
-      {
-        id: `imap_${Date.now()}_1`,
-        subject: 'Urgent: Verify Your Account Now',
-        from: 'security@suspicious-bank.com',
-        body: 'Your account has been compromised. Click here to verify your identity immediately! Act now or your account will be suspended.',
-        date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: `imap_${Date.now()}_2`,
-        subject: 'Re: Meeting Tomorrow',
-        from: 'colleague@yourcompany.com',
-        body: 'Hi, just confirming our meeting tomorrow at 2 PM in the conference room. Looking forward to discussing the project updates.',
-        date: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: `imap_${Date.now()}_3`,
-        subject: 'Congratulations! You\'ve Won $1,000,000!',
-        from: 'lottery@fake-winnings.com',
-        body: 'CONGRATULATIONS! You have won our international lottery. Send us your bank details immediately to claim your prize of $1,000,000!',
-        date: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-      },
-      {
-        id: `imap_${Date.now()}_4`,
-        subject: 'Invoice #12345 - Payment Due',
-        from: 'billing@legitimate-service.com',
-        body: 'Thank you for your business. Please find attached invoice #12345 with payment due in 30 days. Contact us if you have any questions.',
-        date: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-      },
-    ];
+    let realEmails: any[] = [];
+    try {
+      realEmails = await fetchRealEmails(email, password, imapConfig);
+      console.log(`📧 Fetched ${realEmails.length} real emails from IMAP server`);
+    } catch (imapError) {
+      console.error('❌ IMAP connection failed:', imapError);
+      
+      // Provide helpful error message based on error type
+      let errorMessage = 'Failed to connect to email server';
+      if (imapError.message?.includes('authentication')) {
+        errorMessage = 'Authentication failed. Please check your email and password/app password.';
+      } else if (imapError.message?.includes('timeout')) {
+        errorMessage = 'Connection timeout. Please try again later.';
+      } else if (imapError.message?.includes('ENOTFOUND')) {
+        errorMessage = 'Email server not found. Please check your email provider.';
+      }
+      
+      return new Response(JSON.stringify({ 
+        error: errorMessage,
+        details: imapError.message,
+        suggestion: 'Try using an app-specific password if your provider requires it (Gmail, Yahoo, iCloud)'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (realEmails.length === 0) {
+      return new Response(JSON.stringify({
+        success: true,
+        total: 0,
+        message: 'No emails found in your inbox',
+        provider: domain,
+        method: 'IMAP',
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     let processedCount = 0;
     const emailSummaries = [];
-
-    // Process each email with OpenAI analysis
-    for (const emailData of simulatedEmails) {
+    // Process each real email with OpenAI analysis
+    for (const emailData of realEmails) {
       try {
         console.log(`🔍 Processing email: ${emailData.id}`);
 
