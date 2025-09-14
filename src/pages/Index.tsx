@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, LogOut, User, Zap, Activity } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import EmailSubmissionForm from "@/components/EmailSubmissionForm";
-import GmailConnect from "@/components/GmailConnect";
 import ChatAssistant from "@/components/ChatAssistant";
+import Auth from "@/pages/Auth";
 
 interface Email {
   id: string;
@@ -31,14 +31,6 @@ const Index = () => {
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const { user, signOut, loading: authLoading } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
-
-  // Redirect to auth if not logged in
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/auth");
-    }
-  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     if (user) {
@@ -141,17 +133,64 @@ const Index = () => {
     }
   };
 
-  const handleSignOut = async () => {
+  const handleUnsync = async () => {
     try {
+      // Remove Gmail tokens
+      if (user) {
+        await supabase
+          .from('gmail_tokens')
+          .delete()
+          .eq('user_id', user.id);
+      }
+      
       await signOut();
+      setGmailConnected(false);
       toast({
-        title: "Signed out",
-        description: "You have been successfully signed out.",
+        title: "Unsynced",
+        description: "Gmail connection removed and signed out successfully.",
       });
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to sign out. Please try again.",
+        description: "Failed to unsync. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const connectGmail = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to connect Gmail.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('gmail-auth', {
+        body: { action: 'get_auth_url' },
+      });
+
+      if (error) {
+        console.error('Gmail auth error:', error);
+        toast({
+          title: "Connection failed",
+          description: error.message || "Failed to connect to Gmail. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data?.auth_url) {
+        window.location.href = data.auth_url;
+      }
+    } catch (error) {
+      console.error('Gmail connection error:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     }
@@ -198,9 +237,9 @@ const Index = () => {
     );
   }
 
-  // Don't render anything if not authenticated (will redirect)
+  // Show auth page if not authenticated
   if (!user) {
-    return null;
+    return <Auth />;
   }
 
   return (
@@ -237,9 +276,9 @@ const Index = () => {
               <Mail className="h-4 w-4 mr-2" />
               Refresh
             </Button>
-            <Button onClick={handleSignOut} variant="outline" className="border-destructive/30 hover:border-destructive/50 hover:bg-destructive hover:text-destructive-foreground transition-all duration-300">
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
+            <Button onClick={handleUnsync} variant="outline" className="border-destructive/30 hover:border-destructive/50 hover:bg-destructive hover:text-destructive-foreground transition-all duration-300">
+              <Lock className="h-4 w-4 mr-2" />
+              Unsync
             </Button>
           </div>
         </div>
@@ -293,10 +332,70 @@ const Index = () => {
 
         {/* Gmail Connection */}
         {!gmailConnected && (
-          <GmailConnect onConnected={() => {
-            setGmailConnected(true);
-            fetchGmailEmails();
-          }} />
+          <Card className="cyber-card">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Mail className="h-5 w-5 text-primary" />
+                <span>Connect Gmail Account</span>
+              </CardTitle>
+              <CardDescription>
+                Connect your Gmail account to automatically analyze your emails for threats and security risks.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button className="w-full">
+                    <Mail className="h-4 w-4 mr-2" />
+                    Connect Gmail Account
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center space-x-2">
+                      <Eye className="h-5 w-5 text-primary" />
+                      <span>Gmail Access Permission</span>
+                    </DialogTitle>
+                    <DialogDescription className="space-y-4">
+                      <p>
+                        We need read-only access to your Gmail account to analyze your emails for security threats and spam.
+                      </p>
+                      <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                        <h4 className="font-semibold text-primary">What we do:</h4>
+                        <ul className="space-y-1 text-sm">
+                          <li>• Read and analyze emails for security threats</li>
+                          <li>• Classify emails as spam, phishing, or legitimate</li>
+                          <li>• Provide threat level assessments</li>
+                        </ul>
+                      </div>
+                      <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                        <h4 className="font-semibold text-accent">What we don't do:</h4>
+                        <ul className="space-y-1 text-sm">
+                          <li>• Send emails on your behalf</li>
+                          <li>• Delete or modify your emails</li>
+                          <li>• Share your data with third parties</li>
+                        </ul>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        This access is only used for email analysis and security purposes.
+                      </p>
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="flex space-x-3 pt-4">
+                    <Button onClick={connectGmail} className="flex-1">
+                      <Shield className="h-4 w-4 mr-2" />
+                      Sync Gmail
+                    </Button>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="flex-1">
+                        Cancel
+                      </Button>
+                    </DialogTrigger>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </CardContent>
+          </Card>
         )}
 
         {/* Email Submission Form */}
