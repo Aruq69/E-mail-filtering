@@ -215,7 +215,7 @@ const Index = () => {
             </div>
             <div>
               <h1 className="text-4xl font-bold cyber-text-glow bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                CYBER MAIL DEFENSE
+                MAIL GUARD
               </h1>
               <p className="text-muted-foreground">
                 Advanced Email Security & Threat Analysis System

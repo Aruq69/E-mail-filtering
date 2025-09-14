@@ -82,8 +82,8 @@ const Auth = () => {
           </CardTitle>
           <CardDescription>
             {isSignUp 
-              ? "Join the Cyber Mail Defense System"
-              : "Access your Cyber Mail Defense System"
+              ? "Join the Mail Guard Security System"
+              : "Access your Mail Guard Security System"
             }
           </CardDescription>
         </CardHeader>

@@ -130,7 +130,7 @@ const ChatAssistant = ({ selectedEmail }: ChatAssistantProps) => {
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <Bot className="h-5 w-5 text-primary cyber-text-glow" />
-          <span className="cyber-text-glow">CYBER SECURITY ASSISTANT</span>
+          <span className="cyber-text-glow">MAIL GUARD ASSISTANT</span>
         </CardTitle>
         <CardDescription>
           Ask me about email classifications, spam indicators, and security best practices
