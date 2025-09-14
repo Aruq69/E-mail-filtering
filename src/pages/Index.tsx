@@ -147,9 +147,12 @@ const Index = () => {
 
   const connectGmail = async () => {
     try {
+      console.log('Starting Gmail connection...');
       const { data, error } = await supabase.functions.invoke('gmail-auth', {
         body: { action: 'get_auth_url' },
       });
+
+      console.log('Gmail auth response:', { data, error });
 
       if (error) {
         console.error('Gmail auth error:', error);
@@ -162,7 +165,15 @@ const Index = () => {
       }
 
       if (data?.auth_url) {
+        console.log('Redirecting to:', data.auth_url);
         window.location.href = data.auth_url;
+      } else {
+        console.error('No auth URL in response:', data);
+        toast({
+          title: "Connection failed",
+          description: "No authorization URL received. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Gmail connection error:', error);
@@ -233,10 +244,12 @@ const Index = () => {
               <Mail className="h-4 w-4 mr-2" />
               Refresh
             </Button>
-            <Button onClick={handleUnsync} variant="outline" className="border-destructive/30 hover:border-destructive/50 hover:bg-destructive hover:text-destructive-foreground transition-all duration-300">
-              <Lock className="h-4 w-4 mr-2" />
-              Unsync
-            </Button>
+            {gmailConnected && (
+              <Button onClick={handleUnsync} variant="outline" className="border-destructive/30 hover:border-destructive/50 hover:bg-destructive hover:text-destructive-foreground transition-all duration-300">
+                <Lock className="h-4 w-4 mr-2" />
+                Unsync
+              </Button>
+            )}
           </div>
         </div>
 
