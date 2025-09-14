@@ -91,13 +91,24 @@ const Index = () => {
     setLoading(true);
     try {
       // First check if we have Gmail tokens
-      const { data: tokenCheck } = await supabase
+      const { data: tokenCheck, error: tokenError } = await supabase
         .from('gmail_tokens')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
-      console.log('Gmail token check:', tokenCheck);
+      console.log('Gmail token check:', tokenCheck, 'Error:', tokenError);
+      
+      if (tokenError) {
+        console.error('Token check error:', tokenError);
+        toast({
+          title: "Database error",
+          description: "Failed to check Gmail connection.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
       
       if (!tokenCheck) {
         toast({
@@ -125,9 +136,19 @@ const Index = () => {
         return;
       }
 
+      if (data && data.error) {
+        console.error('Gmail fetch returned error:', data.error);
+        toast({
+          title: "Gmail fetch failed",
+          description: data.error,
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
         title: "Gmail sync complete",
-        description: `Analyzed ${data.total || 0} emails from Gmail`,
+        description: `Analyzed ${data?.total || 0} emails from Gmail`,
       });
 
       // Refresh the local email list
