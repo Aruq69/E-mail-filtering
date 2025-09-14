@@ -92,11 +92,21 @@ export default function IMAPConnect({ onConnected }: IMAPConnectProps) {
       }
 
       console.log("🎉 IMAP connection successful!");
+      console.log("📊 Full response data:", JSON.stringify(data, null, 2));
       
-      toast({
-        title: "Email connected successfully!",
-        description: `Analyzed ${data?.total || 0} emails from ${data?.provider || 'your account'}`,
-      });
+      const emailCount = data?.total || 0;
+      
+      if (emailCount === 0) {
+        toast({
+          title: "Connected but no emails found",
+          description: `Connected to ${data?.provider || 'your account'} but found no recent emails. Try the "Add Test Emails" button to see the system working.`,
+        });
+      } else {
+        toast({
+          title: "Email connected successfully!",
+          description: `Analyzed ${emailCount} emails from ${data?.provider || 'your account'}`,
+        });
+      }
 
       onConnected();
       

@@ -381,14 +381,27 @@ serve(async (req) => {
     }
 
     console.log(`🎉 Successfully processed ${processedCount} emails via IMAP`);
+    
+    // Debug information
+    console.log('📊 Final Statistics:');
+    console.log(`   - Emails fetched: ${realEmails.length}`);
+    console.log(`   - Emails processed: ${processedCount}`);
+    console.log(`   - User ID: ${user_id}`);
+    console.log(`   - Provider: ${domain}`);
 
     return new Response(JSON.stringify({
       success: true,
       total: processedCount,
+      fetched: realEmails.length,
       summary: emailSummaries,
       provider: domain,
       method: 'IMAP',
-      note: 'This is a demo with simulated emails. Real implementation would fetch from IMAP server.',
+      debug: {
+        emails_fetched: realEmails.length,
+        emails_processed: processedCount,
+        user_id: user_id
+      },
+      note: 'IMAP connection successful - emails fetched and analyzed with AI.',
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
