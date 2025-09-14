@@ -41,7 +41,7 @@ const IMAP_CONFIGS = {
   },
 };
 
-// Real IMAP email fetcher using native Deno capabilities
+// Real IMAP email fetcher using TCP connection
 async function fetchRealEmails(email: string, password: string, imapConfig: any): Promise<any[]> {
   console.log('🔍 Connecting to real IMAP server...');
   
@@ -59,61 +59,119 @@ async function fetchRealEmails(email: string, password: string, imapConfig: any)
     throw new Error(`Unsupported email provider: ${domain}`);
   }
 
-  // For now, return realistic demo emails that will actually be processed
-  // This simulates a real IMAP connection with actual email content
-  console.log('✅ Simulating IMAP connection with realistic emails');
+  console.log(`📧 Connecting to ${imapConfig.host}:${imapConfig.port}`);
   
-  const currentTime = Date.now();
-  const demoEmails = [
-    {
-      id: `imap_${domain}_${currentTime}_1`,
-      subject: `🚨 Urgent: Verify your ${domain} account immediately`,
-      from: `security@fake-${domain.replace('.', '-')}.com`,
-      to: email,
-      date: new Date(currentTime - 2 * 60 * 60 * 1000).toISOString(),
-      body: `URGENT: Your ${domain} account has been compromised! Click this link immediately to secure your account: http://fake-security-link.com/verify?token=abc123. You have 24 hours before your account is permanently suspended.`,
-      uid: `${currentTime}_1`
-    },
-    {
-      id: `imap_${domain}_${currentTime}_2`,
-      subject: 'Weekly Team Meeting Notes',
-      from: 'manager@yourcompany.com',
-      to: email,
-      date: new Date(currentTime - 4 * 60 * 60 * 1000).toISOString(),
-      body: 'Hi team, here are the notes from our weekly meeting: 1) Project Alpha is on schedule, 2) Budget review next week, 3) Client presentation on Friday. Please review and let me know if you have any questions.',
-      uid: `${currentTime}_2`
-    },
-    {
-      id: `imap_${domain}_${currentTime}_3`,
-      subject: 'CONGRATULATIONS! You Won $1,000,000!!!',
-      from: 'winner@lottery-scam.org',
-      to: email,
-      date: new Date(currentTime - 1 * 60 * 60 * 1000).toISOString(),
-      body: 'CONGRATULATIONS!!! You are our LUCKY WINNER of $1,000,000 in the International Email Lottery! To claim your prize, please send us: 1) Your full name, 2) Address, 3) Phone number, 4) Social Security Number, 5) Bank account details. ACT NOW!',
-      uid: `${currentTime}_3`
-    },
-    {
-      id: `imap_${domain}_${currentTime}_4`,
-      subject: 'Your invoice from Amazon',
-      from: 'invoices@amazon-security.fake',
-      to: email,
-      date: new Date(currentTime - 30 * 60 * 1000).toISOString(),
-      body: 'Dear customer, your recent purchase of $599.99 for iPhone 15 Pro has been processed. If you did not make this purchase, please click here immediately: http://fake-amazon.com/cancel-order. Your account will be charged within 24 hours.',
-      uid: `${currentTime}_4`
-    },
-    {
-      id: `imap_${domain}_${currentTime}_5`,
-      subject: 'Monthly Newsletter - Tech Updates',
-      from: 'newsletter@techcompany.com',
-      to: email,
-      date: new Date(currentTime - 15 * 60 * 1000).toISOString(),
-      body: 'Dear subscriber, this month\'s tech updates include: New AI developments, cybersecurity best practices, and upcoming webinars. Our team has been working on innovative solutions to help protect your digital assets.',
-      uid: `${currentTime}_5`
-    }
-  ];
+  try {
+    // Establish TCP connection to IMAP server
+    const conn = await Deno.connect({
+      hostname: imapConfig.host,
+      port: imapConfig.port,
+    });
 
-  console.log(`📧 Generated ${demoEmails.length} realistic demo emails for analysis`);
-  return demoEmails;
+    // Helper function to send command and read response
+    async function sendCommand(command: string): Promise<string> {
+      const encoder = new TextEncoder();
+      const decoder = new TextDecoder();
+      
+      console.log(`>>> ${command}`);
+      await conn.write(encoder.encode(command + '\r\n'));
+      
+      const buffer = new Uint8Array(4096);
+      const bytesRead = await conn.read(buffer);
+      const response = decoder.decode(buffer.subarray(0, bytesRead || 0));
+      console.log(`<<< ${response.trim()}`);
+      
+      return response;
+    }
+
+    // IMAP authentication flow
+    console.log('🔐 Starting IMAP authentication...');
+    
+    // 1. Read server greeting
+    let response = await sendCommand('');
+    
+    // 2. Login
+    response = await sendCommand(`A001 LOGIN "${email}" "${password}"`);
+    if (!response.includes('A001 OK')) {
+      throw new Error('Authentication failed - please check your credentials');
+    }
+    
+    // 3. Select INBOX
+    response = await sendCommand('A002 SELECT INBOX');
+    if (!response.includes('A002 OK')) {
+      throw new Error('Failed to select INBOX');
+    }
+    
+    // 4. Search for recent emails (last 10)
+    response = await sendCommand('A003 SEARCH RECENT');
+    const searchMatch = response.match(/SEARCH (.+)/);
+    const messageIds = searchMatch ? searchMatch[1].trim().split(' ').filter(id => id && id !== 'A003') : [];
+    
+    console.log(`📧 Found ${messageIds.length} recent emails`);
+    
+    const emails = [];
+    
+    // 5. Fetch details for each message (limit to 5 most recent)
+    for (const msgId of messageIds.slice(-5)) {
+      try {
+        // Fetch headers and body
+        const headerResponse = await sendCommand(`A00${msgId} FETCH ${msgId} (ENVELOPE BODY[TEXT])`);
+        
+        // Parse email data (simplified)
+        const subjectMatch = headerResponse.match(/"([^"]*)".*?"([^"]*)".*?"([^"]*)"/);
+        const bodyMatch = headerResponse.match(/BODY\[TEXT\]\s*"([^"]*)"/) || 
+                         headerResponse.match(/BODY\[TEXT\]\s*\{[0-9]+\}\s*([^A-Z]+)/);
+        
+        if (subjectMatch) {
+          emails.push({
+            id: `real_${msgId}_${Date.now()}`,
+            subject: subjectMatch[1] || 'No Subject',
+            from: subjectMatch[2] || 'unknown@unknown.com',
+            to: email,
+            date: new Date().toISOString(),
+            body: bodyMatch ? bodyMatch[1] : 'Email body could not be retrieved',
+            uid: msgId
+          });
+        }
+      } catch (emailError) {
+        console.error(`Failed to fetch email ${msgId}:`, emailError);
+      }
+    }
+    
+    // 6. Logout
+    await sendCommand('A999 LOGOUT');
+    conn.close();
+    
+    console.log(`✅ Successfully fetched ${emails.length} real emails from ${domain}`);
+    return emails;
+    
+  } catch (error) {
+    console.error('❌ IMAP connection error:', error);
+    
+    // Fallback to demo emails if real connection fails, but with clear indication
+    console.log('⚠️ Falling back to demo emails due to connection issues');
+    const currentTime = Date.now();
+    return [
+      {
+        id: `demo_fallback_${currentTime}_1`,
+        subject: '⚠️ DEMO: Account Security Alert',
+        from: 'security@example.com',
+        to: email,
+        date: new Date(currentTime - 1 * 60 * 60 * 1000).toISOString(),
+        body: 'DEMO EMAIL: This is a sample phishing email to demonstrate threat detection. Click here to verify your account: http://fake-link.com',
+        uid: `demo_${currentTime}_1`
+      },
+      {
+        id: `demo_fallback_${currentTime}_2`,
+        subject: '⚠️ DEMO: Team Meeting Notes',
+        from: 'manager@company.com',
+        to: email,
+        date: new Date(currentTime - 2 * 60 * 60 * 1000).toISOString(),
+        body: 'DEMO EMAIL: Weekly meeting notes - Project updates, budget review, and upcoming deadlines.',
+        uid: `demo_${currentTime}_2`
+      }
+    ];
+  }
 }
 
 serve(async (req) => {
