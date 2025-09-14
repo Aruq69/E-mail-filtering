@@ -462,7 +462,7 @@ const Index = () => {
                           return (
                             <div 
                               key={email.id} 
-                              className={`${threatClass} p-3 hover:scale-[1.01] transition-all duration-200 cursor-pointer border border-border/20 bg-card/50 backdrop-blur-sm rounded-lg hover-card ${
+                              className={`${threatClass} p-4 hover:scale-[1.01] transition-all duration-200 cursor-pointer border border-border/20 bg-card/50 backdrop-blur-sm rounded-lg hover-card ${
                                 selectedEmail?.id === email.id ? 'ring-2 ring-primary' : ''
                               }`}
                               onClick={() => {
@@ -471,40 +471,40 @@ const Index = () => {
                               }}
                             >
                               <div className="flex items-center justify-between">
-                                <div className="flex-1 space-y-2">
-                                  <div className="flex items-center space-x-2">
+                                <div className="flex-1 space-y-2.5">
+                                  <div className="flex items-center space-x-3">
                                     {getThreatIcon(email.threat_level)}
-                                    <span className="font-medium text-foreground text-sm">{email.subject}</span>
+                                    <span className="font-semibold text-foreground text-base">{email.subject}</span>
                                     {email.threat_level && (
                                       <Badge 
                                         variant={getThreatBadgeVariant(email.threat_level)}
-                                        className="text-xs px-2 py-0.5"
+                                        className="text-xs px-2.5 py-1"
                                       >
                                         {email.threat_level.toUpperCase()}
                                       </Badge>
                                     )}
                                     {email.classification && (
-                                      <Badge variant="outline" className="border-primary/30 text-primary text-xs px-2 py-0.5">
+                                      <Badge variant="outline" className="border-primary/30 text-primary text-xs px-2.5 py-1">
                                         {email.classification}
                                       </Badge>
                                     )}
                                   </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    <span className="text-primary">From:</span> {email.sender} • 
-                                    <span className="text-primary ml-2">Date:</span> {new Date(email.received_date).toLocaleDateString()}
+                                  <div className="text-sm text-muted-foreground">
+                                    <span className="text-primary font-medium">From:</span> {email.sender} • 
+                                    <span className="text-primary font-medium ml-2">Date:</span> {new Date(email.received_date).toLocaleDateString()}
                                   </div>
                                   {email.keywords && email.keywords.length > 0 && (
-                                    <div className="flex flex-wrap gap-1">
+                                    <div className="flex flex-wrap gap-1.5">
                                       {email.keywords.slice(0, 3).map((keyword, index) => (
                                         <span
                                           key={index}
-                                          className="inline-block bg-primary/20 text-primary px-1.5 py-0.5 text-xs rounded border border-primary/30"
+                                          className="inline-block bg-primary/20 text-primary px-2 py-1 text-xs rounded border border-primary/30"
                                         >
                                           {keyword}
                                         </span>
                                       ))}
                                       {email.keywords.length > 3 && (
-                                        <span className="inline-block bg-secondary/20 text-secondary px-1.5 py-0.5 text-xs rounded border border-secondary/30">
+                                        <span className="inline-block bg-secondary/20 text-secondary px-2 py-1 text-xs rounded border border-secondary/30">
                                           +{email.keywords.length - 3} more
                                         </span>
                                       )}
@@ -512,11 +512,11 @@ const Index = () => {
                                   )}
                                 </div>
                                 {email.confidence && (
-                                  <div className="text-right ml-3">
-                                    <div className="text-lg font-bold text-primary">
+                                  <div className="text-right ml-4">
+                                    <div className="text-xl font-bold text-primary">
                                       {Math.round(email.confidence * 100)}%
                                     </div>
-                                    <div className="text-xs text-muted-foreground">CONFIDENCE</div>
+                                    <div className="text-xs text-muted-foreground font-medium">CONFIDENCE</div>
                                   </div>
                                 )}
                               </div>
