@@ -28,6 +28,13 @@ export default function NylasConnect({ onConnected }: NylasConnectProps) {
     }
 
     setIsConnecting(true);
+    
+    // Show immediate feedback
+    toast({
+      title: "Connecting...",
+      description: "Initializing email connection...",
+    });
+
     try {
       console.log("🚀 Starting Nylas email connection for user:", user.id);
       console.log("🔗 Calling nylas-auth function...");
@@ -40,21 +47,44 @@ export default function NylasConnect({ onConnected }: NylasConnectProps) {
 
       if (error) {
         console.error("❌ Supabase function call failed:", error);
+        toast({
+          title: "Function Error",
+          description: `Supabase function error: ${error.message}`,
+          variant: "destructive",
+        });
         throw new Error(error.message);
       }
 
       if (data?.error) {
         console.error("❌ Nylas auth function returned error:", data.error);
+        toast({
+          title: "Auth Error",
+          description: `Nylas auth error: ${data.error}`,
+          variant: "destructive",
+        });
         throw new Error(data.error);
       }
 
       if (!data?.auth_url) {
         console.error("❌ No auth URL received from function");
+        toast({
+          title: "Missing URL",
+          description: "No authorization URL received from Nylas",
+          variant: "destructive",
+        });
         throw new Error("No authorization URL received");
       }
 
       console.log("✅ Got auth URL, redirecting to:", data.auth_url);
-      window.location.href = data.auth_url;
+      toast({
+        title: "Redirecting...",
+        description: "Taking you to email provider authorization",
+      });
+      
+      // Add a small delay to show the toast
+      setTimeout(() => {
+        window.location.href = data.auth_url;
+      }, 1000);
       
     } catch (error) {
       console.error("🚨 Email connection error:", error);
