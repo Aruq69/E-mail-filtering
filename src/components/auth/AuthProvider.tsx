@@ -40,7 +40,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      setLoading(false);
+      // Only set loading to false if onAuthStateChange hasn't fired yet
+      if (loading) {
+        setLoading(false);
+      }
     });
 
     return () => subscription.unsubscribe();
