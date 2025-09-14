@@ -367,7 +367,7 @@ const Index = () => {
                 Unsync
               </Button>
             )}
-            <Button onClick={signOut} variant="outline" className="border-muted-foreground/30 hover:border-muted-foreground/50 hover-button">
+            <Button onClick={signOut} variant="outline" className="border-muted-foreground/30 hover:border-destructive hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 hover-button">
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
             </Button>
