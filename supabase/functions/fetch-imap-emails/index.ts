@@ -281,13 +281,12 @@ async function fetchRealEmails(email: string, password: string, imapConfig: any)
       const sampleEmails = [];
       const currentTime = Date.now();
       
-      // Generate 100 diverse, realistic emails
-      const subjects = [
+      // Generate 100 diverse, realistic emails with randomized threat levels
+      const safeSubjects = [
         'Your order has shipped',
         'Weekly newsletter from TechCorp',
         'Meeting reminder: Q4 Planning',
-        'Password reset requested',
-        'Your subscription is expiring',
+        'Your subscription renewal',
         'Invoice #12345 is ready',
         'New message from LinkedIn',
         'Flight confirmation for tomorrow',
@@ -298,7 +297,6 @@ async function fetchRealEmails(email: string, password: string, imapConfig: any)
         'Survey: How did we do?',
         'Monthly report attached',
         'Event reminder: Company picnic',
-        'Security alert for your account',
         'Your purchase receipt',
         'Newsletter: Industry trends',
         'Meeting notes from yesterday',
@@ -314,15 +312,15 @@ async function fetchRealEmails(email: string, password: string, imapConfig: any)
         'Course completion certificate',
         'Budget approval needed',
         'Performance review scheduled',
-        'Travel itinerary attached',
-        'Your booking confirmation',
-        'New comment on your post',
-        'Monthly summary report',
-        'Software license renewal',
+        'Travel itinerary attached'
+      ];
+
+      const mediumSubjects = [
+        'Password reset requested',
+        'Security alert for your account',
         'Project deadline approaching',
         'Your download is ready',
         'Account verification required',
-        'Special offer just for you',
         'Team building event invitation',
         'Your profile was viewed',
         'Data backup completed',
@@ -332,14 +330,41 @@ async function fetchRealEmails(email: string, password: string, imapConfig: any)
         'Conference registration open',
         'Payment processed successfully',
         'Your survey results',
-        'Network maintenance notice'
+        'Network maintenance notice',
+        'Login attempt from new device',
+        'Unusual account activity detected',
+        'Verify your email address',
+        'Action required: Update payment method',
+        'Temporary account limitation'
+      ];
+
+      const highSubjects = [
+        'URGENT: Suspicious activity detected',
+        'Immediate action required - Account compromised',
+        'Your account will be suspended in 24 hours',
+        'Verify your identity immediately',
+        'Unauthorized payment attempt blocked',
+        'Critical security breach - Reset password now',
+        'Your payment has been declined - Update now',
+        'Account locked due to suspicious activity',
+        'Immediate verification required',
+        'Security alert: Multiple failed login attempts',
+        'FINAL NOTICE: Account termination',
+        'Emergency: Unusual transactions detected',
+        'Click here to prevent account closure',
+        'Congratulations! You\'ve won $1000',
+        'Limited time offer - Act now!',
+        'Your refund is ready - Claim now',
+        'IRS Notice: Tax payment required',
+        'Invoice overdue - Legal action pending',
+        'Bank notice: Card will be deactivated',
+        'Lottery winnings awaiting collection'
       ];
       
-      const senders = [
+      const safeSenders = [
         'notifications@amazon.com',
         'newsletter@techcrunch.com',
         'calendar@company.com',
-        'security@paypal.com',
         'billing@netflix.com',
         'invoices@stripe.com',
         'notifications@linkedin.com',
@@ -351,49 +376,55 @@ async function fetchRealEmails(email: string, password: string, imapConfig: any)
         'feedback@surveymonkey.com',
         'reports@salesforce.com',
         'events@eventbrite.com',
-        'alerts@google.com',
         'receipts@apple.com',
         'news@bloomberg.com',
         'documents@dropbox.com',
         'sharing@googledrive.com',
         'updates@github.com',
-        'rewards@starbucks.com',
+        'rewards@starbucks.com'
+      ];
+
+      const mediumSenders = [
+        'security@paypal.com',
+        'alerts@google.com',
         'appointments@healthcare.com',
-        'memories@photos.google.com',
         'maintenance@hosting.com',
         'features@zoom.com',
         'taxes@turbotax.com',
         'weather@weather.com',
-        'certificates@coursera.com',
-        'finance@quickbooks.com',
-        'hr@company.com',
-        'travel@expedia.com',
-        'bookings@airbnb.com',
-        'social@facebook.com',
-        'analytics@googleanalytics.com',
-        'licensing@adobe.com',
-        'projects@asana.com',
-        'downloads@spotify.com',
         'verification@instagram.com',
-        'offers@retailer.com',
         'team@company.com',
         'recruiting@linkedin.com',
         'backups@cloudservice.com',
         'onboarding@company.com',
         'goals@okr.com',
-        'presentations@canva.com',
-        'conference@eventorg.com',
-        'payments@square.com',
-        'results@typeform.com',
-        'network@isp.com'
+        'network@isp.com',
+        'support@techservice.com'
+      ];
+
+      const highSenders = [
+        'urgent@suspicious-bank.com',
+        'noreply@fake-paypal.com',
+        'security@phishing-site.net',
+        'admin@untrusted-source.com',
+        'alert@malicious-domain.org',
+        'notice@scam-website.biz',
+        'system@fraudulent-service.info',
+        'warning@suspicious-platform.co',
+        'verify@untrusted-bank.net',
+        'update@phishing-attempt.com',
+        'critical@fake-security.org',
+        'emergency@scammer-email.biz',
+        'final@fraudulent-notice.net',
+        'winner@lottery-scam.com',
+        'refund@fake-service.org'
       ];
       
-      const bodyTemplates = [
+      const safeBodyTemplates = [
         'Your recent order has been processed and is on its way. Track your package using the link provided.',
         'Thank you for subscribing to our newsletter. Stay updated with the latest industry news and insights.',
         'This is a friendly reminder about your upcoming meeting scheduled for tomorrow at 2 PM.',
-        'A password reset was requested for your account. If this was not you, please contact support.',
-        'Your subscription will expire in 7 days. Renew now to continue enjoying our services.',
+        'Your subscription will be renewed automatically. You can manage your subscription in your account settings.',
         'Your monthly invoice is now available for download in your account dashboard.',
         'You have a new connection request and 3 messages waiting for your review.',
         'Your flight departure is confirmed for tomorrow morning. Check-in is now available online.',
@@ -404,57 +435,93 @@ async function fetchRealEmails(email: string, password: string, imapConfig: any)
         'We value your opinion. Please take a moment to share your experience with our service.',
         'Please find attached the monthly performance report for your review and analysis.',
         'You are invited to join us for our annual company picnic next Friday at the park.',
-        'We detected unusual activity on your account. Please verify your recent transactions.',
         'Thank you for your purchase. Your receipt and warranty information are attached.',
         'Stay ahead of the curve with our latest industry analysis and market trends.',
         'Here are the key takeaways and action items from our meeting yesterday.',
         'A new document has been shared with you. Click the link to view and collaborate.',
         'Important changes to our terms of service will take effect next month.',
-        'You have earned 250 reward points this month. Check your balance and redeem rewards.',
-        'Your appointment has been confirmed for next Tuesday at 10:30 AM.',
-        'Take a trip down memory lane with your photo highlights from last month.',
-        'Scheduled maintenance will occur this weekend. Services may be briefly unavailable.',
-        'Discover our exciting new features designed to improve your productivity.',
-        'Your tax documents for this year are now available for download.',
-        'Severe weather alert: Heavy rain expected in your area tonight.',
-        'Congratulations! You have successfully completed the certification course.',
-        'The proposed budget requires your approval before we can proceed with implementation.',
-        'Your annual performance review has been scheduled for next week.',
-        'Your complete travel itinerary with flight and hotel details is attached.',
-        'Your reservation has been confirmed. We look forward to hosting you.',
-        'Your recent post received several new comments and engagement.',
-        'Here is your comprehensive monthly activity summary and key metrics.',
-        'Your software license will expire soon. Renew now to avoid service interruption.',
-        'The project deadline is approaching quickly. Please review the current status.',
-        'Your requested file download has been prepared and is ready for you.',
-        'Please verify your account to continue using all features of our platform.',
-        'Exclusive offer: Save 20% on your next purchase with this limited-time deal.',
-        'Join us for our upcoming team building event and strengthen workplace relationships.',
-        'Your professional profile was viewed by several potential connections today.',
-        'Your scheduled data backup has been completed successfully without any issues.',
-        'Welcome to the team! Your orientation session is scheduled for Monday morning.',
-        'Time to review and update your quarterly goals and objectives.',
-        'We have compiled feedback on your recent presentation for your review.',
-        'Early bird registration is now open for our annual industry conference.',
-        'Your payment has been processed successfully. Thank you for your business.',
-        'The survey results are in! See how your responses compare to others.',
-        'Planned network maintenance will affect services briefly this evening.'
+        'You have earned 250 reward points this month. Check your balance and redeem rewards.'
       ];
+
+      const mediumBodyTemplates = [
+        'A password reset was requested for your account. If this was not you, please contact support immediately.',
+        'We detected unusual activity on your account. Please verify your recent transactions and update your security settings.',
+        'Please verify your account to continue using all features of our platform within the next 48 hours.',
+        'Your account has been temporarily limited due to security concerns. Please complete verification.',
+        'We noticed a login attempt from a new device. If this was you, no action needed. Otherwise, please secure your account.',
+        'Your payment method needs to be updated to continue your subscription. Please update within 7 days.',
+        'Multiple failed login attempts detected. Consider updating your password for better security.',
+        'Your session has expired due to inactivity. Please log in again to continue.',
+        'New security features have been added to your account. Please review and enable them.',
+        'Your account information needs verification. Please confirm your details within 3 days.',
+        'Unusual download activity detected. Please review your recent file downloads.',
+        'Your backup process encountered some issues. Please check your backup settings.',
+        'Network maintenance may affect your service temporarily. We apologize for any inconvenience.',
+        'Your profile security score has decreased. Please review your privacy settings.',
+        'A new device has been added to your account. Please verify this was authorized by you.'
+      ];
+
+      const highBodyTemplates = [
+        'URGENT: Your account has been compromised. Click here immediately to secure it before permanent damage occurs.',
+        'WARNING: Suspicious activity detected on your account. You have 24 hours to verify or face suspension.',
+        'CRITICAL: Multiple unauthorized transactions attempted. Click this link now to prevent financial loss.',
+        'ALERT: Your account will be permanently deleted in 12 hours unless you verify immediately.',
+        'IMMEDIATE ACTION REQUIRED: Hackers are trying to access your account. Secure it now!',
+        'Your payment has been declined 3 times. Update your information now or lose access forever.',
+        'SECURITY BREACH: Your personal information may be compromised. Act now to protect yourself.',
+        'FINAL NOTICE: Your account termination is imminent. Click here to prevent closure.',
+        'Congratulations! You have been selected to receive $5000. Claim your prize now before it expires.',
+        'URGENT REFUND: You are entitled to a $2500 refund. Click here to claim within 24 hours.',
+        'IRS TAX NOTICE: You owe $3000 in back taxes. Pay immediately to avoid legal action.',
+        'Your lottery ticket has won $50000! Click here to claim your winnings immediately.',
+        'BANK ALERT: Your card will be deactivated in 6 hours. Verify now to prevent this.',
+        'EMERGENCY: Your account has been frozen due to suspicious activity. Unfreeze now.',
+        'LIMITED TIME: Exclusive offer expires in 1 hour. Act now or miss out forever!'
+      ];
+
+      // Define threat distributions (approximate percentages)
+      const threatDistribution = [
+        { level: 'safe', count: 60, classification: 'legitimate' },
+        { level: 'medium', count: 25, classification: 'suspicious' },
+        { level: 'high', count: 15, classification: 'phishing' }
+      ];
+
+      let emailIndex = 0;
       
-      for (let i = 0; i < 100; i++) {
-        const subjectIndex = i % subjects.length;
-        const senderIndex = i % senders.length;
-        const bodyIndex = i % bodyTemplates.length;
+      for (const threat of threatDistribution) {
+        const subjects = threat.level === 'safe' ? safeSubjects : 
+                        threat.level === 'medium' ? mediumSubjects : highSubjects;
+        const senders = threat.level === 'safe' ? safeSenders : 
+                       threat.level === 'medium' ? mediumSenders : highSenders;
+        const bodyTemplates = threat.level === 'safe' ? safeBodyTemplates : 
+                             threat.level === 'medium' ? mediumBodyTemplates : highBodyTemplates;
         
-        sampleEmails.push({
-          id: `sample_${currentTime + i}`,
-          subject: subjects[subjectIndex],
-          from: senders[senderIndex],
-          to: email,
-          date: new Date(currentTime - (i * 3600000)).toISOString(), // Each email 1 hour apart
-          body: bodyTemplates[bodyIndex],
-          uid: `sample_${i + 1}`
-        });
+        for (let i = 0; i < threat.count; i++) {
+          const subjectIndex = i % subjects.length;
+          const senderIndex = i % senders.length;
+          const bodyIndex = i % bodyTemplates.length;
+          
+          sampleEmails.push({
+            id: `sample_${currentTime + emailIndex}`,
+            subject: subjects[subjectIndex],
+            from: senders[senderIndex],
+            to: email,
+            date: new Date(currentTime - (emailIndex * 3600000)).toISOString(),
+            body: bodyTemplates[bodyIndex],
+            uid: `sample_${emailIndex + 1}`,
+            // Add metadata for classification
+            threat_level: threat.level,
+            classification: threat.classification
+          });
+          
+          emailIndex++;
+        }
+      }
+
+      // Shuffle the emails to randomize the order
+      for (let i = sampleEmails.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [sampleEmails[i], sampleEmails[j]] = [sampleEmails[j], sampleEmails[i]];
       }
       
       return sampleEmails;
