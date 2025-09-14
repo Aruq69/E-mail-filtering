@@ -57,7 +57,7 @@ const GmailConnect = ({ onConnected }: GmailConnectProps) => {
   };
 
   return (
-    <Card>
+    <Card className="border-border/20 bg-card/50 backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <Shield className="h-5 w-5 text-primary" />

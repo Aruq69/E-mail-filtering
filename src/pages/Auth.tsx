@@ -43,8 +43,8 @@ const Auth = () => {
           }
         } else {
           toast({
-            title: "Account created!",
-            description: "Please check your email to verify your account.",
+            title: "Defense Systems Activated!",
+            description: "Please verify your security clearance via email.",
           });
         }
       } else {
@@ -57,8 +57,8 @@ const Auth = () => {
           }
         } else {
           toast({
-            title: "Welcome back!",
-            description: "You have been successfully signed in.",
+            title: "Access Granted!",
+            description: "Welcome to the security command center.",
           });
         }
       }
@@ -105,12 +105,12 @@ const Auth = () => {
         <Card className="border-border/20 bg-card/50 backdrop-blur-sm">
           <CardHeader className="text-center">
             <CardTitle className="text-xl text-foreground">
-              {isSignUp ? "Create Account" : "Welcome Back"}
+              {isSignUp ? "Initialize Defense Protocol" : "Secure Access Portal"}
             </CardTitle>
             <CardDescription className="text-muted-foreground">
               {isSignUp 
-                ? "Sign up to start protecting your emails" 
-                : "Sign in to access your dashboard"
+                ? "Deploy advanced threat detection systems" 
+                : "Authenticate to access command center"
               }
             </CardDescription>
           </CardHeader>
@@ -150,7 +150,7 @@ const Auth = () => {
                 disabled={loading}
               >
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                {isSignUp ? "Create Account" : "Sign In"}
+                {isSignUp ? "Deploy Defense Systems" : "Access Command Center"}
               </Button>
             </form>
             
@@ -189,8 +189,8 @@ const Auth = () => {
                 className="text-primary hover:text-primary/80 text-sm"
               >
                 {isSignUp 
-                  ? "Already have an account? Sign in" 
-                  : "Don't have an account? Sign up"
+                  ? "Already deployed? Access portal" 
+                  : "Need deployment? Initialize systems"
                 }
               </button>
             </div>

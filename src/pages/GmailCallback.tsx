@@ -102,7 +102,7 @@ const GmailCallback = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="max-w-md w-full mx-auto p-6">
-        <div className="p-8 text-center space-y-6 max-w-md border rounded-lg bg-card">
+        <div className="p-8 text-center space-y-6 max-w-md border border-border/20 bg-card/50 backdrop-blur-sm rounded-lg">
           <div className="relative">
             <Shield className="h-16 w-16 text-primary mx-auto" />
             <div className="absolute inset-0 h-16 w-16 border border-primary/30 rounded-full animate-ping mx-auto" />

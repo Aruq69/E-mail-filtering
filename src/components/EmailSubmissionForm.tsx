@@ -97,7 +97,7 @@ const EmailSubmissionForm = ({ onEmailSubmitted }: EmailSubmissionFormProps) => 
   };
 
   return (
-    <Card>
+    <Card className="border-border/20 bg-card/50 backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <Shield className="h-5 w-5 text-primary" />
@@ -106,7 +106,7 @@ const EmailSubmissionForm = ({ onEmailSubmitted }: EmailSubmissionFormProps) => 
         <CardDescription>
           Enter email details to store and analyze for spam and security threats
         </CardDescription>
-        <Alert>
+        <Alert className="border-border/20 bg-card/50 backdrop-blur-sm">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             AI analysis is temporarily simplified to avoid authentication issues. 

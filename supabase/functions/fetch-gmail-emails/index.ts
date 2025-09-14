@@ -35,34 +35,90 @@ serve(async (req) => {
     console.log('Looking for Gmail tokens for user:', user_id);
     const { data: tokenData, error: tokenError } = await supabase
       .from('gmail_tokens')
-      .select('access_token, refresh_token')
+      .select('access_token, refresh_token, expires_at')
       .eq('user_id', user_id)
-      .single();
+      .maybeSingle();
 
-    if (tokenError || !tokenData) {
-      console.error('Gmail token error:', tokenError);
-      console.log('Token data:', tokenData);
+    if (tokenError) {
+      console.error('Gmail token database error:', tokenError);
+      return new Response(
+        JSON.stringify({ error: 'Database error while fetching Gmail tokens' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!tokenData) {
+      console.error('No Gmail tokens found for user:', user_id);
       return new Response(
         JSON.stringify({ error: 'No Gmail access token found. Please connect your Gmail account.' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Found Gmail token for user, fetching emails...');
+    console.log('Found Gmail token for user, checking expiry...');
+    
+    // Check if token needs refresh
+    const now = new Date();
+    const expiresAt = new Date(tokenData.expires_at);
+    
+    let accessToken = tokenData.access_token;
+    
+    if (expiresAt <= now) {
+      console.log('Token expired, attempting to refresh...');
+      // Token has expired, try to refresh
+      const refreshResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: Deno.env.get('GOOGLE_CLIENT_ID')!,
+          client_secret: Deno.env.get('GOOGLE_CLIENT_SECRET')!,
+          refresh_token: tokenData.refresh_token,
+          grant_type: 'refresh_token',
+        }),
+      });
+
+      if (!refreshResponse.ok) {
+        console.error('Failed to refresh token:', await refreshResponse.text());
+        return new Response(
+          JSON.stringify({ error: 'Gmail token expired and refresh failed. Please reconnect your Gmail account.' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const refreshData = await refreshResponse.json();
+      accessToken = refreshData.access_token;
+      
+      // Update token in database
+      const newExpiresAt = new Date(Date.now() + (refreshData.expires_in * 1000));
+      await supabase
+        .from('gmail_tokens')
+        .update({ 
+          access_token: accessToken,
+          expires_at: newExpiresAt.toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user_id);
+    }
 
     // Fetch emails from Gmail API
+    console.log('Fetching emails from Gmail API...');
     const gmailResponse = await fetch(
       'https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=20&q=in:inbox',
       {
         headers: {
-          'Authorization': `Bearer ${tokenData.access_token}`,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
       }
     );
 
     if (!gmailResponse.ok) {
-      throw new Error(`Gmail API error: ${gmailResponse.status}`);
+      const errorText = await gmailResponse.text();
+      console.error(`Gmail API error: ${gmailResponse.status} - ${errorText}`);
+      return new Response(
+        JSON.stringify({ error: `Gmail API error: ${gmailResponse.status}. Please try reconnecting your Gmail account.` }),
+        { status: gmailResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const gmailData = await gmailResponse.json();
@@ -78,7 +134,7 @@ serve(async (req) => {
           `https://gmail.googleapis.com/gmail/v1/users/me/messages/${message.id}`,
           {
             headers: {
-              'Authorization': `Bearer ${tokenData.access_token}`,
+              'Authorization': `Bearer ${accessToken}`,
               'Content-Type': 'application/json',
             },
           }

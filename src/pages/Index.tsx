@@ -322,7 +322,7 @@ const Index = () => {
   }, {} as Record<string, number>);
 
   return (
-    <div className="min-h-screen bg-background">{" "}
+    <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-7xl space-y-6 p-6">
         {/* Cyber Header */}
         <div className="flex items-center justify-between">
@@ -376,7 +376,7 @@ const Index = () => {
 
         {/* Threat Level Dashboard */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
+          <Card className="border-border/20 bg-card/50 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">TOTAL EMAILS</CardTitle>
               <Mail className="h-4 w-4 text-primary" />
@@ -387,7 +387,7 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          <Card className="threat-high">
+          <Card className="threat-high border-border/20 bg-card/50 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">HIGH THREATS</CardTitle>
               <AlertTriangle className="h-4 w-4 text-destructive" />
@@ -398,7 +398,7 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          <Card className="threat-medium">
+          <Card className="threat-medium border-border/20 bg-card/50 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">MEDIUM THREATS</CardTitle>
               <Clock className="h-4 w-4 text-yellow-500" />
@@ -409,7 +409,7 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          <Card className="threat-low">
+          <Card className="threat-low border-border/20 bg-card/50 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">SAFE EMAILS</CardTitle>
               <CheckCircle className="h-4 w-4 text-accent" />
@@ -423,7 +423,7 @@ const Index = () => {
 
         {/* Gmail Connection */}
         {!gmailConnected && (
-          <Card>
+          <Card className="border-border/20 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Mail className="h-5 w-5 text-primary" />
@@ -463,7 +463,7 @@ const Index = () => {
           {/* Left Column - Email Analysis */}
           <div className="lg:col-span-2 space-y-6">
             {/* Search Interface */}
-            <Card>
+            <Card className="border-border/20 bg-card/50 backdrop-blur-sm">
               <CardContent className="pt-6">
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-primary" />
@@ -479,7 +479,7 @@ const Index = () => {
             </Card>
 
             {/* Threat Analysis Dashboard */}
-            <Card>
+            <Card className="border-border/20 bg-card/50 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Zap className="h-5 w-5 text-primary" />
@@ -513,7 +513,7 @@ const Index = () => {
                       return (
                         <div 
                           key={email.id} 
-                          className={`${threatClass} p-4 hover:scale-[1.02] transition-all duration-300 cursor-pointer border rounded-lg ${
+                          className={`${threatClass} p-4 hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-border/20 bg-card/50 backdrop-blur-sm rounded-lg ${
                             selectedEmail?.id === email.id ? 'ring-2 ring-primary' : ''
                           }`}
                           onClick={() => {
@@ -588,7 +588,7 @@ const Index = () => {
 
         {/* Email Details Dialog */}
         <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
-          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto border-border/20 bg-card/50 backdrop-blur-sm">
             <DialogHeader>
               <DialogTitle className="flex items-center space-x-3">
                 <Mail className="h-6 w-6 text-primary" />
@@ -607,7 +607,7 @@ const Index = () => {
             {selectedEmail && (
               <div className="space-y-6 mt-6">
                 {/* Security Status Banner */}
-                <div className={`p-4 border-2 rounded-lg ${
+                <div className={`p-4 border-2 border-border/20 bg-card/50 backdrop-blur-sm rounded-lg ${
                   selectedEmail.threat_level === 'high' ? 'border-destructive' :
                   selectedEmail.threat_level === 'medium' ? 'border-yellow-500' :
                   'border-accent'
@@ -630,7 +630,7 @@ const Index = () => {
                 {/* Email Details Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Email Info */}
-                  <Card>
+                  <Card className="border-border/20 bg-card/50 backdrop-blur-sm">
                     <CardHeader>
                       <CardTitle className="text-sm text-primary">📧 EMAIL DETAILS</CardTitle>
                     </CardHeader>
@@ -655,7 +655,7 @@ const Index = () => {
                   </Card>
 
                   {/* Analysis Results */}
-                  <Card>
+                  <Card className="border-border/20 bg-card/50 backdrop-blur-sm">
                     <CardHeader>
                       <CardTitle className="text-sm text-primary">🔍 ANALYSIS RESULTS</CardTitle>
                     </CardHeader>
@@ -691,7 +691,7 @@ const Index = () => {
 
                 {/* Keywords */}
                 {selectedEmail.keywords && selectedEmail.keywords.length > 0 && (
-                  <Card>
+                  <Card className="border-border/20 bg-card/50 backdrop-blur-sm">
                     <CardHeader>
                       <CardTitle className="text-sm text-primary">🔍 DETECTED KEYWORDS</CardTitle>
                     </CardHeader>
@@ -711,7 +711,7 @@ const Index = () => {
                 )}
 
                 {/* Email Content */}
-                <Card>
+                <Card className="border-border/20 bg-card/50 backdrop-blur-sm">
                   <CardHeader>
                     <CardTitle className="text-sm text-primary">📄 EMAIL CONTENT</CardTitle>
                   </CardHeader>
