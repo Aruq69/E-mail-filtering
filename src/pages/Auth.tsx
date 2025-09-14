@@ -60,7 +60,7 @@ const Auth = () => {
         }
 
         // Send OTP for email verification
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -75,11 +75,21 @@ const Auth = () => {
             setError(error.message);
           }
         } else {
-          setIsOtpMode(true);
-          toast({
-            title: "Verification Code Sent!",
-            description: "Please check your email for the verification code.",
-          });
+          // Check if email confirmation is required
+          if (data.user && !data.user.email_confirmed_at) {
+            setIsOtpMode(true);
+            toast({
+              title: "Account Created!",
+              description: "Check your email for the verification code. If you don't see it, check your spam folder or try signing in directly.",
+            });
+          } else {
+            // Email confirmation is disabled, user is automatically confirmed
+            toast({
+              title: "Account Created Successfully!",
+              description: "Welcome to Mail Guard! You can now sign in.",
+            });
+            setIsSignUp(false);
+          }
         }
       } else if (isSignUp && isOtpMode) {
         // Verify OTP
@@ -193,9 +203,28 @@ const Auth = () => {
                     className="bg-background/50 border-border/20 text-center text-lg tracking-widest"
                     maxLength={6}
                   />
-                  <p className="text-xs text-muted-foreground text-center">
-                    Code sent to {email}
-                  </p>
+                  <div className="text-xs text-muted-foreground text-center space-y-1">
+                    <p>Code sent to {email}</p>
+                    <p>Check your spam folder if you don't see the email</p>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const { error } = await supabase.auth.resend({
+                          type: 'signup',
+                          email: email
+                        });
+                        if (!error) {
+                          toast({
+                            title: "Code Resent!",
+                            description: "Check your email for the new verification code.",
+                          });
+                        }
+                      }}
+                      className="text-primary hover:text-primary/80 underline"
+                    >
+                      Resend code
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <>
@@ -312,17 +341,22 @@ const Auth = () => {
             
             <div className="mt-6 text-center">
               {isOtpMode ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsOtpMode(false);
-                    setOtp("");
-                    setError("");
-                  }}
-                  className="text-primary hover:text-primary/80 text-sm"
-                >
-                  ← Back to sign up
-                </button>
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOtpMode(false);
+                      setOtp("");
+                      setError("");
+                    }}
+                    className="text-primary hover:text-primary/80 text-sm"
+                  >
+                    ← Back to sign up
+                  </button>
+                  <p className="text-xs text-muted-foreground">
+                    Or try signing in directly if email confirmation is disabled
+                  </p>
+                </div>
               ) : (
                 <button
                   type="button"
