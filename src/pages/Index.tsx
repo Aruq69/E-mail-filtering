@@ -599,53 +599,74 @@ const Index = () => {
                           Security Status: {selectedEmail.threat_level?.toUpperCase() || 'UNKNOWN'}
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          Classification: {selectedEmail.classification || 'Unclassified'}
+                          Confidence: {Math.round((selectedEmail.confidence || 0) * 100)}%
                         </p>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-3xl font-bold cyber-text-glow">
-                        {selectedEmail.confidence ? Math.round(selectedEmail.confidence * 100) : 'N/A'}%
-                      </div>
-                      <div className="text-xs text-muted-foreground">CONFIDENCE</div>
                     </div>
                   </div>
                 </div>
 
-                {/* Email Information */}
-                <Card className="cyber-card">
-                  <CardHeader>
-                    <CardTitle className="text-sm text-primary">📧 EMAIL INFORMATION</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <label className="text-xs font-medium text-primary uppercase">Subject</label>
-                      <p className="text-foreground font-medium p-2 bg-muted/20 rounded border">
-                        {selectedEmail.subject}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-primary uppercase">Sender</label>
-                      <p className="text-foreground p-2 bg-muted/20 rounded border font-mono">
-                        {selectedEmail.sender}
-                      </p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                {/* Email Details Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Email Info */}
+                  <Card className="cyber-card">
+                    <CardHeader>
+                      <CardTitle className="text-sm text-primary">📧 EMAIL DETAILS</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
                       <div>
-                        <label className="text-xs font-medium text-primary uppercase">Date</label>
-                        <p className="text-foreground p-2 bg-muted/20 rounded border text-sm">
-                          {new Date(selectedEmail.received_date).toLocaleString()}
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">From</label>
+                        <p className="text-sm font-mono">{selectedEmail.sender}</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Subject</label>
+                        <p className="text-sm">{selectedEmail.subject}</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Received</label>
+                        <p className="text-sm">{new Date(selectedEmail.received_date).toLocaleDateString()}</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Message ID</label>
+                        <p className="text-xs font-mono text-muted-foreground break-all">{selectedEmail.message_id}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Analysis Results */}
+                  <Card className="cyber-card">
+                    <CardHeader>
+                      <CardTitle className="text-sm text-primary">🔍 ANALYSIS RESULTS</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Classification</label>
+                        <p className="text-sm font-semibold">
+                          {selectedEmail.classification || 'Not classified'}
                         </p>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-primary uppercase">Message ID</label>
-                        <p className="text-foreground p-2 bg-muted/20 rounded border text-xs font-mono">
-                          {selectedEmail.message_id}
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Threat Level</label>
+                        <div className="flex items-center space-x-2">
+                          <Badge variant={getThreatBadgeVariant(selectedEmail.threat_level)}>
+                            {selectedEmail.threat_level?.toUpperCase() || 'UNKNOWN'}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            ({Math.round((selectedEmail.confidence || 0) * 100)}% confidence)
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Risk Assessment</label>
+                        <p className="text-sm">
+                          {selectedEmail.threat_level === 'high' ? 'HIGH RISK - Immediate attention required' :
+                           selectedEmail.threat_level === 'medium' ? 'MEDIUM RISK - Review recommended' :
+                           'LOW RISK - Safe to proceed'}
                         </p>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </div>
 
                 {/* Keywords */}
                 {selectedEmail.keywords && selectedEmail.keywords.length > 0 && (
@@ -704,164 +725,6 @@ const Index = () => {
                     Close Viewer
                   </Button>
                 </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-      </div>
-    </div>
-  );
-};
-
-export default Index;
-                <DialogHeader>
-                  <DialogTitle className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="relative">
-                        <Mail className="h-6 w-6 text-primary cyber-text-glow" />
-                        <div className="absolute inset-0 h-6 w-6 border border-primary/30 rounded animate-pulse" />
-                      </div>
-                      <span className="text-xl cyber-text-glow bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                        EMAIL ANALYSIS REPORT
-                      </span>
-                      {selectedEmail?.threat_level && (
-                        <Badge variant={getThreatBadgeVariant(selectedEmail.threat_level)} className="cyber-text-glow">
-                          {selectedEmail.threat_level.toUpperCase()} THREAT
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      ID: {selectedEmail?.id.substring(0, 8)}...
-                    </div>
-                  </DialogTitle>
-                  <DialogDescription className="text-muted-foreground">
-                    Complete email content analysis and security assessment
-                  </DialogDescription>
-                </DialogHeader>
-                
-                {selectedEmail && (
-                  <div className="space-y-6 mt-6">
-                    {/* Security Status Banner */}
-                    <div className={`cyber-card p-4 border-2 ${
-                      selectedEmail.threat_level === 'high' ? 'border-destructive' :
-                      selectedEmail.threat_level === 'medium' ? 'border-yellow-500' :
-                      'border-accent'
-                    }`}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          {getThreatIcon(selectedEmail.threat_level)}
-                          <div>
-                            <h3 className="font-semibold text-lg">
-                              Security Status: {selectedEmail.threat_level?.toUpperCase() || 'UNKNOWN'}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              Classification: {selectedEmail.classification || 'Unclassified'}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-3xl font-bold cyber-text-glow">
-                            {selectedEmail.confidence ? Math.round(selectedEmail.confidence * 100) : 'N/A'}%
-                          </div>
-                          <div className="text-xs text-muted-foreground">CONFIDENCE</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Email Information */}
-                    <Card className="cyber-card">
-                      <CardHeader>
-                        <CardTitle className="text-sm text-primary">📧 EMAIL INFORMATION</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div>
-                          <label className="text-xs font-medium text-primary uppercase">Subject</label>
-                          <p className="text-foreground font-medium p-2 bg-muted/20 rounded border">
-                            {selectedEmail.subject}
-                          </p>
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium text-primary uppercase">Sender</label>
-                          <p className="text-foreground p-2 bg-muted/20 rounded border font-mono">
-                            {selectedEmail.sender}
-                          </p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="text-xs font-medium text-primary uppercase">Date</label>
-                            <p className="text-foreground p-2 bg-muted/20 rounded border text-sm">
-                              {new Date(selectedEmail.received_date).toLocaleString()}
-                            </p>
-                          </div>
-                          <div>
-                            <label className="text-xs font-medium text-primary uppercase">Message ID</label>
-                            <p className="text-foreground p-2 bg-muted/20 rounded border text-xs font-mono">
-                              {selectedEmail.message_id}
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Keywords */}
-                    {selectedEmail.keywords && selectedEmail.keywords.length > 0 && (
-                      <Card className="cyber-card">
-                        <CardHeader>
-                          <CardTitle className="text-sm text-primary">🔍 DETECTED KEYWORDS</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedEmail.keywords.map((keyword, index) => (
-                              <span
-                                key={index}
-                                className="inline-block bg-primary/20 text-primary px-3 py-1 text-sm rounded border border-primary/30"
-                              >
-                                {keyword}
-                              </span>
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-
-                    {/* Email Content */}
-                    <Card className="cyber-card">
-                      <CardHeader>
-                        <CardTitle className="text-sm text-primary">📄 EMAIL CONTENT</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="bg-background/50 p-6 rounded-lg border-2 border-muted/20 min-h-[300px] max-h-[400px] overflow-y-auto">
-                          <pre className="whitespace-pre-wrap text-sm text-foreground font-mono">
-                            {selectedEmail.content || selectedEmail.raw_content || 'No content available'}
-                          </pre>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Action Buttons */}
-                    <div className="flex justify-between items-center pt-4 border-t border-primary/20">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          navigator.clipboard.writeText(selectedEmail.content || selectedEmail.raw_content || '');
-                          toast({
-                            title: "Content Copied",
-                            description: "Email content copied to clipboard",
-                          });
-                        }}
-                      >
-                        📋 Copy Content
-                      </Button>
-                      <Button
-                        onClick={() => setShowEmailDialog(false)}
-                        className="cyber-button"
-                      >
-                        Close Viewer
-                      </Button>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </DialogContent>
