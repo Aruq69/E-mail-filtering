@@ -87,9 +87,13 @@ const Index = () => {
   };
 
   const fetchGmailEmails = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('❌ No user found for Gmail fetch');
+      return;
+    }
     
     setLoading(true);
+    console.log('🚀 STARTING GMAIL EMAIL FETCH for user:', user.id);
     try {
       // First check if we have Gmail tokens
       const { data: tokenCheck, error: tokenError } = await supabase
@@ -98,10 +102,11 @@ const Index = () => {
         .eq('user_id', user.id)
         .maybeSingle();
       
-      console.log('Gmail token check:', tokenCheck, 'Error:', tokenError);
+      console.log('🔍 Gmail token check result:', { tokenCheck, tokenError });
+      console.log('📅 Token expires at:', tokenCheck?.expires_at);
       
       if (tokenError) {
-        console.error('Token check error:', tokenError);
+        console.error('❌ Token check database error:', tokenError);
         toast({
           title: "Database error",
           description: "Failed to check Gmail connection.",
@@ -112,6 +117,7 @@ const Index = () => {
       }
       
       if (!tokenCheck) {
+        console.log('❌ No Gmail tokens found - user needs to connect Gmail first');
         toast({
           title: "Gmail not connected",
           description: "Please connect your Gmail account first.",
@@ -125,10 +131,11 @@ const Index = () => {
         body: { user_id: user.id },
       });
 
-      console.log('Gmail fetch response:', { data, error });
+      console.log('📊 Gmail fetch response data:', data);
+      console.log('⚠️ Gmail fetch response error:', error);
 
       if (error) {
-        console.error('Gmail fetch error:', error);
+        console.error('🚨 Gmail fetch function error details:', error);
         toast({
           title: "Gmail fetch failed",
           description: error.message || "Failed to fetch Gmail emails. Please try again.",
@@ -138,7 +145,7 @@ const Index = () => {
       }
 
       if (data && data.error) {
-        console.error('Gmail fetch returned error:', data.error);
+        console.error('🚨 Gmail fetch returned application error:', data.error);
         toast({
           title: "Gmail fetch failed",
           description: data.error,
@@ -147,16 +154,20 @@ const Index = () => {
         return;
       }
 
+      console.log('🎉 Gmail fetch successful! Total emails processed:', data?.total || 0);
+      console.log('📧 Email processing summary:', data?.summary || 'No summary available');
+      
       toast({
-        title: "Gmail sync complete",
-        description: `Analyzed ${data?.total || 0} emails from Gmail`,
+        title: "Gmail sync complete!",
+        description: `Successfully analyzed ${data?.total || 0} emails from Gmail`,
       });
 
       // Refresh the local email list
+      console.log('🔄 Refreshing local email list...');
       fetchEmails();
 
     } catch (error) {
-      console.error('Gmail fetch error:', error);
+      console.error('🚨 CRITICAL GMAIL FETCH ERROR:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred while fetching Gmail emails.",
@@ -164,6 +175,7 @@ const Index = () => {
       });
     } finally {
       setLoading(false);
+      console.log('✅ Gmail email fetch process completed');
     }
   };
 
