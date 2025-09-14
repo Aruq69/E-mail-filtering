@@ -29,6 +29,7 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [gmailConnected, setGmailConnected] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
   const { toast } = useToast();
   const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -491,7 +492,10 @@ const Index = () => {
                           className={`cyber-card ${threatClass} p-4 hover:scale-[1.02] transition-all duration-300 cursor-pointer ${
                             selectedEmail?.id === email.id ? 'ring-2 ring-primary' : ''
                           }`}
-                          onClick={() => setSelectedEmail(email)}
+                          onClick={() => {
+                            setSelectedEmail(email);
+                            setShowEmailDialog(true);
+                          }}
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex-1 space-y-3">
@@ -556,7 +560,128 @@ const Index = () => {
           <div className="lg:col-span-1">
             <ChatAssistant selectedEmail={selectedEmail} />
           </div>
+          </div>
         </div>
+
+        {/* Email Details Dialog */}
+        <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                <Mail className="h-5 w-5 text-primary" />
+                <span>Email Details</span>
+                {selectedEmail?.threat_level && (
+                  <Badge variant={getThreatBadgeVariant(selectedEmail.threat_level)}>
+                    {selectedEmail.threat_level.toUpperCase()}
+                  </Badge>
+                )}
+              </DialogTitle>
+              <DialogDescription>
+                Complete email content and security analysis
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedEmail && (
+              <div className="space-y-6">
+                {/* Email Header */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/20 rounded-lg border">
+                  <div>
+                    <label className="text-sm font-medium text-primary">Subject:</label>
+                    <p className="text-foreground">{selectedEmail.subject}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-primary">From:</label>
+                    <p className="text-foreground">{selectedEmail.sender}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-primary">Date:</label>
+                    <p className="text-foreground">{new Date(selectedEmail.received_date).toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-primary">Message ID:</label>
+                    <p className="text-foreground text-xs font-mono">{selectedEmail.message_id}</p>
+                  </div>
+                </div>
+
+                {/* Security Analysis */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card className="cyber-card">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Threat Level</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center space-x-2">
+                        {getThreatIcon(selectedEmail.threat_level)}
+                        <span className="font-medium">{selectedEmail.threat_level?.toUpperCase() || 'N/A'}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="cyber-card">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Classification</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Badge variant="outline" className="border-primary/30 text-primary">
+                        {selectedEmail.classification || 'Unclassified'}
+                      </Badge>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="cyber-card">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Confidence</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-primary">
+                        {selectedEmail.confidence ? Math.round(selectedEmail.confidence * 100) : 'N/A'}%
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Keywords */}
+                {selectedEmail.keywords && selectedEmail.keywords.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-medium text-primary mb-2">Detected Keywords:</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedEmail.keywords.map((keyword, index) => (
+                        <span
+                          key={index}
+                          className="inline-block bg-primary/20 text-primary px-2 py-1 text-xs rounded border border-primary/30"
+                        >
+                          {keyword}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Email Content */}
+                <div>
+                  <h3 className="text-sm font-medium text-primary mb-2">Email Content:</h3>
+                  <div className="p-4 bg-muted/10 rounded-lg border min-h-[200px]">
+                    <pre className="whitespace-pre-wrap text-sm text-foreground font-mono">
+                      {selectedEmail.content || selectedEmail.raw_content || 'No content available'}
+                    </pre>
+                  </div>
+                </div>
+
+                {/* Raw Content (if different) */}
+                {selectedEmail.raw_content && selectedEmail.raw_content !== selectedEmail.content && (
+                  <div>
+                    <h3 className="text-sm font-medium text-primary mb-2">Raw Email Content:</h3>
+                    <div className="p-4 bg-muted/10 rounded-lg border max-h-[300px] overflow-y-auto">
+                      <pre className="whitespace-pre-wrap text-xs text-muted-foreground font-mono">
+                        {selectedEmail.raw_content}
+                      </pre>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
