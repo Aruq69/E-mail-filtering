@@ -41,8 +41,10 @@ serve(async (req) => {
       authUrl.searchParams.set('redirect_uri', redirectUri);
       authUrl.searchParams.set('response_type', 'code');
       authUrl.searchParams.set('access_type', 'offline');
+      authUrl.searchParams.set('prompt', 'consent');
       
       console.log('✅ Generated Nylas auth URL:', authUrl.toString());
+      console.log('🔗 Redirect URI:', redirectUri);
       
       return new Response(JSON.stringify({ 
         auth_url: authUrl.toString(),
@@ -63,6 +65,9 @@ serve(async (req) => {
         });
       }
 
+      // Use the same redirect URI as in auth URL generation
+      const redirectUri = `https://ntqeccpwqtjmxlqjfcdb.lovable.app/nylas-callback`;
+
       // Exchange code for access token using Nylas API
       const tokenResponse = await fetch('https://api.nylas.com/v3/connect/token', {
         method: 'POST',
@@ -73,6 +78,7 @@ serve(async (req) => {
         body: JSON.stringify({
           code,
           client_id: nylasApiKey,
+          redirect_uri: redirectUri,
         }),
       });
 
