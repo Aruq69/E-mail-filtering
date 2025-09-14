@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import EmailSubmissionForm from "@/components/EmailSubmissionForm";
 import ChatAssistant from "@/components/ChatAssistant";
 import IMAPConnect from "@/components/IMAPConnect";
+import mailGuardLogo from "@/assets/mail-guard-logo.png";
 
 interface Email {
   id: string;
@@ -269,8 +270,8 @@ const Index = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <Shield className="h-10 w-10 text-primary" />
-              <div className="absolute inset-0 h-10 w-10 border border-primary/30 rounded-full animate-ping" />
+              <img src={mailGuardLogo} alt="Mail Guard Logo" className="h-12 w-12" />
+              <div className="absolute inset-0 h-12 w-12 border border-primary/30 rounded-full animate-ping" />
             </div>
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
