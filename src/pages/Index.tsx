@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
+import EmailSubmissionForm from "@/components/EmailSubmissionForm";
 
 interface Email {
   id: string;
@@ -207,6 +208,9 @@ const Index = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Email Submission Form */}
+        <EmailSubmissionForm onEmailSubmitted={fetchEmails} />
 
         {/* Search */}
         <Card>
