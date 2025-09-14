@@ -115,8 +115,16 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    // Always scroll to bottom when messages change
+    const timeoutId = setTimeout(scrollToBottom, 100);
+    return () => clearTimeout(timeoutId);
+  }, [messages, isTyping]);
+
+  useEffect(() => {
+    // Always scroll to bottom when messages change
+    const timeoutId = setTimeout(scrollToBottom, 100);
+    return () => clearTimeout(timeoutId);
+  }, [messages, isTyping]);
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -301,16 +309,16 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
         )}
       </CardHeader>
       
-      <CardContent className="flex-1 flex flex-col space-y-4">
-        <ScrollArea ref={scrollAreaRef} className="flex-1 pr-4">
-          <div className="space-y-4">
+      <CardContent className="flex-1 flex flex-col space-y-4 p-4 h-0">
+        <ScrollArea ref={scrollAreaRef} className="flex-1 pr-4 h-full">
+          <div className="space-y-4 pb-4">
             {messages.map((message) => (
               <div
                 key={message.id}
                 className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
+                  className={`max-w-[85%] rounded-lg p-3 ${
                     message.isBot
                       ? 'bg-primary/10 border border-primary/20 text-foreground'
                       : 'bg-secondary/10 border border-secondary/20 text-foreground'
@@ -334,7 +342,7 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
             ))}
             {(isLoading && isTyping) && (
               <div className="flex justify-start">
-                <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 max-w-[80%]">
+                <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 max-w-[85%]">
                   <div className="flex items-center space-x-2">
                     <Bot className="h-4 w-4 text-primary" />
                     <div className="flex space-x-1">
@@ -350,7 +358,7 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
           </div>
         </ScrollArea>
 
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 pt-2 border-t border-border/20">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -362,9 +370,13 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
           <Button
             onClick={sendMessage}
             disabled={!input.trim() || isLoading}
-            className="cyber-button"
+            className="cyber-button px-3"
           >
-            <Send className="h-4 w-4" />
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </CardContent>
