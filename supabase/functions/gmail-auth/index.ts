@@ -13,16 +13,37 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('Gmail auth function called, method:', req.method);
+  
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight');
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { action, code } = await req.json();
+    console.log('Parsing request body...');
+    const body = await req.text();
+    console.log('Raw body:', body);
+    
+    let jsonBody;
+    try {
+      jsonBody = JSON.parse(body);
+    } catch (e) {
+      console.error('Failed to parse JSON:', e);
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const { action, code } = jsonBody;
+    console.log('Parsed action:', action, 'code present:', !!code);
 
     // Handle auth URL generation
     if (action === 'get_auth_url') {
+      console.log('Generating auth URL...');
       if (!googleClientId) {
+        console.error('Google Client ID not found');
         return new Response(
           JSON.stringify({ error: 'Google OAuth not configured. Please set GOOGLE_CLIENT_ID.' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -41,6 +62,7 @@ serve(async (req) => {
       authUrl.searchParams.set('prompt', 'consent');
       authUrl.searchParams.set('state', 'anonymous');
 
+      console.log('Generated auth URL:', authUrl.toString());
       return new Response(
         JSON.stringify({ auth_url: authUrl.toString() }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -115,8 +137,12 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in gmail-auth function:', error);
+    console.error('Error stack:', error.stack);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: 'Check function logs for more information'
+      }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
