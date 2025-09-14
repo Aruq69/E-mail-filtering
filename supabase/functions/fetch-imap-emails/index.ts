@@ -41,9 +41,193 @@ const IMAP_CONFIGS = {
   },
 };
 
-// Real IMAP email fetcher using TCP connection
+// IMAP Client class for real email fetching
+class IMAPClient {
+  private conn: Deno.TcpConn | null = null;
+  private tagCounter = 1;
+  
+  constructor(private config: any) {}
+  
+  private getNextTag(): string {
+    return `A${String(this.tagCounter++).padStart(3, '0')}`;
+  }
+  
+  private async sendCommand(command: string): Promise<string> {
+    if (!this.conn) throw new Error('Not connected');
+    
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+    
+    console.log(`>>> ${command}`);
+    await this.conn.write(encoder.encode(command + '\r\n'));
+    
+    let response = '';
+    const buffer = new Uint8Array(8192);
+    
+    // Read response until we get a complete response
+    while (true) {
+      const bytesRead = await this.conn.read(buffer);
+      if (!bytesRead) break;
+      
+      const chunk = decoder.decode(buffer.subarray(0, bytesRead));
+      response += chunk;
+      
+      // Check if we have a complete response (ends with our tag)
+      const lines = response.split('\r\n');
+      const lastLine = lines[lines.length - 2]; // -2 because last element is empty
+      if (lastLine && (lastLine.includes('OK') || lastLine.includes('NO') || lastLine.includes('BAD'))) {
+        break;
+      }
+    }
+    
+    console.log(`<<< ${response.trim()}`);
+    return response;
+  }
+  
+  async connect(email: string, password: string): Promise<boolean> {
+    try {
+      console.log(`🔗 Connecting to ${this.config.host}:${this.config.port}`);
+      
+      if (this.config.secure) {
+        // For secure connections, we need to establish TLS
+        this.conn = await Deno.connectTls({
+          hostname: this.config.host,
+          port: this.config.port,
+        });
+      } else {
+        this.conn = await Deno.connect({
+          hostname: this.config.host,
+          port: this.config.port,
+        });
+      }
+      
+      // Read server greeting
+      const encoder = new TextEncoder();
+      const decoder = new TextDecoder();
+      const buffer = new Uint8Array(1024);
+      const bytesRead = await this.conn.read(buffer);
+      const greeting = decoder.decode(buffer.subarray(0, bytesRead || 0));
+      console.log(`Server greeting: ${greeting.trim()}`);
+      
+      if (!greeting.includes('OK')) {
+        throw new Error('Server not ready');
+      }
+      
+      // Login
+      const loginTag = this.getNextTag();
+      const loginResponse = await this.sendCommand(`${loginTag} LOGIN "${email}" "${password}"`);
+      if (!loginResponse.includes(`${loginTag} OK`)) {
+        throw new Error('Authentication failed');
+      }
+      
+      return true;
+      
+    } catch (error) {
+      console.error('IMAP connection failed:', error);
+      if (this.conn) {
+        this.conn.close();
+        this.conn = null;
+      }
+      throw error;
+    }
+  }
+  
+  async selectInbox(): Promise<void> {
+    const tag = this.getNextTag();
+    const response = await this.sendCommand(`${tag} SELECT INBOX`);
+    if (!response.includes(`${tag} OK`)) {
+      throw new Error('Failed to select INBOX');
+    }
+  }
+  
+  async searchRecentEmails(): Promise<string[]> {
+    const tag = this.getNextTag();
+    const response = await this.sendCommand(`${tag} SEARCH RECENT`);
+    
+    const searchLine = response.split('\r\n').find(line => line.startsWith('* SEARCH'));
+    if (!searchLine) return [];
+    
+    const messageIds = searchLine.replace('* SEARCH ', '').trim().split(' ').filter(id => id && !isNaN(Number(id)));
+    return messageIds.slice(-10); // Get last 10 messages
+  }
+  
+  async fetchEmail(messageId: string): Promise<any> {
+    const tag = this.getNextTag();
+    const response = await this.sendCommand(`${tag} FETCH ${messageId} (ENVELOPE BODY[TEXT])`);
+    
+    // Parse the IMAP response (simplified parsing)
+    const lines = response.split('\r\n');
+    
+    let subject = 'No Subject';
+    let from = 'unknown@unknown.com';
+    let body = 'Could not retrieve email body';
+    let date = new Date().toISOString();
+    
+    // Extract envelope information
+    for (const line of lines) {
+      if (line.includes('ENVELOPE')) {
+        // Basic envelope parsing - this is simplified
+        const envelopeMatch = line.match(/ENVELOPE \((.*?)\)/);
+        if (envelopeMatch) {
+          const envelope = envelopeMatch[1];
+          // Extract subject (first quoted string after date)
+          const subjectMatch = envelope.match(/"([^"]*?)"/);
+          if (subjectMatch) subject = subjectMatch[1];
+          
+          // Extract from address (simplified)
+          const fromMatch = envelope.match(/"([^"]*?@[^"]*?)"/);
+          if (fromMatch) from = fromMatch[1];
+        }
+      }
+      
+      if (line.includes('BODY[TEXT]')) {
+        // Extract body text
+        const bodyMatch = line.match(/BODY\[TEXT\] "([^"]*)"/);
+        if (bodyMatch) {
+          body = bodyMatch[1];
+        } else {
+          // Handle literal strings
+          const literalMatch = line.match(/BODY\[TEXT\] \{(\d+)\}/);
+          if (literalMatch) {
+            // The body follows in the next lines
+            const bodyLength = parseInt(literalMatch[1]);
+            const lineIndex = lines.indexOf(line);
+            if (lineIndex >= 0 && lines[lineIndex + 1]) {
+              body = lines[lineIndex + 1].substring(0, bodyLength);
+            }
+          }
+        }
+      }
+    }
+    
+    return {
+      id: `real_${messageId}_${Date.now()}`,
+      subject: subject || 'No Subject',
+      from: from || 'unknown@unknown.com',
+      to: '',
+      date: date,
+      body: body || 'Could not retrieve email content',
+      uid: messageId
+    };
+  }
+  
+  async close(): Promise<void> {
+    if (this.conn) {
+      try {
+        const tag = this.getNextTag();
+        await this.sendCommand(`${tag} LOGOUT`);
+      } catch (error) {
+        console.log('Error during logout:', error);
+      }
+      this.conn.close();
+      this.conn = null;
+    }
+  }
+}
+
+// Real IMAP email fetcher using proper IMAP protocol
 async function fetchRealEmails(email: string, password: string, imapConfig: any): Promise<any[]> {
-  console.log('🔍 Connecting to real IMAP server...');
+  console.log('🔍 Connecting to real IMAP server with proper protocol...');
   
   // Basic validation
   if (!email || !password) {
@@ -59,118 +243,69 @@ async function fetchRealEmails(email: string, password: string, imapConfig: any)
     throw new Error(`Unsupported email provider: ${domain}`);
   }
 
-  console.log(`📧 Connecting to ${imapConfig.host}:${imapConfig.port}`);
+  const client = new IMAPClient(imapConfig);
   
   try {
-    // Establish TCP connection to IMAP server
-    const conn = await Deno.connect({
-      hostname: imapConfig.host,
-      port: imapConfig.port,
-    });
-
-    // Helper function to send command and read response
-    async function sendCommand(command: string): Promise<string> {
-      const encoder = new TextEncoder();
-      const decoder = new TextDecoder();
-      
-      console.log(`>>> ${command}`);
-      await conn.write(encoder.encode(command + '\r\n'));
-      
-      const buffer = new Uint8Array(4096);
-      const bytesRead = await conn.read(buffer);
-      const response = decoder.decode(buffer.subarray(0, bytesRead || 0));
-      console.log(`<<< ${response.trim()}`);
-      
-      return response;
-    }
-
-    // IMAP authentication flow
-    console.log('🔐 Starting IMAP authentication...');
+    console.log(`📧 Connecting to ${domain} IMAP server...`);
     
-    // 1. Read server greeting
-    let response = await sendCommand('');
+    // Connect and authenticate
+    await client.connect(email, password);
+    console.log('✅ Authentication successful!');
     
-    // 2. Login
-    response = await sendCommand(`A001 LOGIN "${email}" "${password}"`);
-    if (!response.includes('A001 OK')) {
-      throw new Error('Authentication failed - please check your credentials');
-    }
+    // Select INBOX
+    await client.selectInbox();
+    console.log('✅ INBOX selected');
     
-    // 3. Select INBOX
-    response = await sendCommand('A002 SELECT INBOX');
-    if (!response.includes('A002 OK')) {
-      throw new Error('Failed to select INBOX');
-    }
-    
-    // 4. Search for recent emails (last 10)
-    response = await sendCommand('A003 SEARCH RECENT');
-    const searchMatch = response.match(/SEARCH (.+)/);
-    const messageIds = searchMatch ? searchMatch[1].trim().split(' ').filter(id => id && id !== 'A003') : [];
-    
+    // Search for recent emails
+    const messageIds = await client.searchRecentEmails();
     console.log(`📧 Found ${messageIds.length} recent emails`);
     
     const emails = [];
     
-    // 5. Fetch details for each message (limit to 5 most recent)
+    // Fetch details for each message (limit to 5 most recent)
     for (const msgId of messageIds.slice(-5)) {
       try {
-        // Fetch headers and body
-        const headerResponse = await sendCommand(`A00${msgId} FETCH ${msgId} (ENVELOPE BODY[TEXT])`);
-        
-        // Parse email data (simplified)
-        const subjectMatch = headerResponse.match(/"([^"]*)".*?"([^"]*)".*?"([^"]*)"/);
-        const bodyMatch = headerResponse.match(/BODY\[TEXT\]\s*"([^"]*)"/) || 
-                         headerResponse.match(/BODY\[TEXT\]\s*\{[0-9]+\}\s*([^A-Z]+)/);
-        
-        if (subjectMatch) {
-          emails.push({
-            id: `real_${msgId}_${Date.now()}`,
-            subject: subjectMatch[1] || 'No Subject',
-            from: subjectMatch[2] || 'unknown@unknown.com',
-            to: email,
-            date: new Date().toISOString(),
-            body: bodyMatch ? bodyMatch[1] : 'Email body could not be retrieved',
-            uid: msgId
-          });
-        }
+        const emailData = await client.fetchEmail(msgId);
+        emails.push(emailData);
+        console.log(`✅ Fetched email: ${emailData.subject}`);
       } catch (emailError) {
         console.error(`Failed to fetch email ${msgId}:`, emailError);
       }
     }
     
-    // 6. Logout
-    await sendCommand('A999 LOGOUT');
-    conn.close();
+    await client.close();
+    
+    if (emails.length === 0) {
+      console.log('⚠️ No real emails found, generating one demo email for testing');
+      return [{
+        id: `demo_no_real_emails_${Date.now()}`,
+        subject: '📧 Demo: Welcome to Mail Guard',
+        from: 'welcome@mailguard.app',
+        to: email,
+        date: new Date().toISOString(),
+        body: 'Welcome to Mail Guard! This is a demo email to show that the system is working. Try adding some real emails to your inbox to see threat analysis in action.',
+        uid: 'demo_welcome'
+      }];
+    }
     
     console.log(`✅ Successfully fetched ${emails.length} real emails from ${domain}`);
     return emails;
     
   } catch (error) {
     console.error('❌ IMAP connection error:', error);
+    await client.close();
     
-    // Fallback to demo emails if real connection fails, but with clear indication
-    console.log('⚠️ Falling back to demo emails due to connection issues');
-    const currentTime = Date.now();
-    return [
-      {
-        id: `demo_fallback_${currentTime}_1`,
-        subject: '⚠️ DEMO: Account Security Alert',
-        from: 'security@example.com',
-        to: email,
-        date: new Date(currentTime - 1 * 60 * 60 * 1000).toISOString(),
-        body: 'DEMO EMAIL: This is a sample phishing email to demonstrate threat detection. Click here to verify your account: http://fake-link.com',
-        uid: `demo_${currentTime}_1`
-      },
-      {
-        id: `demo_fallback_${currentTime}_2`,
-        subject: '⚠️ DEMO: Team Meeting Notes',
-        from: 'manager@company.com',
-        to: email,
-        date: new Date(currentTime - 2 * 60 * 60 * 1000).toISOString(),
-        body: 'DEMO EMAIL: Weekly meeting notes - Project updates, budget review, and upcoming deadlines.',
-        uid: `demo_${currentTime}_2`
-      }
-    ];
+    // More specific error handling
+    let errorMessage = error.message;
+    if (error.message.includes('Authentication failed')) {
+      errorMessage = 'Authentication failed. Please check your credentials or use an app-specific password.';
+    } else if (error.message.includes('ECONNREFUSED')) {
+      errorMessage = 'Connection refused by server. Please check your email provider settings.';
+    } else if (error.message.includes('timeout')) {
+      errorMessage = 'Connection timeout. Please try again later.';
+    }
+    
+    throw new Error(errorMessage);
   }
 }
 
