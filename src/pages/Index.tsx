@@ -302,8 +302,8 @@ const Index = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <img src={shieldIcon} alt="Mail Guard Shield" className="h-16 w-16" />
-              <div className="absolute inset-0 h-16 w-16 border border-primary/30 rounded-full animate-ping" />
+              <img src={shieldIcon} alt="Mail Guard Shield" className="h-12 w-12" />
+              <div className="absolute inset-0 h-12 w-12 border border-primary/30 rounded-full animate-ping" />
             </div>
             <div>
               <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
