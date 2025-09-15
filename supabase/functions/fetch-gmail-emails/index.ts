@@ -4,7 +4,40 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+
+// Helper function to decode base64url (Gmail uses this encoding)
+function decodeBase64Url(str: string): string {
+  try {
+    // Convert base64url to base64
+    let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+    
+    // Add padding if needed
+    while (base64.length % 4) {
+      base64 += '=';
+    }
+    
+    // Decode and convert to UTF-8
+    const bytes = atob(base64);
+    return decodeURIComponent(escape(bytes));
+  } catch (error) {
+    console.error('Failed to decode base64url:', error);
+    return str;
+  }
+}
+
+// Helper function to strip HTML tags
+function stripHtmlTags(html: string): string {
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .trim();
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -101,38 +134,50 @@ serve(async (req) => {
         .eq('user_id', user_id);
     }
 
-    // Fetch emails from Gmail API
+    // Fetch emails from Gmail API with better query options
     console.log('Fetching emails from Gmail API...');
-    const gmailResponse = await fetch(
-      'https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=20&q=in:inbox',
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    if (!gmailResponse.ok) {
-      const errorText = await gmailResponse.text();
-      console.error(`Gmail API error: ${gmailResponse.status} - ${errorText}`);
-      return new Response(
-        JSON.stringify({ error: `Gmail API error: ${gmailResponse.status}. Please try reconnecting your Gmail account.` }),
-        { status: gmailResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    
+    // Get the latest emails with various filters
+    const queries = [
+      'in:inbox -in:spam -in:trash newer_than:7d', // Recent inbox emails (last 7 days)
+      'in:promotions newer_than:3d', // Promotional emails (last 3 days) 
+      'has:attachment newer_than:7d' // Emails with attachments (last 7 days)
+    ];
+    
+    let allMessages = [];
+    
+    // Fetch from multiple categories
+    for (const query of queries) {
+      const gmailResponse = await fetch(
+        `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10&q=${encodeURIComponent(query)}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
       );
+
+      if (gmailResponse.ok) {
+        const gmailData = await gmailResponse.json();
+        const messages = gmailData.messages || [];
+        allMessages.push(...messages);
+      }
     }
-
-    const gmailData = await gmailResponse.json();
-    const messages = gmailData.messages || [];
-
-    console.log(`Found ${messages.length} messages`);
+    
+    // Remove duplicates based on message ID
+    const uniqueMessages = allMessages.filter((message, index, arr) => 
+      arr.findIndex(m => m.id === message.id) === index
+    );
+    
+    console.log(`Found ${uniqueMessages.length} unique messages`);
 
     // Fetch details for each message and classify them
-    const emailPromises = messages.slice(0, 10).map(async (message: any) => {
+    const emailPromises = uniqueMessages.slice(0, 15).map(async (message: any) => {
       try {
-        // Get message details
+        // Get message details with full format for complete content
         const messageResponse = await fetch(
-          `https://gmail.googleapis.com/gmail/v1/users/me/messages/${message.id}`,
+          `https://gmail.googleapis.com/gmail/v1/users/me/messages/${message.id}?format=full`,
           {
             headers: {
               'Authorization': `Bearer ${accessToken}`,
@@ -149,76 +194,79 @@ serve(async (req) => {
         const messageData = await messageResponse.json();
         const headers = messageData.payload.headers;
         
+        // Extract comprehensive header information
         const subject = headers.find((h: any) => h.name === 'Subject')?.value || 'No Subject';
         const sender = headers.find((h: any) => h.name === 'From')?.value || 'Unknown Sender';
         const date = headers.find((h: any) => h.name === 'Date')?.value || new Date().toISOString();
+        const replyTo = headers.find((h: any) => h.name === 'Reply-To')?.value || '';
+        const returnPath = headers.find((h: any) => h.name === 'Return-Path')?.value || '';
         
-        // Extract email content
+        // Enhanced content extraction with better MIME handling
         let content = '';
-        if (messageData.payload.body?.data) {
-          content = atob(messageData.payload.body.data.replace(/-/g, '+').replace(/_/g, '/'));
-        } else if (messageData.payload.parts) {
-          const textPart = messageData.payload.parts.find((part: any) => 
-            part.mimeType === 'text/plain' || part.mimeType === 'text/html'
-          );
-          if (textPart?.body?.data) {
-            content = atob(textPart.body.data.replace(/-/g, '+').replace(/_/g, '/'));
+        let htmlContent = '';
+        
+        const extractContent = (payload: any): void => {
+          if (payload.body?.data) {
+            const decodedContent = decodeBase64Url(payload.body.data);
+            if (payload.mimeType === 'text/html') {
+              htmlContent = decodedContent;
+            } else if (payload.mimeType === 'text/plain') {
+              content = decodedContent;
+            }
           }
+          
+          if (payload.parts) {
+            payload.parts.forEach((part: any) => {
+              if (part.mimeType === 'text/plain' && part.body?.data) {
+                content = decodeBase64Url(part.body.data);
+              } else if (part.mimeType === 'text/html' && part.body?.data) {
+                htmlContent = decodeBase64Url(part.body.data);
+              } else if (part.parts) {
+                extractContent(part);
+              }
+            });
+          }
+        };
+        
+        extractContent(messageData.payload);
+        
+        // Use text content if available, otherwise extract text from HTML
+        if (!content && htmlContent) {
+          content = stripHtmlTags(htmlContent);
         }
 
-        // Limit content length for analysis
-        content = content.substring(0, 2000);
+        // Limit content length for analysis but keep more for better classification
+        const fullContent = content;
+        content = content.substring(0, 3000);
 
-        // Use OpenAI to classify the email
-        const classificationPrompt = `
-        Analyze this email for spam classification:
-        
-        Subject: ${subject}
-        Sender: ${sender}
-        Content: ${content}
-        
-        Based on common spam indicators, classify this email and respond with a JSON object containing:
-        {
-          "classification": "spam" or "legitimate",
-          "threat_level": "high", "medium", or "low",
-          "confidence": decimal between 0 and 1,
-          "keywords": array of suspicious keywords found (max 5),
-          "reasoning": brief explanation
-        }
-        `;
+        // Enhanced email classification with more context
+        const emailData = {
+          subject,
+          sender,
+          content,
+          replyTo,
+          returnPath,
+          headers: headers.map(h => `${h.name}: ${h.value}`).join('\n')
+        };
 
-        const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              { role: 'system', content: 'You are an expert email security analyst. Respond only with valid JSON.' },
-              { role: 'user', content: classificationPrompt }
-            ],
-            temperature: 0.1,
-            max_tokens: 400,
-          }),
+        // Call our enhanced classification function
+        const classificationResponse = await supabase.functions.invoke('classify-email', {
+          body: { 
+            emails: [emailData],
+            method: 'hybrid' // Use our enhanced classification
+          }
         });
 
         let classification = {
           classification: "legitimate",
-          threat_level: "low",
+          threat_level: "low", 
           confidence: 0.5,
           keywords: [],
           reasoning: "Default classification"
         };
 
-        if (aiResponse.ok) {
-          const aiData = await aiResponse.json();
-          try {
-            classification = JSON.parse(aiData.choices[0].message.content);
-          } catch (parseError) {
-            console.error('Failed to parse AI response for message', message.id);
-          }
+        if (classificationResponse.data?.results?.[0]) {
+          classification = classificationResponse.data.results[0];
         }
 
         // Check if email already exists in database
@@ -239,6 +287,7 @@ serve(async (req) => {
               subject,
               sender,
               content: content.substring(0, 1000), // Store limited content
+              raw_content: fullContent.substring(0, 5000), // Store more of the original
               classification: classification.classification,
               threat_level: classification.threat_level,
               confidence: classification.confidence,

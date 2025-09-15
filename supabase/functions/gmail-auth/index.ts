@@ -138,6 +138,24 @@ serve(async (req) => {
       
       console.log('Token exchange successful');
 
+      // Get user's email address from Google
+      let userEmail = 'user@gmail.com';
+      try {
+        const profileResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+          headers: {
+            'Authorization': `Bearer ${tokenData.access_token}`,
+          },
+        });
+        
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json();
+          userEmail = profileData.email || userEmail;
+          console.log('Retrieved user email:', userEmail);
+        }
+      } catch (error) {
+        console.error('Failed to get user profile:', error);
+      }
+
       // Create Supabase client
       const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
@@ -156,7 +174,7 @@ serve(async (req) => {
         .from('gmail_tokens')
         .upsert({
           user_id: user_id,
-          email_address: 'user@gmail.com', // Could get from Google API later
+          email_address: userEmail, // Now using actual email
           access_token: tokenData.access_token,
           refresh_token: tokenData.refresh_token,
           expires_at: new Date(Date.now() + (tokenData.expires_in * 1000)).toISOString(),
