@@ -134,42 +134,42 @@ export default function IMAPConnect({ onConnected }: IMAPConnectProps) {
       
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center mb-6">
-          <div className="border border-border/20 bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
+          <div className="border border-border/20 bg-gradient-to-br from-orange-500/10 via-orange-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
             <div className="relative mb-3">
-              <div className="p-3 rounded-full bg-green-500/20 w-fit mx-auto">
-                <Shield className="h-6 w-6 text-green-500" />
+              <div className="p-3 rounded-full bg-orange-500/20 w-fit mx-auto">
+                <Shield className="h-6 w-6 text-orange-500" />
               </div>
-              <div className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full animate-pulse" />
+              <div className="absolute -top-1 -right-1 h-3 w-3 bg-orange-500 rounded-full animate-pulse" />
             </div>
             <h3 className="text-sm font-semibold text-foreground mb-1">Universal</h3>
             <p className="text-xs text-muted-foreground">Works with any provider</p>
           </div>
-          <div className="border border-border/20 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
+          <div className="border border-border/20 bg-gradient-to-br from-cyan-500/10 via-cyan-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
             <div className="relative mb-3">
-              <div className="p-3 rounded-full bg-blue-500/20 w-fit mx-auto">
-                <Eye className="h-6 w-6 text-blue-500" />
+              <div className="p-3 rounded-full bg-cyan-500/20 w-fit mx-auto">
+                <Eye className="h-6 w-6 text-cyan-500" />
               </div>
-              <div className="absolute -top-1 -right-1 h-3 w-3 bg-blue-500 rounded-full animate-pulse" />
+              <div className="absolute -top-1 -right-1 h-3 w-3 bg-cyan-500 rounded-full animate-pulse" />
             </div>
             <h3 className="text-sm font-semibold text-foreground mb-1">AI Analysis</h3>
             <p className="text-xs text-muted-foreground">Real-time detection</p>
           </div>
-          <div className="border border-border/20 bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
+          <div className="border border-border/20 bg-gradient-to-br from-pink-500/10 via-pink-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
             <div className="relative mb-3">
-              <div className="p-3 rounded-full bg-purple-500/20 w-fit mx-auto">
-                <Database className="h-6 w-6 text-purple-500" />
+              <div className="p-3 rounded-full bg-pink-500/20 w-fit mx-auto">
+                <Database className="h-6 w-6 text-pink-500" />
               </div>
-              <div className="absolute -top-1 -right-1 h-3 w-3 bg-purple-500 rounded-full animate-pulse" />
+              <div className="absolute -top-1 -right-1 h-3 w-3 bg-pink-500 rounded-full animate-pulse" />
             </div>
             <h3 className="text-sm font-semibold text-foreground mb-1">Secure</h3>
             <p className="text-xs text-muted-foreground">Read-only access</p>
           </div>
-          <div className="border border-border/20 bg-gradient-to-br from-teal-500/10 via-teal-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
+          <div className="border border-border/20 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
             <div className="relative mb-3">
-              <div className="p-3 rounded-full bg-teal-500/20 w-fit mx-auto">
-                <Database className="h-6 w-6 text-teal-500" />
+              <div className="p-3 rounded-full bg-emerald-500/20 w-fit mx-auto">
+                <Database className="h-6 w-6 text-emerald-500" />
               </div>
-              <div className="absolute -top-1 -right-1 h-3 w-3 bg-teal-500 rounded-full animate-pulse" />
+              <div className="absolute -top-1 -right-1 h-3 w-3 bg-emerald-500 rounded-full animate-pulse" />
             </div>
             <h3 className="text-sm font-semibold text-foreground mb-1">ML Engine</h3>
             <p className="text-xs text-muted-foreground">Adaptive learning</p>
