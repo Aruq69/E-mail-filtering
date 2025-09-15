@@ -325,48 +325,48 @@ const Index = () => {
 
 
         {/* Threat Level Dashboard */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">TOTAL EMAILS</CardTitle>
-              <Mail className="h-4 w-4 text-primary" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+              <CardTitle className="text-xs font-medium text-muted-foreground">TOTAL EMAILS</CardTitle>
+              <Mail className="h-3 w-3 text-primary" />
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-primary">{emails.length}</div>
-              <div className="text-xs text-muted-foreground mt-1">Active monitoring</div>
+            <CardContent className="pt-1">
+              <div className="text-xl font-bold text-primary">{emails.length}</div>
+              <div className="text-xs text-muted-foreground">Active monitoring</div>
             </CardContent>
           </Card>
           
           <Card className="threat-high border-border/20 bg-card/50 backdrop-blur-sm hover-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">HIGH THREATS</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-destructive" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+              <CardTitle className="text-xs font-medium text-muted-foreground">HIGH THREATS</CardTitle>
+              <AlertTriangle className="h-3 w-3 text-destructive" />
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-destructive">{threatStats.high || 0}</div>
-              <div className="text-xs text-muted-foreground mt-1">Critical alerts</div>
+            <CardContent className="pt-1">
+              <div className="text-xl font-bold text-destructive">{threatStats.high || 0}</div>
+              <div className="text-xs text-muted-foreground">Critical alerts</div>
             </CardContent>
           </Card>
           
           <Card className="threat-medium border-border/20 bg-card/50 backdrop-blur-sm hover-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">MEDIUM THREATS</CardTitle>
-              <Clock className="h-4 w-4 text-yellow-500" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+              <CardTitle className="text-xs font-medium text-muted-foreground">MEDIUM THREATS</CardTitle>
+              <Clock className="h-3 w-3 text-yellow-500" />
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-yellow-500">{threatStats.medium || 0}</div>
-              <div className="text-xs text-muted-foreground mt-1">Under review</div>
+            <CardContent className="pt-1">
+              <div className="text-xl font-bold text-yellow-500">{threatStats.medium || 0}</div>
+              <div className="text-xs text-muted-foreground">Under review</div>
             </CardContent>
             </Card>
           
           <Card className="threat-low border-border/20 bg-card/50 backdrop-blur-sm hover-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">SAFE EMAILS</CardTitle>
-              <CheckCircle className="h-4 w-4 text-accent" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+              <CardTitle className="text-xs font-medium text-muted-foreground">SAFE EMAILS</CardTitle>
+              <CheckCircle className="h-3 w-3 text-accent" />
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-accent">{threatStats.low || 0}</div>
-              <div className="text-xs text-muted-foreground mt-1">Verified clean</div>
+            <CardContent className="pt-1">
+              <div className="text-xl font-bold text-accent">{threatStats.low || 0}</div>
+              <div className="text-xs text-muted-foreground">Verified clean</div>
             </CardContent>
           </Card>
         </div>
