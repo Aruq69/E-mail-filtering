@@ -170,54 +170,75 @@ class MLEmailClassifier {
     };
   }
 
-  // Main classification function (matches your predict_spam function)
+  // Main classification function with enhanced sender validation
   public classifyEmail(subject: string, sender: string, content: string) {
     const fullText = `${subject} ${content}`;
+    const senderEmail = sender.toLowerCase();
     const senderDomain = sender.split('@')[1]?.toLowerCase() || '';
     
     const mlResult = this.calculateSpamProbability(fullText);
     
-    // Enhanced domain reputation adjustment
+    // Comprehensive sender legitimacy validation
+    const senderValidation = this.validateSenderLegitimacy(senderEmail, senderDomain);
+    
+    // Enhanced domain reputation with more comprehensive checks
     const trustedDomains = [
-      // Major platforms
-      'gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com', 'icloud.com',
+      // Major email providers
+      'gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com', 'icloud.com', 'protonmail.com',
       
-      // Business services
-      'linkedin.com', 'microsoft.com', 'google.com', 'apple.com', 'amazon.com',
-      'paypal.com', 'stripe.com', 'shopify.com', 'salesforce.com',
+      // Major corporations
+      'microsoft.com', 'google.com', 'apple.com', 'amazon.com', 'meta.com', 'facebook.com',
+      'linkedin.com', 'twitter.com', 'x.com', 'netflix.com', 'adobe.com',
       
-      // Educational
-      'edu', '.edu', 'university.', 'college.',
+      // Financial services
+      'paypal.com', 'stripe.com', 'mastercard.com', 'visa.com', 'square.com',
+      'chase.com', 'bankofamerica.com', 'wells.com', 'citi.com',
       
-      // Financial institutions
-      'bank', 'credit-union', 'mastercard.com', 'visa.com',
+      // Business tools
+      'shopify.com', 'salesforce.com', 'hubspot.com', 'mailchimp.com', 'zendesk.com',
+      'slack.com', 'zoom.us', 'dropbox.com', 'atlassian.com', 'github.com',
       
-      // Known legitimate services
-      'github.com', 'stackoverflow.com', 'canva.com', 'dropbox.com',
-      'slack.com', 'zoom.us', 'atlassian.', 'hubspot.com'
+      // Educational institutions
+      'edu', '.edu', 'university.', 'college.', 'ac.uk', 'edu.au',
+      
+      // Government domains
+      'gov', '.gov', 'mil', '.mil', 'gov.uk', 'gov.au', 'gov.ca',
+      
+      // Regional banks and services
+      'ilabank.com', 'marketing.ilabank.com', 'bankofbahrain.com', 'ahlibank.com.bh',
+      'batelco.com.bh', 'gov.bh', 'edu.bh', 'bahrain.bh',
+      
+      // Technology companies
+      'stackoverflow.com', 'canva.com', 'notion.so', 'figma.com', 'aws.amazon.com'
     ];
     
     let adjustedProbability = mlResult.probability;
     let domainAdjustment = 0;
-    let domainTrust = 'unknown';
+    let domainTrust = senderValidation.trustLevel;
     
-    // Enhanced domain trust analysis
-    const isHighlyTrusted = trustedDomains.some(domain => 
-      senderDomain.includes(domain) || domain.includes(senderDomain)
-    );
-    
-    if (isHighlyTrusted) {
-      domainTrust = 'high';
-      domainAdjustment = -0.25; // Significant reduction for highly trusted domains
-      adjustedProbability = Math.max(0.05, mlResult.probability + domainAdjustment);
-    } else if (senderDomain.includes('.gov') || senderDomain.includes('.org')) {
-      domainTrust = 'medium';
-      domainAdjustment = -0.15;
-      adjustedProbability = Math.max(0.1, mlResult.probability + domainAdjustment);
-    } else if (senderDomain.includes('noreply') || senderDomain.includes('no-reply')) {
-      domainTrust = 'automated';
-      domainAdjustment = -0.1; // Slight trust for automated systems
-      adjustedProbability = Math.max(0.2, mlResult.probability + domainAdjustment);
+    // Apply sender validation results to classification
+    if (senderValidation.isSuspicious) {
+      domainAdjustment += senderValidation.suspicionScore;
+      adjustedProbability = Math.min(0.95, mlResult.probability + domainAdjustment);
+    } else {
+      // Enhanced domain trust analysis
+      const isHighlyTrusted = trustedDomains.some(domain => 
+        senderDomain.includes(domain) || domain.includes(senderDomain)
+      );
+      
+      if (isHighlyTrusted) {
+        domainTrust = 'high';
+        domainAdjustment = -0.25; // Significant reduction for highly trusted domains
+        adjustedProbability = Math.max(0.05, mlResult.probability + domainAdjustment);
+      } else if (senderDomain.includes('.gov') || senderDomain.includes('.org')) {
+        domainTrust = 'medium';
+        domainAdjustment = -0.15;
+        adjustedProbability = Math.max(0.1, mlResult.probability + domainAdjustment);
+      } else if (senderDomain.includes('noreply') || senderDomain.includes('no-reply')) {
+        domainTrust = 'automated';
+        domainAdjustment = -0.1; // Slight trust for automated systems
+        adjustedProbability = Math.max(0.2, mlResult.probability + domainAdjustment);
+      }
     }
     
     // Determine classification and threat level
@@ -318,8 +339,160 @@ class MLEmailClassifier {
       confidence: Math.round(confidence * 100) / 100,
       keywords: [...new Set(mlResult.keywords)], // Remove duplicates
       ml_probability: Math.round(adjustedProbability * 100) / 100,
-      reasoning: `Advanced ML classification: ${classification} (${threatType || 'N/A'}), spam probability ${Math.round(adjustedProbability * 100)}%, domain trust: ${domainTrust}, patterns detected: ${maxScore}`
+      reasoning: `Advanced ML classification: ${classification} (${threatType || 'N/A'}), spam probability ${Math.round(adjustedProbability * 100)}%, domain trust: ${domainTrust}, sender validation: ${senderValidation.reason}, patterns detected: ${maxScore}`
     };
+  }
+
+  // Comprehensive sender legitimacy validation
+  private validateSenderLegitimacy(senderEmail: string, senderDomain: string) {
+    let suspicionScore = 0;
+    let isSuspicious = false;
+    let trustLevel = 'unknown';
+    let reasons: string[] = [];
+
+    // 1. Check for common spoofing patterns
+    const spoofingPatterns = [
+      'payp4l.com', 'g00gle.com', 'micr0soft.com', 'appl3.com', 'amaz0n.com',
+      'facebk.com', 'twiter.com', 'linkdin.com', 'gmai1.com', 'outl00k.com',
+      'g-mail.com', 'pay-pal.com', 'micro-soft.com', 'amazon-security.com'
+    ];
+
+    if (spoofingPatterns.some(pattern => senderDomain.includes(pattern))) {
+      suspicionScore += 0.4;
+      isSuspicious = true;
+      reasons.push('domain spoofing detected');
+    }
+
+    // 2. Check for suspicious domain characteristics
+    if (senderDomain.includes('secure-') || senderDomain.includes('verify-') || 
+        senderDomain.includes('update-') || senderDomain.includes('account-')) {
+      suspicionScore += 0.3;
+      isSuspicious = true;
+      reasons.push('suspicious prefix in domain');
+    }
+
+    // 3. Check for common malicious TLDs
+    const suspiciousTlds = ['.tk', '.ml', '.ga', '.cf', '.pw', '.cc', '.top', '.club'];
+    if (suspiciousTlds.some(tld => senderDomain.endsWith(tld))) {
+      suspicionScore += 0.35;
+      isSuspicious = true;
+      reasons.push('suspicious TLD');
+    }
+
+    // 4. Check for domain length anomalies
+    if (senderDomain.length > 30) {
+      suspicionScore += 0.2;
+      reasons.push('unusually long domain');
+    }
+
+    // 5. Check for excessive numbers in domain
+    const numberCount = (senderDomain.match(/\d/g) || []).length;
+    if (numberCount >= 3) {
+      suspicionScore += 0.25;
+      reasons.push('excessive numbers in domain');
+    }
+
+    // 6. Check for homograph attacks (similar looking characters)
+    const homographPatterns = /[а-я]|[α-ω]|[אַ-ת]/; // Cyrillic, Greek, Hebrew mixed with Latin
+    if (homographPatterns.test(senderDomain)) {
+      suspicionScore += 0.4;
+      isSuspicious = true;
+      reasons.push('potential homograph attack');
+    }
+
+    // 7. Check for suspicious email patterns
+    const suspiciousEmailPatterns = [
+      /noreply[0-9]+@/, /admin[0-9]+@/, /support[0-9]+@/,
+      /security[0-9]+@/, /notification[0-9]+@/
+    ];
+    
+    if (suspiciousEmailPatterns.some(pattern => pattern.test(senderEmail))) {
+      suspicionScore += 0.2;
+      reasons.push('suspicious email pattern');
+    }
+
+    // 8. Check for URL shortener domains being used as email domains
+    const shortenerDomains = ['bit.ly', 'tinyurl.com', 't.co', 'ow.ly', 'is.gd'];
+    if (shortenerDomains.includes(senderDomain)) {
+      suspicionScore += 0.5;
+      isSuspicious = true;
+      reasons.push('URL shortener used as email domain');
+    }
+
+    // 9. Check for typosquatting of major services
+    const majorServices = ['google', 'microsoft', 'apple', 'amazon', 'paypal', 'facebook'];
+    for (const service of majorServices) {
+      if (senderDomain.includes(service) && !senderDomain.includes(`${service}.com`)) {
+        // Check if it's a close match but not exact
+        const distance = this.calculateLevenshteinDistance(senderDomain, `${service}.com`);
+        if (distance <= 3 && distance > 0) {
+          suspicionScore += 0.35;
+          isSuspicious = true;
+          reasons.push(`possible typosquatting of ${service}`);
+        }
+      }
+    }
+
+    // 10. Check for subdomain spoofing
+    const legitimateSubdomains = ['mail.', 'noreply.', 'no-reply.', 'notifications.', 'support.'];
+    const hasLegitSubdomain = legitimateSubdomains.some(sub => senderEmail.includes(sub));
+    
+    if (senderEmail.includes('.') && !hasLegitSubdomain && senderDomain.split('.').length > 2) {
+      const subdomainPart = senderDomain.split('.')[0];
+      if (majorServices.some(service => subdomainPart.includes(service))) {
+        suspicionScore += 0.3;
+        reasons.push('suspicious subdomain structure');
+      }
+    }
+
+    // Determine final trust level
+    if (isSuspicious) {
+      trustLevel = 'suspicious';
+    } else if (suspicionScore > 0.15) {
+      trustLevel = 'low';
+    } else if (suspicionScore > 0.05) {
+      trustLevel = 'medium';
+    } else {
+      trustLevel = 'high';
+    }
+
+    return {
+      isSuspicious,
+      suspicionScore,
+      trustLevel,
+      reason: reasons.length > 0 ? reasons.join(', ') : 'no suspicious indicators'
+    };
+  }
+
+  // Helper function to calculate Levenshtein distance for typosquatting detection
+  private calculateLevenshteinDistance(str1: string, str2: string): number {
+    const matrix = [];
+    const len1 = str1.length;
+    const len2 = str2.length;
+
+    for (let i = 0; i <= len2; i++) {
+      matrix[i] = [i];
+    }
+
+    for (let j = 0; j <= len1; j++) {
+      matrix[0][j] = j;
+    }
+
+    for (let i = 1; i <= len2; i++) {
+      for (let j = 1; j <= len1; j++) {
+        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
+    }
+
+    return matrix[len2][len1];
   }
 }
 
