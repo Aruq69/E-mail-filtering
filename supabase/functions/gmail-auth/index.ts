@@ -39,8 +39,17 @@ serve(async (req) => {
     const { action, code } = jsonBody;
     console.log('Parsed action:', action, 'code present:', !!code);
     
-    // Extract origin from referer if no origin header
-    const refererOrigin = req.headers.get('referer') ? new URL(req.headers.get('referer')!).origin : null;
+    // Extract origin from referer if no origin header (with error handling)
+    let refererOrigin = null;
+    try {
+      const refererUrl = req.headers.get('referer');
+      if (refererUrl) {
+        refererOrigin = new URL(refererUrl).origin;
+      }
+    } catch (e) {
+      console.log('Failed to parse referer URL:', e);
+    }
+    
     const requestOrigin = req.headers.get('origin') || refererOrigin;
     console.log('=== GMAIL AUTH DEBUG ===');
     console.log('Request origin header:', req.headers.get('origin'));
