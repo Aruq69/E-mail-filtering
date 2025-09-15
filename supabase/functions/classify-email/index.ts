@@ -32,26 +32,31 @@ class EmailClassifier {
   private legitimateDomains = [
     'gmail.com', 'outlook.com', 'yahoo.com', 'apple.com', 'amazon.com',
     'paypal.com', 'microsoft.com', 'google.com', 'facebook.com', 'twitter.com',
-    'linkedin.com', 'dropbox.com', 'github.com', 'stackoverflow.com'
+    'linkedin.com', 'dropbox.com', 'github.com', 'stackoverflow.com',
+    'ilabank.com', 'marketing.ilabank.com', 'info.beyonmoney.com', 'beyonmoney.com',
+    'bebee.com', 'notification.bebee.com', 'bankofbahrain.com', 'btelco.com',
+    'gov.bh', 'edu.bh', 'bahrain.bh'
   ];
 
   private suspiciousDomains = [
     '.tk', '.ml', '.ga', '.cf', 'secure-', 'verify-', 'update-', 'account-'
   ];
 
-  // Rule-based classification (fast, no API calls)
+  // Rule-based classification with dynamic confidence calculation
   classifyWithRules(subject: string, sender: string, content: string) {
     const text = `${subject} ${content}`.toLowerCase();
     const senderDomain = sender.split('@')[1]?.toLowerCase() || '';
     
     let suspiciousScore = 0;
     let foundKeywords: string[] = [];
+    let confidenceFactors = [];
     
-    // Check for suspicious keywords
+    // Check for suspicious keywords with different weights
     for (const keyword of this.suspiciousKeywords) {
       if (text.includes(keyword.toLowerCase())) {
         suspiciousScore += 2;
         foundKeywords.push(keyword);
+        confidenceFactors.push(`keyword: ${keyword}`);
       }
     }
     
@@ -59,47 +64,79 @@ class EmailClassifier {
     const isDomainSuspicious = this.suspiciousDomains.some(suspicious => 
       senderDomain.includes(suspicious)
     );
-    if (isDomainSuspicious) suspiciousScore += 3;
+    if (isDomainSuspicious) {
+      suspiciousScore += 3;
+      confidenceFactors.push('suspicious domain pattern');
+    }
     
     // Check for legitimate domains
     const isLegitDomain = this.legitimateDomains.includes(senderDomain);
-    if (!isLegitDomain && senderDomain) suspiciousScore += 1;
+    if (!isLegitDomain && senderDomain) {
+      suspiciousScore += 1;
+      confidenceFactors.push('unknown domain');
+    } else if (isLegitDomain) {
+      confidenceFactors.push('trusted domain');
+    }
     
     // Check for URL shorteners and suspicious links
     if (text.includes('bit.ly') || text.includes('tinyurl') || text.includes('t.co')) {
       suspiciousScore += 2;
+      confidenceFactors.push('URL shorteners detected');
     }
     
     // Check for financial/crypto content with suspicious domain
     const hasFinancialContent = /crypto|bitcoin|wallet|payment|account|bank|verify/i.test(text);
     if (hasFinancialContent && !isLegitDomain) {
       suspiciousScore += 4;
+      confidenceFactors.push('financial content from untrusted source');
     }
     
-    // Determine classification
+    // Enhanced confidence calculation based on evidence strength
     let classification = 'legitimate';
     let threatLevel = 'low';
-    let confidence = 0.6;
+    let confidence = 0.65; // Base confidence
     
-    if (suspiciousScore >= 6) {
+    // Calculate confidence based on evidence strength
+    const evidenceStrength = confidenceFactors.length;
+    const maxSuspiciousScore = 15; // Maximum possible suspicious score
+    
+    if (suspiciousScore >= 8) {
       classification = 'spam';
       threatLevel = 'high';
-      confidence = 0.9;
-    } else if (suspiciousScore >= 3) {
+      // High confidence for clearly suspicious emails
+      confidence = Math.min(0.95, 0.75 + (suspiciousScore / maxSuspiciousScore) * 0.2);
+    } else if (suspiciousScore >= 4) {
       classification = 'spam';
       threatLevel = 'medium';
-      confidence = 0.7;
-    } else if (suspiciousScore >= 1) {
+      // Medium-high confidence for moderately suspicious emails
+      confidence = Math.min(0.85, 0.65 + (suspiciousScore / maxSuspiciousScore) * 0.2);
+    } else if (suspiciousScore >= 2) {
+      classification = 'legitimate';
       threatLevel = 'medium';
-      confidence = 0.6;
+      // Lower confidence when some suspicious elements are present
+      confidence = Math.max(0.55, 0.75 - (suspiciousScore / maxSuspiciousScore) * 0.2);
+    } else if (isLegitDomain && suspiciousScore === 0) {
+      // High confidence for emails from trusted domains with no suspicious elements
+      confidence = 0.92;
+    } else {
+      // Adjust confidence based on available evidence
+      confidence = Math.max(0.70, 0.85 - (suspiciousScore / maxSuspiciousScore) * 0.15);
     }
+    
+    // Additional confidence adjustments
+    if (evidenceStrength >= 3) {
+      confidence = Math.min(0.95, confidence + 0.05); // More evidence = higher confidence
+    }
+    
+    // Round confidence to 2 decimal places
+    confidence = Math.round(confidence * 100) / 100;
     
     return {
       classification,
       threat_level: threatLevel,
       confidence,
       keywords: foundKeywords,
-      reasoning: `Rule-based analysis: suspicious score ${suspiciousScore}/10. Keywords found: ${foundKeywords.join(', ')}`
+      reasoning: `Rule-based analysis: suspicious score ${suspiciousScore}/${maxSuspiciousScore}. Evidence: ${confidenceFactors.join(', ') || 'minimal indicators'}`
     };
   }
 
@@ -221,8 +258,8 @@ serve(async (req) => {
 
       console.log(`🔍 Classifying email ${i + 1}/${emails.length}: ${subject}`);
 
-      // Use AI for first few emails, then rule-based for the rest to avoid rate limits
-      const useAI = i < 3; // Only use AI for first 3 emails
+      // Use AI for more emails, with progressive fallback to rule-based
+      const useAI = i < 10 || (emails.length <= 5); // Use AI for first 10 emails or if small batch
       
       const classification = useAI 
         ? await classifier.classifyWithAI(subject, sender, content || '')
