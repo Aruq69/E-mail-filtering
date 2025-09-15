@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const groqApiKey = Deno.env.get('GROQ_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -91,26 +91,27 @@ When explaining email classifications, always break down:
     // Add current user message
     messages.push({ role: 'user', content: message });
 
-    console.log('Sending request to OpenAI with GPT-5...');
+    console.log('Sending request to Groq with Llama-3.1...');
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${groqApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-2025-08-07',
+        model: 'llama-3.1-70b-versatile',
         messages: messages,
-        max_completion_tokens: 1200,
+        max_tokens: 1200,
+        temperature: 0.1,
         stream: false,
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API error:', errorText);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      console.error('Groq API error:', errorText);
+      throw new Error(`Groq API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -140,7 +141,7 @@ When explaining email classifications, always break down:
     if (error.message.includes('429') || error.message.includes('exceeded your current quota')) {
       errorResponse = {
         error: 'AI service quota exceeded. Please try again later.',
-        details: 'The OpenAI API quota has been exceeded. This typically resolves within 24 hours.'
+        details: 'The Groq API quota has been exceeded. This typically resets quickly.'
       };
       statusCode = 429;
     } else if (error.message.includes('insufficient_quota')) {
