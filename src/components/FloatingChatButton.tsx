@@ -29,7 +29,7 @@ const FloatingChatButton: React.FC<FloatingChatButtonProps> = ({ selectedEmail, 
   return (
     <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40">
       {/* Container for button with proper overflow handling */}
-      <div className="relative p-2 sm:p-4">
+      <div className="relative">
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
             <Button
