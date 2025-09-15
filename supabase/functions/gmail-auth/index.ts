@@ -50,8 +50,13 @@ serve(async (req) => {
     // Handle auth URL generation
     if (action === 'get_auth_url') {
       console.log('Generating auth URL...');
+      console.log('Google Client ID present:', !!googleClientId);
+      console.log('Google Client Secret present:', !!googleClientSecret);
+      
       if (!googleClientId || !googleClientSecret) {
         console.error('Google Client ID or Secret not found');
+        console.error('Client ID exists:', !!googleClientId);
+        console.error('Client Secret exists:', !!googleClientSecret);
         return new Response(
           JSON.stringify({ error: 'Google OAuth not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
