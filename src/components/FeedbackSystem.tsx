@@ -126,7 +126,7 @@ const FeedbackSystem = () => {
   const selectedType = feedbackTypes.find(type => type.value === feedbackType);
 
   return (
-    <div className="fixed bottom-20 left-4 sm:left-6 z-40">
+    <div className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-40">
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
           <Button
