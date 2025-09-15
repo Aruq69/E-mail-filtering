@@ -267,8 +267,8 @@ const Index = () => {
   }, {} as Record<string, number>);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-7xl space-y-6 p-6">
+    <div className="min-h-screen bg-background overflow-x-hidden">
+      <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
         {/* Centered Header with Shield */}
         <div className="text-center space-y-6">
           {/* Centered Shield Icon */}
