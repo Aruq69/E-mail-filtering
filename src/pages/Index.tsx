@@ -541,12 +541,12 @@ const Index = () => {
                               <div className="flex items-center justify-between relative z-10">
                                 <div className="flex-1 space-y-3">
                                   {/* Header with icons and badges */}
-                                  <div className="flex items-center space-x-3">
-                                    <div className="flex-shrink-0">
+                                  <div className="flex items-start space-x-3">
+                                    <div className="flex-shrink-0 mt-1">
                                       {getThreatIcon(email.threat_level)}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <h3 className="font-bold text-foreground text-lg leading-tight truncate group-hover:text-primary transition-colors duration-300">
+                                      <h3 className="font-bold text-foreground text-lg leading-tight group-hover:text-primary transition-colors duration-300">
                                         {email.subject}
                                       </h3>
                                     </div>
