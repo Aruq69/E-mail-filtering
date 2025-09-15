@@ -780,9 +780,6 @@ const Index = () => {
         {/* Feedback System */}
         <FeedbackSystem />
 
-        {/* User Onboarding */}
-        <UserOnboarding />
-
         {/* Email Details Dialog */}
         <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
           <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto border-border/20 bg-card/95 backdrop-blur-md shadow-2xl">

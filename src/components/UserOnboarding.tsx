@@ -36,6 +36,7 @@ const UserOnboarding = () => {
   useEffect(() => {
     // Check if user has seen onboarding before
     const seen = localStorage.getItem('mailguard_onboarding_seen');
+    // Show onboarding for new visitors (regardless of auth status)
     if (!seen) {
       setIsOpen(true);
     }
@@ -46,47 +47,34 @@ const UserOnboarding = () => {
     {
       id: 'welcome',
       title: 'Welcome to Mail Guard',
-      description: 'Your advanced email security system powered by AI. Let\'s take a quick tour of the key features.',
+      description: 'Your advanced email security system powered by AI. Let\'s take a quick tour of what you can do with Mail Guard.',
       icon: Shield,
     },
     {
-      id: 'connect',
-      title: 'Connect Your Email',
-      description: 'Start by connecting your Gmail account for real-time threat analysis. We use secure OAuth 2.0 - no passwords stored.',
-      icon: Mail,
-      action: 'Connect Gmail Account'
-    },
-    {
-      id: 'analyze',
-      title: 'AI Threat Analysis',
-      description: 'Our AI analyzes emails for phishing, spam, and security threats. View detailed threat levels and confidence scores.',
+      id: 'security',
+      title: 'AI-Powered Protection',
+      description: 'Our advanced AI analyzes emails for phishing, spam, malware, and 24+ different threat types in real-time.',
       icon: Zap,
     },
     {
       id: 'dashboard',
       title: 'Security Dashboard',
-      description: 'Monitor threat statistics and filter emails by risk level. Click on any email to see detailed analysis.',
+      description: 'Monitor threat statistics, view detailed analysis, and filter emails by risk level to focus on what matters most.',
       icon: Target,
     },
     {
       id: 'chat',
       title: 'AI Security Assistant',
-      description: 'Ask questions like "Is this secure?" or "What\'s suspicious?" for instant security insights.',
+      description: 'Ask questions like "Is this secure?" or "What\'s suspicious?" for instant security insights from our AI assistant.',
       icon: MessageSquare,
       action: 'Try the AI Assistant'
     },
     {
-      id: 'search',
-      title: 'Search & Filter',
-      description: 'Use the search bar to find specific emails and filter by threat levels to focus on what matters.',
-      icon: Search,
-    },
-    {
-      id: 'feedback',
-      title: 'Help Us Improve',
-      description: 'Share your feedback to help us enhance the user experience. Your input is valuable for our development.',
-      icon: Eye,
-      action: 'Provide Feedback'
+      id: 'connect',
+      title: 'Connect Your Email',
+      description: 'Connect your Gmail account securely using OAuth 2.0. We never store passwords and only analyze for threats.',
+      icon: Mail,
+      action: 'Get Started'
     }
   ];
 

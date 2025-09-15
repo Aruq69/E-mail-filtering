@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Shield, Check, X } from "lucide-react";
+import UserOnboarding from "@/components/UserOnboarding";
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -390,6 +391,9 @@ const Auth = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* User Onboarding - Show welcome tour for new visitors */}
+        <UserOnboarding />
       </div>
     </div>
   );
