@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock, LogOut, Plus, Brain, Bot, Cpu, Target, Radar, ScanLine } from "lucide-react";
+import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock, LogOut, Plus, Brain, Bot, Cpu, Target, Radar, ScanLine, Database } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -342,7 +342,7 @@ const Index = () => {
               <div className="text-3xl font-bold text-yellow-500">{threatStats.medium || 0}</div>
               <div className="text-xs text-muted-foreground mt-1">Under review</div>
             </CardContent>
-          </Card>
+            </Card>
           
           <Card className="threat-low border-border/20 bg-card/50 backdrop-blur-sm hover-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -634,7 +634,7 @@ const Index = () => {
                 </Card>
           
           {/* AI Analysis Features Section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {/* AI Analysis */}
             <Card className="border-border/20 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent backdrop-blur-sm hover:scale-105 transition-all duration-300">
               <CardContent className="p-6 text-center">
@@ -674,6 +674,20 @@ const Index = () => {
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">Neural Network</h3>
                 <p className="text-sm text-muted-foreground">Deep learning networks for sophisticated threat pattern analysis</p>
+              </CardContent>
+            </Card>
+
+            {/* ML Engine */}
+            <Card className="border-border/20 bg-gradient-to-br from-teal-500/10 via-teal-500/5 to-transparent backdrop-blur-sm hover:scale-105 transition-all duration-300">
+              <CardContent className="p-6 text-center">
+                <div className="relative mb-4">
+                  <div className="p-4 rounded-full bg-teal-500/20 w-fit mx-auto">
+                    <Database className="h-8 w-8 text-teal-500" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 h-4 w-4 bg-teal-500 rounded-full animate-pulse" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">ML Engine</h3>
+                <p className="text-sm text-muted-foreground">Adaptive learning system that improves detection accuracy over time</p>
               </CardContent>
             </Card>
           </div>
