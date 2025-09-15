@@ -237,25 +237,25 @@ const Index = () => {
     switch (threatLevel?.toLowerCase()) {
       case 'high': 
         return (
-          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-red-500">
+          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 hover:shadow-lg hover:shadow-red-500/50 transition-all duration-300 cursor-pointer">
             <AlertTriangle className="h-3 w-3 text-white" />
           </div>
         );
       case 'medium': 
         return (
-          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-yellow-500">
+          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-yellow-500 hover:bg-yellow-600 hover:shadow-lg hover:shadow-yellow-500/50 transition-all duration-300 cursor-pointer">
             <Clock className="h-3 w-3 text-white" />
           </div>
         );
       case 'low': 
         return (
-          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500">
+          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500 hover:bg-green-600 hover:shadow-lg hover:shadow-green-500/50 transition-all duration-300 cursor-pointer">
             <CheckCircle className="h-3 w-3 text-white" />
           </div>
         );
       default: 
         return (
-          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-500">
+          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-500 hover:bg-gray-600 hover:shadow-lg hover:shadow-gray-500/50 transition-all duration-300 cursor-pointer">
             <Shield className="h-3 w-3 text-white" />
           </div>
         );
