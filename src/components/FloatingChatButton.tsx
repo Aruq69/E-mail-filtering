@@ -31,24 +31,37 @@ const FloatingChatButton: React.FC<FloatingChatButtonProps> = ({ selectedEmail, 
         <SheetTrigger asChild>
           <Button
             size="lg"
-            className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-primary hover:bg-primary/90 group relative overflow-hidden"
+            className="group relative h-16 w-16 rounded-full border-2 border-primary/20 bg-gradient-to-br from-primary via-primary to-primary-glow shadow-lg hover:shadow-2xl hover:shadow-primary/25 transition-all duration-500 hover:scale-110 overflow-hidden"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="relative z-10 flex items-center justify-center">
+            {/* Animated background gradient */}
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary-glow/50 to-primary opacity-0 group-hover:opacity-100 transition-all duration-500 group-hover:rotate-45" />
+            
+            {/* Glowing ring effect */}
+            <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping [animation-duration:2s]" />
+            <div className="absolute inset-1 rounded-full bg-primary/10 animate-ping [animation-duration:2.5s] [animation-delay:0.5s]" />
+            
+            {/* Main icon container */}
+            <div className="relative z-10 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
               {isOpen ? (
-                <X className="h-6 w-6 text-primary-foreground" />
+                <X className="h-7 w-7 text-primary-foreground transition-all duration-300" />
               ) : (
-                <Bot className="h-6 w-6 text-primary-foreground animate-pulse" />
+                <MessageCircle className="h-7 w-7 text-primary-foreground transition-all duration-300" />
               )}
             </div>
             
-            {/* Pulse animation ring */}
-            <div className="absolute inset-0 rounded-full bg-primary/30 animate-ping" />
-            
-            {/* Chat indicator */}
+            {/* Status indicator */}
             {!isOpen && (
-              <div className="absolute -top-1 -right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-background animate-pulse" />
+              <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center">
+                <div className="absolute h-full w-full rounded-full bg-green-500 animate-ping [animation-duration:1.5s]" />
+                <div className="relative h-3 w-3 rounded-full bg-green-400 border-2 border-background shadow-sm" />
+              </div>
             )}
+            
+            {/* Hover tooltip */}
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 rounded-lg bg-popover px-3 py-1.5 text-xs font-medium text-popover-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap border border-border/20">
+              {isOpen ? 'Close Chat' : 'AI Assistant'}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-popover" />
+            </div>
           </Button>
         </SheetTrigger>
         
