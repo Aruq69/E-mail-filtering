@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import EmailSubmissionForm from "@/components/EmailSubmissionForm";
-import ChatAssistant from "@/components/ChatAssistant";
+import FloatingChatButton from "@/components/FloatingChatButton";
 import IMAPConnect from "@/components/IMAPConnect";
 import shieldIcon from "@/assets/shield-icon.png";
 
@@ -405,10 +405,10 @@ const Index = () => {
         {/* Email Submission Form */}
         <EmailSubmissionForm onEmailSubmitted={fetchEmails} />
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Email Analysis */}
-          <div className="lg:col-span-2 space-y-6">
+        {/* Main Content - Full Width */}
+        <div className="space-y-6">
+          {/* Email Analysis */}
+          <div className="w-full space-y-6">
             {/* Search Interface */}
             <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
               <CardContent className="pt-6">
@@ -531,15 +531,14 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Right Column - Chat Assistant */}
-          <div className="lg:col-span-1">
-            <ChatAssistant selectedEmail={selectedEmail} emails={emails} />
-          </div>
         </div>
+
+        {/* Floating Chat Button */}
+        <FloatingChatButton selectedEmail={selectedEmail} emails={emails} />
 
         {/* Email Details Dialog */}
         <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
-          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto border-border/20 bg-card/50 backdrop-blur-sm">
+          <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto border-border/20 bg-card/95 backdrop-blur-md shadow-2xl">
             <DialogHeader>
               <DialogTitle className="flex items-center space-x-3">
                 <Mail className="h-6 w-6 text-primary" />
@@ -558,10 +557,10 @@ const Index = () => {
             {selectedEmail && (
               <div className="space-y-6 mt-6">
                 {/* Security Status Banner */}
-                <div className={`p-4 border-2 border-border/20 bg-card/50 backdrop-blur-sm rounded-lg ${
-                  selectedEmail.threat_level === 'high' ? 'border-destructive' :
-                  selectedEmail.threat_level === 'medium' ? 'border-yellow-500' :
-                  'border-accent'
+                <div className={`p-6 border-2 rounded-xl backdrop-blur-sm transition-all duration-300 ${
+                  selectedEmail.threat_level === 'high' ? 'border-destructive/50 bg-destructive/10' :
+                  selectedEmail.threat_level === 'medium' ? 'border-yellow-500/50 bg-yellow-500/10' :
+                  'border-accent/50 bg-accent/10'
                 }`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
@@ -581,7 +580,7 @@ const Index = () => {
                 {/* Email Details Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Email Info */}
-                  <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
+                  <Card className="border-border/20 bg-card/80 backdrop-blur-sm hover-card transition-all duration-300 hover:bg-card/90">
                     <CardHeader>
                       <CardTitle className="text-sm text-primary">📧 EMAIL DETAILS</CardTitle>
                     </CardHeader>

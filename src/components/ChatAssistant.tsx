@@ -240,8 +240,8 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
   };
 
   return (
-    <div className="h-[700px] flex flex-col">
-      <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card flex-1 flex flex-col overflow-hidden">
+    <div className="h-full flex flex-col">
+      <Card className="border-none bg-transparent flex-1 flex flex-col overflow-hidden h-full">
         <CardHeader className="pb-2 flex-shrink-0">
           <CardTitle className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -274,22 +274,22 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
           </div>
         </CardTitle>
         
-        {/* Dynamic Threat Statistics */}
+        {/* Threat Statistics - Consistent with Dashboard */}
         <div className="grid grid-cols-3 gap-2 mt-3">
-          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-2 text-center">
-            <div className="text-xs text-destructive font-semibold">HIGH RISK</div>
-            <div className="text-lg font-bold text-destructive">{animatedStats.high}</div>
-            <AlertTriangle className="h-3 w-3 mx-auto mt-1 text-destructive" />
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 text-center">
+            <div className="text-xs text-muted-foreground font-medium">HIGH THREATS</div>
+            <div className="text-2xl font-bold text-destructive">{animatedStats.high}</div>
+            <div className="text-xs text-muted-foreground mt-1">Critical alerts</div>
           </div>
-          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2 text-center">
-            <div className="text-xs text-yellow-600 font-semibold">MEDIUM</div>
-            <div className="text-lg font-bold text-yellow-600">{animatedStats.medium}</div>
-            <Shield className="h-3 w-3 mx-auto mt-1 text-yellow-600" />
+          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 text-center">
+            <div className="text-xs text-muted-foreground font-medium">MEDIUM THREATS</div>
+            <div className="text-2xl font-bold text-yellow-500">{animatedStats.medium}</div>
+            <div className="text-xs text-muted-foreground mt-1">Under review</div>
           </div>
-          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2 text-center">
-            <div className="text-xs text-green-600 font-semibold">LOW RISK</div>
-            <div className="text-lg font-bold text-green-600">{animatedStats.low}</div>
-            <Eye className="h-3 w-3 mx-auto mt-1 text-green-600" />
+          <div className="bg-accent/10 border border-accent/20 rounded-lg p-3 text-center">
+            <div className="text-xs text-muted-foreground font-medium">SAFE EMAILS</div>
+            <div className="text-2xl font-bold text-accent">{animatedStats.low}</div>
+            <div className="text-xs text-muted-foreground mt-1">Verified clean</div>
           </div>
         </div>
 
