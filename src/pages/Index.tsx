@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import EmailSubmissionForm from "@/components/EmailSubmissionForm";
 import FloatingChatButton from "@/components/FloatingChatButton";
-import IMAPConnect from "@/components/IMAPConnect";
+
 
 
 interface Email {
@@ -87,9 +87,8 @@ const Index = () => {
     }
   };
 
-  const fetchIMAPEmails = async () => {
+  const fetchGmailEmails = async () => {
     if (!user) {
-      
       toast({
         title: "Authentication required",
         description: "Please sign in to fetch emails.",
@@ -100,24 +99,35 @@ const Index = () => {
     
     setLoading(true);
     
-    
     try {
-      // This will trigger the IMAP connection form to show
-      toast({
-        title: "Connect Email Account",
-        description: "Use the Connect Email Account section below to fetch real emails.",
-      });
+      console.log('🔄 Invoking Gmail email fetch...');
       
-      // Refresh emails after a brief delay to show any newly connected emails
-      setTimeout(() => {
+      const { data, error } = await supabase.functions.invoke('fetch-gmail-emails', {
+        body: { user_id: user.id }
+      });
+
+      if (error) {
+        console.error('Gmail fetch error:', error);
+        throw error;
+      }
+
+      if (data.success) {
+        toast({
+          title: "Gmail sync successful",
+          description: `Processed ${data.total} emails from your Gmail inbox.`,
+        });
+        
+        // Refresh the emails list
         fetchEmails();
-      }, 1000);
+      } else {
+        throw new Error(data.error || 'Unknown error occurred');
+      }
       
     } catch (error) {
-      console.error('🚨 IMAP fetch error:', error);
+      console.error('🚨 Gmail fetch error:', error);
       toast({
-        title: "Error",
-        description: "Failed to initiate IMAP connection.",
+        title: "Gmail sync failed",
+        description: error.message || "Failed to fetch emails from Gmail. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -130,9 +140,9 @@ const Index = () => {
     if (!user) return;
     
     try {
-      // Check if user has analyzed any emails (indicates they've connected an account)
+      // Check if user has Gmail tokens (indicates they've connected Gmail)
       const { data, error } = await supabase
-        .from('emails')
+        .from('gmail_tokens')
         .select('id')
         .eq('user_id', user.id)
         .limit(1);
@@ -147,16 +157,22 @@ const Index = () => {
     if (!user) return;
     
     try {
-      // Clear all analyzed emails (since IMAP doesn't store persistent tokens)
-      await supabase
-        .from('emails')
-        .delete()
-        .eq('user_id', user.id);
+      // Clear Gmail tokens and emails
+      await Promise.all([
+        supabase
+          .from('gmail_tokens')
+          .delete()
+          .eq('user_id', user.id),
+        supabase
+          .from('emails')
+          .delete()
+          .eq('user_id', user.id)
+      ]);
       
       setGmailConnected(false);
       toast({
-        title: "Cleared",
-        description: "Email analysis history cleared successfully.",
+        title: "Disconnected",
+        description: "Gmail account and email data cleared successfully.",
       });
       
       // Refresh to show empty state
@@ -164,7 +180,7 @@ const Index = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to clear email data. Please try again.",
+        description: "Failed to disconnect Gmail. Please try again.",
         variant: "destructive",
       });
     }
@@ -288,9 +304,9 @@ const Index = () => {
         {/* Action Buttons Bar */}
         <div className="flex items-center justify-center space-x-4 flex-wrap gap-2">
             {gmailConnected && (
-              <Button onClick={fetchIMAPEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50 hover-button">
+              <Button onClick={fetchGmailEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50 hover-button">
                 <Activity className="h-4 w-4 mr-2" />
-                Connect New Account
+                Sync Gmail
               </Button>
             )}
             <Button onClick={fetchEmails} disabled={loading} variant="outline" className="border-primary/30 hover:border-primary/50 hover-button">
@@ -357,9 +373,97 @@ const Index = () => {
           </Card>
         </div>
 
-        {/* Email Connection */}
+        {/* Gmail Connection */}
         {!gmailConnected && (
-          <IMAPConnect onConnected={checkEmailConnection} />
+          <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Mail className="h-5 w-5 text-primary" />
+                <span>Connect Gmail Account</span>
+              </CardTitle>
+              <CardDescription>
+                Connect your Gmail account to start analyzing emails for threats
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Feature Cards Section */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center mb-6">
+                {/* Universal */}
+                <div className="border border-border/20 bg-gradient-to-br from-orange-500/10 via-orange-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
+                  <div className="relative mb-3">
+                    <div className="p-3 rounded-full bg-orange-500/20 w-fit mx-auto">
+                      <Shield className="h-6 w-6 text-orange-500" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-orange-500 rounded-full animate-pulse" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-foreground mb-1">Universal</h3>
+                  <p className="text-xs text-muted-foreground">Works with Gmail</p>
+                </div>
+                
+                {/* AI Analysis */}
+                <div className="border border-border/20 bg-gradient-to-br from-cyan-500/10 via-cyan-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
+                  <div className="relative mb-3">
+                    <div className="p-3 rounded-full bg-cyan-500/20 w-fit mx-auto">
+                      <Eye className="h-6 w-6 text-cyan-500" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-cyan-500 rounded-full animate-pulse" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-foreground mb-1">AI Analysis</h3>
+                  <p className="text-xs text-muted-foreground">Real-time detection</p>
+                </div>
+                
+                {/* Secure */}
+                <div className="border border-border/20 bg-gradient-to-br from-pink-500/10 via-pink-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
+                  <div className="relative mb-3">
+                    <div className="p-3 rounded-full bg-pink-500/20 w-fit mx-auto">
+                      <Database className="h-6 w-6 text-pink-500" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-pink-500 rounded-full animate-pulse" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-foreground mb-1">Secure</h3>
+                  <p className="text-xs text-muted-foreground">OAuth 2.0</p>
+                </div>
+                
+                {/* ML Engine */}
+                <div className="border border-border/20 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
+                  <div className="relative mb-3">
+                    <div className="p-3 rounded-full bg-emerald-500/20 w-fit mx-auto">
+                      <Database className="h-6 w-6 text-emerald-500" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-emerald-500 rounded-full animate-pulse" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-foreground mb-1">ML Engine</h3>
+                  <p className="text-xs text-muted-foreground">Adaptive learning</p>
+                </div>
+              </div>
+
+              {/* Gmail Connection Button */}
+              <div className="text-center space-y-4">
+                <div className="relative p-6 rounded-lg bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 backdrop-blur-sm">
+                  <div className="flex items-center justify-center space-x-4 mb-4">
+                    <div className="p-3 rounded-full bg-primary/20">
+                      <Mail className="h-8 w-8 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground">Gmail Integration</h3>
+                      <p className="text-sm text-muted-foreground">Secure OAuth 2.0 connection to your Gmail account</p>
+                    </div>
+                  </div>
+                  <Button onClick={connectGmail} className="w-full gradient-button" size="lg">
+                    <Mail className="h-5 w-5 mr-2" />
+                    Connect Gmail Account
+                  </Button>
+                </div>
+                
+                <div className="text-xs text-muted-foreground bg-muted/20 p-3 rounded border border-border/20">
+                  <div className="flex items-center space-x-2">
+                    <Shield className="h-4 w-4 text-primary" />
+                    <span>Secure OAuth 2.0 authentication • Read-only access • No passwords stored</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
 
