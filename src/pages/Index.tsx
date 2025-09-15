@@ -156,22 +156,15 @@ const Index = () => {
     if (!user) return;
     
     try {
-      // Clear Gmail tokens and emails
-      await Promise.all([
-        supabase
-          .from('gmail_tokens')
-          .delete()
-          .eq('user_id', user.id),
-        supabase
-          .from('emails')
-          .delete()
-          .eq('user_id', user.id)
-      ]);
+      // Only clear emails, keep Gmail connection active
+      await supabase
+        .from('emails')
+        .delete()
+        .eq('user_id', user.id);
       
-      setGmailConnected(false);
       toast({
-        title: "Disconnected",
-        description: "Gmail account and email data cleared successfully.",
+        title: "Data Cleared",
+        description: "All email data has been cleared. Gmail connection remains active.",
       });
       
       // Refresh to show empty state
@@ -179,7 +172,7 @@ const Index = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to disconnect Gmail. Please try again.",
+        description: "Failed to clear email data. Please try again.",
         variant: "destructive",
       });
     }
@@ -356,9 +349,9 @@ const Index = () => {
               Refresh
             </Button>
             {gmailConnected && (
-              <Button onClick={handleUnsync} variant="outline" className="border-destructive/30 hover:border-destructive/50 hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 hover-button">
-                <Lock className="h-4 w-4 mr-2" />
-                Clear Data
+              <Button onClick={handleUnsync} variant="outline" className="border-orange-500/30 hover:border-orange-500/50 hover:bg-orange-500 hover:text-white transition-all duration-300 hover-button">
+                <Mail className="h-4 w-4 mr-2" />
+                Clear Emails
               </Button>
             )}
             <Button onClick={signOut} variant="outline" className="border-muted-foreground/30 hover:border-destructive hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 hover-button">
