@@ -27,7 +27,7 @@ const FloatingChatButton: React.FC<FloatingChatButtonProps> = ({ selectedEmail, 
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40">
       {/* Container for button with proper overflow handling */}
       <div className="relative p-2 sm:p-4">
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
