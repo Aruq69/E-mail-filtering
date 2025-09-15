@@ -526,7 +526,7 @@ const Index = () => {
                           return (
                             <div 
                               key={email.id} 
-                              className={`group relative ${threatClass} p-5 hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-border/30 bg-gradient-to-r from-card/80 via-card/60 to-card/80 backdrop-blur-md rounded-xl hover-card animate-fade-in shadow-lg hover:shadow-xl ${
+                              className={`group relative ${threatClass} p-3 hover:scale-[1.01] transition-all duration-300 cursor-pointer border border-border/30 bg-gradient-to-r from-card/80 via-card/60 to-card/80 backdrop-blur-md rounded-lg hover-card animate-fade-in shadow-sm hover:shadow-md ${
                                 selectedEmail?.id === email.id ? 'ring-2 ring-primary/50 shadow-primary/20' : ''
                               }`}
                               style={{ animationDelay: `${index * 0.1}s` }}
@@ -539,14 +539,14 @@ const Index = () => {
                               <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/10 via-transparent to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                               
                               <div className="flex items-center justify-between relative z-10">
-                                <div className="flex-1 space-y-3">
+                                <div className="flex-1 space-y-2">
                                   {/* Header with icons and badges */}
                                   <div className="flex items-start space-x-3">
                                     <div className="flex-shrink-0 mt-1">
                                       {getThreatIcon(email.threat_level)}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <h3 className="font-bold text-foreground text-lg leading-tight group-hover:text-primary transition-colors duration-300">
+                                      <h3 className="font-bold text-foreground text-base leading-tight group-hover:text-primary transition-colors duration-300">
                                         {email.subject}
                                       </h3>
                                     </div>
@@ -554,7 +554,7 @@ const Index = () => {
                                       {email.threat_level && (
                                         <Badge 
                                           variant={getThreatBadgeVariant(email.threat_level)}
-                                          className="text-xs px-3 py-1.5 font-semibold shadow-sm"
+                                          className="text-xs px-2 py-1 font-semibold shadow-sm"
                                         >
                                           {email.threat_level.toUpperCase()}
                                         </Badge>
@@ -562,7 +562,7 @@ const Index = () => {
                                       {email.classification && (
                                         <Badge 
                                           variant="outline" 
-                                          className="border-primary/40 text-primary text-xs px-3 py-1.5 font-medium bg-primary/5 shadow-sm"
+                                          className="border-primary/40 text-primary text-xs px-2 py-1 font-medium bg-primary/5 shadow-sm"
                                         >
                                           {email.classification}
                                         </Badge>
