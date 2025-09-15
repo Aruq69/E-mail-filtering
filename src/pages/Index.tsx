@@ -526,7 +526,7 @@ const Index = () => {
                           return (
                             <div 
                               key={email.id} 
-                              className={`group relative ${threatClass} p-3 hover:scale-[1.01] transition-all duration-300 cursor-pointer border border-border/30 bg-gradient-to-r from-card/80 via-card/60 to-card/80 backdrop-blur-md rounded-lg hover-card animate-fade-in shadow-sm hover:shadow-md ${
+                              className={`group relative ${threatClass} p-3 hover:scale-105 transition-all duration-300 cursor-pointer border border-border/30 bg-gradient-to-r from-card/80 via-card/60 to-card/80 backdrop-blur-md rounded-lg hover-card animate-fade-in shadow-sm hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] hover:border-green-500/50 ${
                                 selectedEmail?.id === email.id ? 'ring-2 ring-primary/50 shadow-primary/20' : ''
                               }`}
                               style={{ animationDelay: `${index * 0.1}s` }}
