@@ -283,6 +283,7 @@ serve(async (req) => {
             .from('emails')
             .insert({
               user_id: user_id,
+              message_id: message.id, // Add the required message_id field
               gmail_id: message.id,
               subject,
               sender,
