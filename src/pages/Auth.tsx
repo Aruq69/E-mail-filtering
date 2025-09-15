@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Shield, Check, X } from "lucide-react";
+import { Loader2, Shield, Check, X, Flame } from "lucide-react";
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -157,7 +157,23 @@ const Auth = () => {
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
           <div className="flex justify-center mb-4">
-            <Shield className="w-12 h-12 text-primary" />
+            <div className="relative">
+              {/* Flame Effects Behind Shield */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Flame className="h-16 w-16 text-orange-500/30 animate-pulse [animation-duration:2s]" />
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center rotate-12">
+                <Flame className="h-14 w-14 text-red-500/20 animate-pulse [animation-duration:2.5s] [animation-delay:0.5s]" />
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center -rotate-12">
+                <Flame className="h-15 w-15 text-yellow-500/25 animate-pulse [animation-duration:1.8s] [animation-delay:1s]" />
+              </div>
+              
+              {/* Main Shield */}
+              <div className="relative z-10">
+                <Shield className="w-12 h-12 text-primary" />
+              </div>
+            </div>
           </div>
           <h1 className="text-3xl font-bold text-foreground">Mail Guard</h1>
           <p className="text-muted-foreground mt-2">
