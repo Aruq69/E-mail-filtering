@@ -65,7 +65,7 @@ const Index = () => {
         .select('*')
         .eq('user_id', user.id)
         .order('received_date', { ascending: false })
-        .limit(50);
+        .limit(100);
       
       if (error) {
         console.error('Error fetching emails:', error);
@@ -114,9 +114,17 @@ const Index = () => {
       }
 
       if (data.success) {
+        // Get current email count to see how many were actually new
+        const { data: currentEmails } = await supabase
+          .from('emails')
+          .select('id', { count: 'exact' })
+          .eq('user_id', user.id);
+          
+        const currentCount = currentEmails?.length || 0;
+        
         toast({
-          title: "Gmail sync successful",
-          description: `Processed ${data.total} emails from your Gmail inbox.`,
+          title: "Gmail sync completed",
+          description: `Processed ${data.total} emails. Total emails in database: ${currentCount}`,
         });
         
         // Refresh the emails list
@@ -408,7 +416,7 @@ const Index = () => {
             <CardContent className="pt-1">
               <div className="text-xl font-bold text-primary">{emails.length}</div>
               <div className="text-xs text-muted-foreground">
-                {threatFilter === 'all' ? 'All emails selected' : 'Active monitoring'}
+                {threatFilter === 'all' ? 'All emails selected' : `Showing ${emails.length} most recent`}
               </div>
             </CardContent>
           </Card>
