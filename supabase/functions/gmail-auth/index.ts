@@ -13,6 +13,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('=== GMAIL AUTH FUNCTION START ===');
   console.log('Gmail auth function called, method:', req.method);
   
   if (req.method === 'OPTIONS') {
@@ -21,6 +22,7 @@ serve(async (req) => {
   }
 
   try {
+    console.log('=== STARTING FUNCTION LOGIC ===');
     console.log('Parsing request body...');
     const body = await req.text();
     console.log('Raw body:', body);
@@ -39,12 +41,15 @@ serve(async (req) => {
     const { action, code } = jsonBody;
     console.log('Parsed action:', action, 'code present:', !!code);
     
+    console.log('=== PARSING ORIGIN HEADERS ===');
     // Extract origin from referer if no origin header (with error handling)
     let refererOrigin = null;
     try {
       const refererUrl = req.headers.get('referer');
+      console.log('Raw referer header:', refererUrl);
       if (refererUrl) {
         refererOrigin = new URL(refererUrl).origin;
+        console.log('Parsed referer origin:', refererOrigin);
       }
     } catch (e) {
       console.log('Failed to parse referer URL:', e);
