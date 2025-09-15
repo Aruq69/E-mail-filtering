@@ -118,16 +118,9 @@ const Index = () => {
 
       if (data.success) {
         // Get current email count to see how many were actually new
-        const { data: currentEmails } = await supabase
-          .from('emails')
-          .select('id', { count: 'exact' })
-          .eq('user_id', user.id);
-          
-        const currentCount = currentEmails?.length || 0;
-        
         toast({
           title: "Gmail sync completed",
-          description: `Processed ${data.total} emails. Total emails in database: ${currentCount}`,
+          description: `Processed ${data.total} emails successfully`,
         });
         
         // Refresh the emails list
