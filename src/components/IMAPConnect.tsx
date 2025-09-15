@@ -133,20 +133,35 @@ export default function IMAPConnect({ onConnected }: IMAPConnectProps) {
       </CardHeader>
       
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-3 gap-3 text-center">
-          <div className="flex flex-col items-center space-y-2 p-3 rounded-lg bg-muted/30 border border-muted">
-            <Shield className="h-6 w-6 text-green-500" />
-            <h4 className="text-xs font-medium">Universal</h4>
+        <div className="grid grid-cols-3 gap-3 text-center mb-6">
+          <div className="border border-border/20 bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
+            <div className="relative mb-3">
+              <div className="p-3 rounded-full bg-green-500/20 w-fit mx-auto">
+                <Shield className="h-6 w-6 text-green-500" />
+              </div>
+              <div className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full animate-pulse" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground mb-1">Universal</h3>
             <p className="text-xs text-muted-foreground">Works with any provider</p>
           </div>
-          <div className="flex flex-col items-center space-y-2 p-3 rounded-lg bg-muted/30 border border-muted">
-            <Eye className="h-6 w-6 text-blue-500" />
-            <h4 className="text-xs font-medium">AI Analysis</h4>
+          <div className="border border-border/20 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
+            <div className="relative mb-3">
+              <div className="p-3 rounded-full bg-blue-500/20 w-fit mx-auto">
+                <Eye className="h-6 w-6 text-blue-500" />
+              </div>
+              <div className="absolute -top-1 -right-1 h-3 w-3 bg-blue-500 rounded-full animate-pulse" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground mb-1">AI Analysis</h3>
             <p className="text-xs text-muted-foreground">Real-time detection</p>
           </div>
-          <div className="flex flex-col items-center space-y-2 p-3 rounded-lg bg-muted/30 border border-muted">
-            <Database className="h-6 w-6 text-purple-500" />
-            <h4 className="text-xs font-medium">Secure</h4>
+          <div className="border border-border/20 bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
+            <div className="relative mb-3">
+              <div className="p-3 rounded-full bg-purple-500/20 w-fit mx-auto">
+                <Database className="h-6 w-6 text-purple-500" />
+              </div>
+              <div className="absolute -top-1 -right-1 h-3 w-3 bg-purple-500 rounded-full animate-pulse" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground mb-1">Secure</h3>
             <p className="text-xs text-muted-foreground">Read-only access</p>
           </div>
         </div>

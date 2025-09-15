@@ -362,50 +362,6 @@ const Index = () => {
           <IMAPConnect onConnected={checkEmailConnection} />
         )}
 
-        {/* Feature Cards Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* Universal */}
-          <Card className="border-border/20 bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent backdrop-blur-sm hover:scale-105 transition-all duration-300">
-            <CardContent className="p-6 text-center">
-              <div className="relative mb-4">
-                <div className="p-4 rounded-full bg-green-500/20 w-fit mx-auto">
-                  <Shield className="h-8 w-8 text-green-500" />
-                </div>
-                <div className="absolute -top-1 -right-1 h-4 w-4 bg-green-500 rounded-full animate-pulse" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">Universal</h3>
-              <p className="text-sm text-muted-foreground">Works with any provider</p>
-            </CardContent>
-          </Card>
-
-          {/* AI Analysis */}
-          <Card className="border-border/20 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent backdrop-blur-sm hover:scale-105 transition-all duration-300">
-            <CardContent className="p-6 text-center">
-              <div className="relative mb-4">
-                <div className="p-4 rounded-full bg-blue-500/20 w-fit mx-auto">
-                  <Eye className="h-8 w-8 text-blue-500" />
-                </div>
-                <div className="absolute -top-1 -right-1 h-4 w-4 bg-blue-500 rounded-full animate-pulse" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">AI Analysis</h3>
-              <p className="text-sm text-muted-foreground">Real-time detection</p>
-            </CardContent>
-          </Card>
-
-          {/* Secure */}
-          <Card className="border-border/20 bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent backdrop-blur-sm hover:scale-105 transition-all duration-300">
-            <CardContent className="p-6 text-center">
-              <div className="relative mb-4">
-                <div className="p-4 rounded-full bg-purple-500/20 w-fit mx-auto">
-                  <Database className="h-8 w-8 text-purple-500" />
-                </div>
-                <div className="absolute -top-1 -right-1 h-4 w-4 bg-purple-500 rounded-full animate-pulse" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">Secure</h3>
-              <p className="text-sm text-muted-foreground">Read-only access</p>
-            </CardContent>
-          </Card>
-        </div>
 
 
         {/* Email Submission Form */}
