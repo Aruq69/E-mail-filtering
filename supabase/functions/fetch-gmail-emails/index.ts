@@ -262,11 +262,11 @@ serve(async (req) => {
           headers: headers.map(h => `${h.name}: ${h.value}`).join('\n')
         };
 
-        // Call the ML-based classification function (implementing your Python ML approach)
-        const classificationResponse = await supabase.functions.invoke('ml-email-classifier', {
+        // Call the enhanced ML classification function with training data
+        const classificationResponse = await supabase.functions.invoke('enhanced-email-classifier', {
           body: { 
             emails: [emailData],
-            method: 'ml' // Use ML classification based on your Python code
+            method: 'enhanced-ml' // Use enhanced ML classification with training data
           }
         });
 
