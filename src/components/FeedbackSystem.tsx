@@ -81,10 +81,9 @@ const FeedbackSystem = () => {
         timestamp: new Date().toISOString()
       };
 
-      // Store feedback in Supabase
-      const { error } = await supabase
-        .from('user_feedback')
-        .insert({
+      // Store feedback using edge function (since types aren't updated yet)
+      const { data, error } = await supabase.functions.invoke('store-feedback', {
+        body: {
           user_id: user?.id || null,
           feedback_type: feedbackData.type,
           category: feedbackData.category,
@@ -92,9 +91,9 @@ const FeedbackSystem = () => {
           feedback_text: feedbackData.feedback,
           email: feedbackData.email,
           page_url: feedbackData.page,
-          user_agent: feedbackData.userAgent,
-          created_at: feedbackData.timestamp
-        });
+          user_agent: feedbackData.userAgent
+        }
+      });
 
       if (error) {
         throw error;
@@ -170,7 +169,7 @@ const FeedbackSystem = () => {
                   key={type.value}
                   variant={feedbackType === type.value ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setFeedbackType(type.value)}
+                  onClick={() => setFeedbackType(type.value as 'general' | 'bug' | 'feature' | 'ux')}
                   className="h-auto p-2 flex flex-col items-center space-y-1"
                 >
                   <type.icon className="h-4 w-4" />

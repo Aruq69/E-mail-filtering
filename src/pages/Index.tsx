@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import EmailSubmissionForm from "@/components/EmailSubmissionForm";
 import FloatingChatButton from "@/components/FloatingChatButton";
+import FeedbackSystem from "@/components/FeedbackSystem";
+import UserOnboarding from "@/components/UserOnboarding";
 
 interface Email {
   id: string;
@@ -774,6 +776,12 @@ const Index = () => {
 
         {/* Floating Chat Button */}
         <FloatingChatButton selectedEmail={selectedEmail} emails={emails} />
+
+        {/* Feedback System */}
+        <FeedbackSystem />
+
+        {/* User Onboarding */}
+        <UserOnboarding />
 
         {/* Email Details Dialog */}
         <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>

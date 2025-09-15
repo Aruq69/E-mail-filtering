@@ -145,7 +145,7 @@ const UserOnboarding = () => {
 
       {/* Onboarding Dialog */}
       <Dialog open={isOpen} onOpenChange={() => {}}>
-        <DialogContent className="max-w-lg" hideClose={false}>
+        <DialogContent className="max-w-lg">
           <div className="absolute top-4 right-4">
             <Button
               variant="ghost"
