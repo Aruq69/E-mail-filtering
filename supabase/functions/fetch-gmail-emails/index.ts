@@ -307,6 +307,7 @@ serve(async (req) => {
               raw_content: fullContent.substring(0, 5000), // Store more of the original
               classification: classification.classification,
               threat_level: classification.threat_level,
+              threat_type: classification.threat_type, // Add new threat_type field
               confidence: classification.confidence,
               keywords: classification.keywords,
               received_date: new Date(date).toISOString(),

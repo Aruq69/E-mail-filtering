@@ -30,6 +30,7 @@ export type Database = {
           sender: string
           subject: string
           threat_level: string | null
+          threat_type: string | null
           updated_at: string
           user_id: string
         }
@@ -48,6 +49,7 @@ export type Database = {
           sender: string
           subject: string
           threat_level?: string | null
+          threat_type?: string | null
           updated_at?: string
           user_id: string
         }
@@ -66,6 +68,7 @@ export type Database = {
           sender?: string
           subject?: string
           threat_level?: string | null
+          threat_type?: string | null
           updated_at?: string
           user_id?: string
         }

@@ -11,6 +11,7 @@ interface Email {
   received_date: string;
   classification: string | null;
   threat_level: string | null;
+  threat_type: string | null; // Add new threat_type field
   confidence: number | null;
   keywords: string[] | null;
   content?: string;

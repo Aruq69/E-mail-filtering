@@ -240,43 +240,85 @@ class MLEmailClassifier {
       confidence = Math.max(0.75, confidence);
     }
     
-    // Add specific threat type detection (for keywords, but keep classification as spam)
-    const phishingWords = ['verify', 'suspended', 'security', 'breach', 'urgent', 'account', 'confirm', 'click', 'login'];
-    const scamWords = ['won', 'winner', 'prize', 'lottery', 'congratulations', 'million', 'inherit'];
-    const malwareWords = ['download', 'attachment', 'exe', 'install', 'software'];
+    // Advanced threat type detection based on comprehensive threat taxonomy
+    const threatPatterns = {
+      // Phishing variants
+      'phishing': ['verify', 'confirm', 'update', 'suspended', 'expire', 'click', 'login'],
+      'spear_phishing': ['personal', 'targeted', 'colleague', 'ceo', 'manager', 'company'],
+      'email_phishing': ['account', 'security', 'breach', 'unauthorized', 'access'],
+      'whaling': ['executive', 'ceo', 'cfo', 'president', 'director', 'senior'],
+      'vishing': ['call', 'phone', 'speak', 'voice', 'number', 'contact'],
+      
+      // Business threats
+      'business_email_compromise': ['invoice', 'payment', 'wire', 'transfer', 'vendor', 'supplier'],
+      'account_takeover': ['locked', 'disabled', 'compromised', 'unusual', 'activity'],
+      'conversation_hijacking': ['reply', 'forward', 'thread', 'previous', 'continuing'],
+      
+      // Social engineering
+      'social_engineering': ['trust', 'help', 'urgent', 'friend', 'colleague', 'recommendation'],
+      'lateral_phishing': ['internal', 'colleague', 'department', 'team', 'organization'],
+      
+      // Technical threats
+      'spoofing': ['from', 'sender', 'domain', 'impersonate', 'fake', 'replica'],
+      'mitm_attacks': ['redirect', 'proxy', 'intercept', 'monitor', 'capture'],
+      'brand_impersonation': ['amazon', 'paypal', 'microsoft', 'google', 'apple', 'bank'],
+      
+      // Malicious content
+      'malware': ['download', 'attachment', 'install', 'software', 'update', 'patch'],
+      'virus': ['infected', 'clean', 'scan', 'antivirus', 'protection', 'threat'],
+      'ransomware': ['encrypt', 'decrypt', 'ransom', 'payment', 'files', 'restore'],
+      'malicious_links': ['click', 'link', 'url', 'website', 'page', 'redirect'],
+      
+      // Data and privacy
+      'data_exfiltration': ['data', 'information', 'files', 'documents', 'confidential', 'sensitive'],
+      'password_attacks': ['password', 'credentials', 'reset', 'change', 'recovery'],
+      'insider_threats': ['employee', 'insider', 'internal', 'privileged', 'access'],
+      
+      // Advanced attacks
+      'pharming': ['dns', 'redirect', 'fake', 'website', 'domain', 'hijack'],
+      'email_bombing': ['flood', 'spam', 'volume', 'massive', 'overwhelm'],
+      'darknet_email_threat': ['darknet', 'tor', 'anonymous', 'underground', 'black market']
+    };
     
-    let threatKeywords = [...mlResult.keywords];
+    // Determine specific threat type
+    let threatType = null;
+    let maxScore = 0;
     
     if (classification === 'spam') {
-      const hasPhishing = phishingWords.some(word => fullText.toLowerCase().includes(word));
-      const hasScam = scamWords.some(word => fullText.toLowerCase().includes(word));
-      const hasMalware = malwareWords.some(word => fullText.toLowerCase().includes(word));
+      for (const [type, patterns] of Object.entries(threatPatterns)) {
+        const score = patterns.reduce((acc, pattern) => {
+          return acc + (fullText.toLowerCase().includes(pattern) ? 1 : 0);
+        }, 0);
+        
+        if (score > maxScore) {
+          maxScore = score;
+          threatType = type;
+        }
+      }
       
-      // Add threat-specific keywords but keep classification as 'spam'
-      if (hasPhishing) {
-        threatKeywords.push('phishing-indicators');
-        threatLevel = 'high'; // Escalate threat level for phishing
-        confidence = Math.min(0.97, confidence + 0.1);
+      // If no specific pattern matched but it's spam, default to generic spam
+      if (!threatType || maxScore === 0) {
+        threatType = 'spam';
       }
-      if (hasScam) {
-        threatKeywords.push('scam-indicators');
+      
+      // Adjust threat level based on specific threat type
+      if (['business_email_compromise', 'spear_phishing', 'whaling', 'account_takeover'].includes(threatType)) {
         threatLevel = 'high';
-        confidence = Math.min(0.95, confidence + 0.08);
-      }
-      if (hasMalware) {
-        threatKeywords.push('malware-indicators');
+        confidence = Math.min(0.95, confidence + 0.15);
+      } else if (['ransomware', 'malware', 'virus', 'data_exfiltration'].includes(threatType)) {
         threatLevel = 'high';
-        confidence = Math.min(0.98, confidence + 0.12);
+        confidence = Math.min(0.98, confidence + 0.2);
       }
     }
     
     return {
       classification, // Will be 'spam' or 'legitimate' only
       threat_level: threatLevel,
+      threat_type: threatType, // New specific threat type
       confidence: Math.round(confidence * 100) / 100,
-      keywords: [...new Set(threatKeywords)], // Remove duplicates
+      keywords: [...new Set(mlResult.keywords)], // Remove duplicates
       ml_probability: Math.round(adjustedProbability * 100) / 100,
-      reasoning: `Enhanced ML classification: spam probability ${Math.round(adjustedProbability * 100)}%, threat indicators detected, domain adjustment: ${Math.round(domainAdjustment * 100)}%`
+      reasoning: `Advanced ML classification: ${classification} (${threatType || 'N/A'}), spam probability ${Math.round(adjustedProbability * 100)}%, domain trust: ${domainTrust}, patterns detected: ${maxScore}`
     };
   }
 }
@@ -327,6 +369,7 @@ serve(async (req) => {
           content: content || '',
           classification: classification.classification,
           threat_level: classification.threat_level,
+          threat_type: classification.threat_type, // Add new threat_type field
           confidence: classification.confidence,
           keywords: classification.keywords || [],
           received_date: new Date().toISOString(),
@@ -345,7 +388,7 @@ serve(async (req) => {
           success: false
         });
       } else {
-        console.log(`✅ ML classified "${subject}" as ${classification.classification} (${Math.round(classification.confidence * 100)}% confidence, ${classification.threat_level} threat)`);
+        console.log(`✅ ML classified "${subject}" as ${classification.classification} (${Math.round(classification.confidence * 100)}% confidence, ${classification.threat_level} threat, type: ${classification.threat_type || 'generic'})`);
         results.push({
           subject,
           sender,

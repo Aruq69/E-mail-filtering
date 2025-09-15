@@ -20,6 +20,7 @@ interface Email {
   received_date: string;
   classification: string | null;
   threat_level: string | null;
+  threat_type: string | null; // Add new threat_type field
   confidence: number | null;
   keywords: string[] | null;
   message_id: string;
@@ -658,6 +659,14 @@ const Index = () => {
                                           {email.threat_level.toUpperCase()}
                                         </Badge>
                                       )}
+                                      {email.threat_type && email.threat_type !== 'spam' && (
+                                        <Badge 
+                                          variant="destructive" 
+                                          className="text-xs px-2 py-1 font-medium bg-red-500/10 border-red-500/30 text-red-600 shadow-sm"
+                                        >
+                                          {email.threat_type.replace(/_/g, ' ').toUpperCase()}
+                                        </Badge>
+                                      )}
                                       {email.classification && (
                                         <Badge 
                                           variant="outline" 
@@ -834,6 +843,16 @@ const Index = () => {
                           </span>
                         </div>
                       </div>
+                      {selectedEmail.threat_type && (
+                        <div>
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Threat Type</label>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="destructive" className="bg-red-500/10 border-red-500/30 text-red-600">
+                              {selectedEmail.threat_type.replace(/_/g, ' ').toUpperCase()}
+                            </Badge>
+                          </div>
+                        </div>
+                      )}
                       <div>
                         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Risk Assessment</label>
                         <p className="text-sm">
