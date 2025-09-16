@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Shield, Check, X } from "lucide-react";
+import { Loader2, Shield, Check, X, AlertTriangle } from "lucide-react";
 import UserOnboarding from "@/components/UserOnboarding";
 
 const Auth = () => {
@@ -19,6 +19,9 @@ const Auth = () => {
   const [username, setUsername] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [passwordCheckLoading, setPasswordCheckLoading] = useState(false);
+  const [passwordBreached, setPasswordBreached] = useState(false);
+  const [breachCount, setBreachCount] = useState<number | null>(null);
   const [error, setError] = useState("");
   
   const { signIn, signUp, user } = useAuth();
@@ -47,6 +50,46 @@ const Auth = () => {
   const passwordRequirements = validatePassword(password);
   const isPasswordValid = Object.values(passwordRequirements).every(req => req);
 
+  // Check password against HaveIBeenPwned database
+  const checkPasswordBreach = async (pwd: string) => {
+    if (!pwd || pwd.length < 8) return; // Only check reasonably strong passwords
+    
+    setPasswordCheckLoading(true);
+    setPasswordBreached(false);
+    setBreachCount(null);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('check-password-breach', {
+        body: { password: pwd }
+      });
+      
+      if (error) {
+        console.warn('Password breach check failed:', error);
+        return;
+      }
+      
+      if (data.isCompromised) {
+        setPasswordBreached(true);
+        setBreachCount(data.breachCount);
+      }
+    } catch (error) {
+      console.warn('Password breach check error:', error);
+    } finally {
+      setPasswordCheckLoading(false);
+    }
+  };
+
+  // Debounced password breach checking
+  useEffect(() => {
+    if (!isSignUp || !password) return;
+    
+    const timer = setTimeout(() => {
+      checkPasswordBreach(password);
+    }, 1000); // Check 1 second after user stops typing
+    
+    return () => clearTimeout(timer);
+  }, [password, isSignUp]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -54,6 +97,13 @@ const Auth = () => {
 
     try {
       if (isSignUp && !isOtpMode) {
+        // Check for breached password
+        if (passwordBreached) {
+          setError(`This password has been compromised in ${breachCount?.toLocaleString()} data breaches. Please choose a different password for your security.`);
+          setLoading(false);
+          return;
+        }
+
         // Validate password complexity
         if (!isPasswordValid) {
           setError("Password does not meet complexity requirements");
@@ -318,6 +368,33 @@ const Auth = () => {
                               Special character
                             </div>
                           </div>
+                          
+                          {/* Password Breach Check Status */}
+                          <div className="mt-3 p-2 rounded border">
+                            {passwordCheckLoading ? (
+                              <div className="flex items-center gap-2 text-blue-600">
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                                <span>Checking password security...</span>
+                              </div>
+                            ) : passwordBreached ? (
+                              <div className="flex items-center gap-2 text-red-600">
+                                <AlertTriangle className="w-3 h-3" />
+                                <span>
+                                  ⚠️ This password appeared in {breachCount?.toLocaleString()} data breaches
+                                </span>
+                              </div>
+                            ) : password.length >= 8 ? (
+                              <div className="flex items-center gap-2 text-green-600">
+                                <Check className="w-3 h-3" />
+                                <span>✅ Password not found in known breaches</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <Shield className="w-3 h-3" />
+                                <span>Password will be checked against breach databases</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
                     </>
@@ -328,7 +405,7 @@ const Auth = () => {
               <Button 
                 type="submit" 
                 className="w-full hover-button" 
-                disabled={loading || (isSignUp && !isOtpMode && (!isPasswordValid || password !== confirmPassword))}
+                disabled={loading || (isSignUp && !isOtpMode && (!isPasswordValid || password !== confirmPassword || passwordBreached))}
               >
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {isOtpMode 
