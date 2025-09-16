@@ -12,40 +12,64 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log(`Request method: ${req.method}`);
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { user_id, email_data, analysis_type = 'individual' } = await req.json();
+    const body = await req.json();
+    console.log('Request body:', JSON.stringify(body));
+    
+    const { user_id, email_data, analysis_type = 'patterns' } = body;
 
     if (!openAIApiKey) {
+      console.error('OpenAI API key not configured');
       return new Response(
         JSON.stringify({ error: 'OpenAI API key not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
-
-    let advice = '';
-
-    if (analysis_type === 'individual' && email_data) {
-      // Individual email analysis
-      advice = await generateIndividualEmailAdvice(email_data);
-    } else if (analysis_type === 'patterns' && user_id) {
-      // Pattern-based analysis using user's email statistics
-      advice = await generatePatternBasedAdvice(supabase, user_id);
-    } else if (analysis_type === 'comprehensive' && user_id) {
-      // Comprehensive security analysis
-      advice = await generateComprehensiveAdvice(supabase, user_id, email_data);
-    } else {
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Supabase configuration missing');
       return new Response(
-        JSON.stringify({ error: 'Invalid request parameters' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Supabase configuration missing' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    let advice = '';
+
+    try {
+      if (analysis_type === 'individual' && email_data) {
+        console.log('Generating individual email advice');
+        advice = await generateIndividualEmailAdvice(email_data);
+      } else if (analysis_type === 'patterns' && user_id) {
+        console.log('Generating pattern-based advice for user:', user_id);
+        advice = await generatePatternBasedAdvice(supabase, user_id);
+      } else if (analysis_type === 'comprehensive' && user_id) {
+        console.log('Generating comprehensive advice for user:', user_id);
+        advice = await generateComprehensiveAdvice(supabase, user_id, email_data);
+      } else {
+        console.error('Invalid request parameters:', { analysis_type, user_id: !!user_id, email_data: !!email_data });
+        return new Response(
+          JSON.stringify({ error: 'Invalid request parameters' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } catch (analysisError) {
+      console.error('Error during analysis:', analysisError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to generate analysis', details: analysisError.message }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Generated advice length:', advice.length);
     return new Response(
       JSON.stringify({ advice }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -54,13 +78,14 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in email-security-advisor function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Internal server error', details: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
 
 async function generateIndividualEmailAdvice(emailData: any): Promise<string> {
+  console.log('Generating individual advice for email:', emailData.subject);
   const { subject, sender, threatLevel, threatType, classification, keywords, confidence } = emailData;
 
   const prompt = `You are a cybersecurity expert providing actionable advice about a specific email threat.
@@ -86,6 +111,7 @@ Keep response under 200 words, use bullet points, be direct and practical.`;
 }
 
 async function generatePatternBasedAdvice(supabase: any, userId: string): Promise<string> {
+  console.log('Fetching email statistics for user:', userId);
   // Get user's email statistics
   const { data: stats, error } = await supabase
     .from('email_statistics')
@@ -94,8 +120,16 @@ async function generatePatternBasedAdvice(supabase: any, userId: string): Promis
     .order('date', { ascending: false })
     .limit(30); // Last 30 days
 
-  if (error || !stats?.length) {
-    return "No email pattern data available. Continue monitoring your emails for personalized security insights.";
+  console.log('Email statistics query result:', { error, statsCount: stats?.length });
+  
+  if (error) {
+    console.error('Error fetching email statistics:', error);
+    return "Unable to fetch email statistics. Please try again later.";
+  }
+  
+  if (!stats?.length) {
+    console.log('No email statistics found for user');
+    return "No email pattern data available yet. Sync your Gmail or analyze more emails to get personalized security insights.";
   }
 
   // Aggregate statistics
@@ -146,6 +180,7 @@ Keep response under 250 words, be specific to their threat profile.`;
 }
 
 async function generateComprehensiveAdvice(supabase: any, userId: string, emailData?: any): Promise<string> {
+  console.log('Generating comprehensive advice for user:', userId);
   // Get both statistics and recent emails for comprehensive analysis
   const [statsResult, emailsResult] = await Promise.all([
     supabase
@@ -217,8 +252,10 @@ Keep response under 300 words, prioritize actionable items.`;
 }
 
 async function callOpenAI(prompt: string): Promise<string> {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
+  console.log('Calling OpenAI with prompt length:', prompt.length);
+  
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
     headers: {
       'Authorization': `Bearer ${openAIApiKey}`,
       'Content-Type': 'application/json',
