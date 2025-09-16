@@ -43,6 +43,8 @@ const Index = () => {
   const [showClearEmailsDialog, setShowClearEmailsDialog] = useState(false); // Add clear emails confirmation dialog
   const [userProfile, setUserProfile] = useState<{username: string} | null>(null);
   const [userPreferences, setUserPreferences] = useState<{never_store_data: boolean} | null>(null);
+  const [recentActivity, setRecentActivity] = useState<Array<{id: string, action: string, timestamp: Date, details?: string}>>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
   const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -132,6 +134,16 @@ const Index = () => {
     }
   };
 
+  const addRecentActivity = (action: string, details?: string) => {
+    const newActivity = {
+      id: Math.random().toString(36).substr(2, 9),
+      action,
+      timestamp: new Date(),
+      details
+    };
+    setRecentActivity(prev => [newActivity, ...prev.slice(0, 4)]); // Keep only last 5 activities
+  };
+
   const fetchGmailEmails = async () => {
     if (!user) {
       toast({
@@ -143,6 +155,8 @@ const Index = () => {
     }
     
     setLoading(true);
+    setIsProcessing(true);
+    addRecentActivity("Gmail sync initiated", "Checking for new emails...");
     
     try {
       console.log('🔄 Invoking Gmail email fetch...');
@@ -158,6 +172,9 @@ const Index = () => {
 
       if (data.success) {
         // Get current email count to see how many were actually new
+        addRecentActivity(`Processed ${data.total} emails`, 
+          userPreferences?.never_store_data ? "Analyzed without storing (Privacy Mode)" : "Analyzed and stored");
+        
         toast({
           title: "Gmail sync completed",
           description: `Processed ${data.total} emails successfully`,
@@ -178,6 +195,7 @@ const Index = () => {
       });
     } finally {
       setLoading(false);
+      setIsProcessing(false);
     }
   };
 
@@ -400,11 +418,15 @@ const Index = () => {
                 onClick={fetchGmailEmails} 
                 disabled={loading} 
                 variant="outline" 
-                className="w-full sm:w-auto border-primary/30 hover:border-primary/50 hover-button text-xs sm:text-sm"
+                className={`w-full sm:w-auto border-primary/30 hover:border-primary/50 hover-button text-xs sm:text-sm ${isProcessing ? 'animate-pulse' : ''}`}
                 size="sm"
               >
-                <Activity className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                Sync Gmail
+                {isProcessing ? (
+                  <div className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 border border-primary border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Activity className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                )}
+                {isProcessing ? 'Processing...' : 'Sync Gmail'}
               </Button>
             )}
             {gmailConnected && (
@@ -681,19 +703,45 @@ const Index = () => {
                       </div>
                     </div>
                   ) : emails.length === 0 && userPreferences?.never_store_data ? (
-                    <div className="flex items-center justify-center py-12">
-                      <div className="text-center space-y-4 max-w-md">
+                    <div className="space-y-6">
+                      <div className="text-center space-y-4">
                         <Lock className="h-12 w-12 text-primary mx-auto" />
                         <div className="text-foreground font-medium">Privacy-First Mode Active</div>
                         <div className="text-muted-foreground text-sm">
-                          Your emails are being analyzed in real-time but not stored for maximum privacy. 
-                          To see historical data, you can disable Privacy-First Mode in Settings.
+                          Your emails are being analyzed in real-time but not stored for maximum privacy.
                         </div>
+                      </div>
+                      
+                      {recentActivity.length > 0 && (
+                        <div className="space-y-3">
+                          <div className="flex items-center space-x-2 text-sm font-medium text-muted-foreground border-b border-border/30 pb-2">
+                            <Activity className="h-4 w-4" />
+                            <span>Recent Processing Activity</span>
+                          </div>
+                          <div className="space-y-2 max-h-32 overflow-y-auto">
+                            {recentActivity.map((activity) => (
+                              <div key={activity.id} className="flex items-start space-x-3 p-2 bg-muted/30 rounded-lg">
+                                <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-sm font-medium text-foreground">{activity.action}</div>
+                                  {activity.details && (
+                                    <div className="text-xs text-muted-foreground">{activity.details}</div>
+                                  )}
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    {activity.timestamp.toLocaleTimeString()}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="text-center">
                         <Button 
                           onClick={() => navigate('/settings')} 
                           variant="outline" 
                           size="sm"
-                          className="mt-4"
                         >
                           <Settings className="h-4 w-4 mr-2" />
                           Go to Settings
