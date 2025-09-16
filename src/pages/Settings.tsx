@@ -193,11 +193,20 @@ const SettingsPage = () => {
       document.documentElement.lang = newLanguage;
       document.documentElement.dir = newLanguage === 'ar' ? 'rtl' : 'ltr';
       
+      // Add CSS class for RTL styling
+      if (newLanguage === 'ar') {
+        document.documentElement.classList.add('rtl');
+        document.body.classList.add('rtl');
+      } else {
+        document.documentElement.classList.remove('rtl');
+        document.body.classList.remove('rtl');
+      }
+      
       toast({
-        title: newLanguage === 'ar' ? "تم تحديث اللغة" : "Language Updated",
+        title: newLanguage === 'ar' ? t('language_updated') : "Language Updated",
         description: newLanguage === 'ar' 
-          ? "تم تغيير اللغة إلى العربية" 
-          : "Language changed to English",
+          ? t('language_changed_arabic')
+          : t('language_changed_english'),
       });
     } catch (error) {
       console.error('Error updating language:', error);
@@ -315,7 +324,7 @@ const SettingsPage = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5 flex items-center justify-center p-4">
         <div className="w-full max-w-md animate-fade-in">
-          <Button
+              <Button
             variant="outline"
             onClick={() => setShowMfaSetup(false)}
             className="mb-6 border-border/30 bg-background/80 backdrop-blur-sm hover:bg-background/90 hover:border-primary/50 transition-all duration-300"
@@ -347,16 +356,16 @@ const SettingsPage = () => {
           {/* Header */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 animate-fade-in">
             <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                onClick={() => navigate("/")}
-                className="group border-border/30 bg-background/80 backdrop-blur-sm hover:bg-gradient-to-r hover:from-primary/10 hover:to-primary/5 hover:border-primary/60 hover:shadow-lg hover:shadow-primary/20 transition-all duration-500 transform hover:scale-105 hover:-translate-y-0.5"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2 group-hover:text-primary group-hover:-translate-x-1 transition-all duration-300" />
-                <span className="group-hover:text-primary/90 transition-colors duration-300">Dashboard</span>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/")}
+                  className={`group border-border/30 bg-background/80 backdrop-blur-sm hover:bg-gradient-to-r hover:from-primary/10 hover:to-primary/5 hover:border-primary/60 hover:shadow-lg hover:shadow-primary/20 transition-all duration-500 transform hover:scale-105 hover:-translate-y-0.5 ${currentLang === 'ar' ? 'flex-row-reverse' : ''}`}
+                >
+                <ArrowLeft className={`w-4 h-4 group-hover:text-primary group-hover:-translate-x-1 transition-all duration-300 ${currentLang === 'ar' ? 'mr-2 rotate-180' : 'mr-2'}`} />
+                <span className="group-hover:text-primary/90 transition-colors duration-300">{t('dashboard')}</span>
               </Button>
               
-              <div className="flex items-center space-x-3">
+              <div className={`flex items-center space-x-3 ${currentLang === 'ar' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                 <div className="p-2 rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20">
                   <Settings className="h-6 w-6 text-primary" />
                 </div>
@@ -370,8 +379,8 @@ const SettingsPage = () => {
             </div>
             
             <Badge variant="outline" className="border-primary/30 text-primary bg-primary/5 animate-pulse">
-              <Shield className="w-3 h-3 mr-1" />
-              Secure Account
+              <Shield className={`w-3 h-3 ${currentLang === 'ar' ? 'ml-1' : 'mr-1'}`} />
+              {t('secure_account')}
             </Badge>
           </div>
 
@@ -379,7 +388,7 @@ const SettingsPage = () => {
             {/* User Profile Card */}
             <Card className="group border-border/20 bg-card/50 backdrop-blur-md shadow-xl hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 hover:scale-[1.02] hover:border-primary/30 animate-scale-in">
               <CardHeader className="pb-4">
-                <div className="flex items-center space-x-4">
+                <div className={`flex items-center space-x-4 ${currentLang === 'ar' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                   <div className="relative">
                     <div className="p-3 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30">
                       <User className="h-6 w-6 text-blue-600" />
@@ -387,25 +396,25 @@ const SettingsPage = () => {
                     <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 border-2 border-background rounded-full animate-pulse" />
                   </div>
                   <div className="flex-1">
-                    <CardTitle className="text-xl font-semibold">Profile Information</CardTitle>
-                    <CardDescription className="text-muted-foreground">Your account details and status</CardDescription>
+                    <CardTitle className="text-xl font-semibold">{t('profile_information')}</CardTitle>
+                    <CardDescription className="text-muted-foreground">{t('account_details_status')}</CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid sm:grid-cols-2 gap-6">
                   <div className="space-y-2 group">
-                    <div className="flex items-center space-x-2">
-                      <Mail className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                      <label className="text-sm font-medium text-muted-foreground">Email Address</label>
+                  <div className={`flex items-center space-x-2 ${currentLang === 'ar' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                    <Mail className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <label className="text-sm font-medium text-muted-foreground">{t('email_address')}</label>
                     </div>
                     <p className="text-foreground font-medium bg-muted/30 px-3 py-2 rounded-lg border">{user?.email}</p>
                   </div>
                   
                   <div className="space-y-2 group">
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                      <label className="text-sm font-medium text-muted-foreground">Member Since</label>
+                  <div className={`flex items-center space-x-2 ${currentLang === 'ar' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                    <Calendar className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <label className="text-sm font-medium text-muted-foreground">{t('member_since')}</label>
                     </div>
                     <p className="text-foreground font-medium bg-muted/30 px-3 py-2 rounded-lg border">
                       {user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { 
@@ -417,9 +426,9 @@ const SettingsPage = () => {
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className={`flex items-center space-x-2 p-3 bg-green-50 border border-green-200 rounded-lg ${currentLang === 'ar' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                   <CheckCircle className="h-5 w-5 text-green-600" />
-                  <span className="text-green-800 font-medium">Email Verified</span>
+                  <span className="text-green-800 font-medium">{t('email_verified')}</span>
                 </div>
               </CardContent>
             </Card>
@@ -427,8 +436,8 @@ const SettingsPage = () => {
             {/* Security Settings Card */}
             <Card className="group border-border/20 bg-card/50 backdrop-blur-md shadow-xl hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 hover:scale-[1.02] hover:border-emerald-500/30 animate-scale-in [animation-delay:100ms]">
               <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
+                <div className={`flex items-center justify-between ${currentLang === 'ar' ? 'flex-row-reverse' : ''}`}>
+                  <div className={`flex items-center space-x-4 ${currentLang === 'ar' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                     <div className="p-3 rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30">
                       <Shield className="h-6 w-6 text-emerald-600" />
                     </div>
@@ -440,8 +449,8 @@ const SettingsPage = () => {
                   
                   {mfaEnabled && (
                     <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-200 hover:bg-emerald-500/20 transition-colors">
-                      <Key className="w-3 h-3 mr-1" />
-                      Protected
+                      <Key className={`w-3 h-3 ${currentLang === 'ar' ? 'ml-1' : 'mr-1'}`} />
+                      {t('protected')}
                     </Badge>
                   )}
                 </div>

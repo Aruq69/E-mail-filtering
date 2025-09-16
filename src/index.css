@@ -2,6 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
+/* RTL Support for Arabic Language */
+.rtl {
+  direction: rtl;
+}
+
+.rtl .flex-row-reverse {
+  flex-direction: row-reverse;
+}
+
+.rtl .space-x-reverse > :not([hidden]) ~ :not([hidden]) {
+  margin-right: calc(1rem * calc(1 - 0));
+  margin-left: calc(1rem * 0);
+}
+
+.rtl .text-left {
+  text-align: right;
+}
+
+.rtl .text-right {
+  text-align: left;
+}
+
+.rtl .ml-auto {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.rtl .mr-auto {
+  margin-right: auto;
+  margin-left: 0;
+}
+
+/* Arabic font support */
+.rtl body,
+.rtl * {
+  font-family: 'Segoe UI', 'Tahoma', 'Arial', 'Helvetica Neue', sans-serif;
+}
+
+/* RTL specific animations */
+.rtl .hover\:translate-x-1:hover {
+  transform: translateX(-0.25rem);
+}
+
+.rtl .hover\:-translate-x-1:hover {
+  transform: translateX(0.25rem);
+}
+
+/* Badge and button adjustments for RTL */
+.rtl .badge {
+  padding-right: 0.5rem;
+  padding-left: 0.75rem;
+}
+
+.rtl .button-icon-left {
+  margin-right: 0;
+  margin-left: 0.5rem;
+}
+
+.rtl .button-icon-right {
+  margin-left: 0;
+  margin-right: 0.5rem;
+}
+
 @layer base {
   :root {
     /* Cyber-themed color palette */
