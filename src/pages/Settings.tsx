@@ -620,7 +620,12 @@ const SettingsPage = () => {
                       </div>
                       <div>
                         <h4 className="font-semibold text-red-800">Privacy-First Mode</h4>
-                        <p className="text-sm text-red-600">By default, emails are NOT stored. Toggle off to consent to data storage.</p>
+                        <p className="text-sm text-red-600">
+                          {neverStoreData 
+                            ? "Emails are NOT stored (maximum privacy)" 
+                            : "You have consented to email storage"
+                          }
+                        </p>
                       </div>
                     </div>
                     <Switch
@@ -639,11 +644,16 @@ const SettingsPage = () => {
                       </div>
                       <div>
                         <h4 className="font-semibold">Data Retention</h4>
-                        <p className="text-sm text-muted-foreground">Emails are stored for 90 days</p>
+                        <p className="text-sm text-muted-foreground">
+                          {neverStoreData 
+                            ? "No emails are stored (privacy-first mode)" 
+                            : "Emails are stored for 90 days"
+                          }
+                        </p>
                       </div>
                     </div>
-                    <Badge variant="outline" className={`border-teal-200 text-teal-700 transition-opacity ${neverStoreData ? 'opacity-50' : ''}`}>
-                      {neverStoreData ? 'Privacy-First (Default)' : 'Data Storage Enabled'}
+                    <Badge variant="outline" className={`transition-opacity ${neverStoreData ? 'border-red-200 text-red-700 bg-red-50' : 'border-teal-200 text-teal-700 bg-teal-50'}`}>
+                      {neverStoreData ? 'Storage Disabled' : 'Storage Active'}
                     </Badge>
                   </div>
                 </div>
