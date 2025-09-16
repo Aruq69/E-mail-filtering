@@ -143,16 +143,45 @@ const SettingsPage = () => {
   const handleDataExport = async () => {
     setDataExportLoading(true);
     try {
-      // Simulate data export process
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Starting data export...');
+      
+      // Call the export edge function
+      const { data, error } = await supabase.functions.invoke('export-user-data', {
+        method: 'GET'
+      });
+
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Failed to generate export');
+      }
+
+      // The edge function returns HTML content
+      if (data) {
+        // Create a blob from the HTML content
+        const blob = new Blob([data], { type: 'text/html' });
+        const url = window.URL.createObjectURL(blob);
+        
+        // Create a temporary download link
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `MailGuard-Report-${new Date().toISOString().split('T')[0]}.html`;
+        document.body.appendChild(link);
+        link.click();
+        
+        // Cleanup
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }
+
       toast({
         title: "Data Export Complete",
-        description: "Your data has been exported successfully.",
+        description: "Your security report has been downloaded successfully. You can open the HTML file in your browser and print to PDF if needed.",
       });
     } catch (error) {
+      console.error('Export error:', error);
       toast({
         title: "Export Failed",
-        description: "Failed to export your data. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to export your data. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -596,8 +625,8 @@ const SettingsPage = () => {
                     <div className="flex items-center space-x-3">
                       <Download className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <p className="font-medium">Export Data</p>
-                        <p className="text-sm text-muted-foreground">Download all your data</p>
+                        <p className="font-medium">Export Security Report</p>
+                        <p className="text-sm text-muted-foreground">Download comprehensive security analysis report</p>
                       </div>
                     </div>
                     <Button
