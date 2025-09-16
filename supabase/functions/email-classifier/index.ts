@@ -325,35 +325,61 @@ serve(async (req) => {
 
       const classification = classifier.classifyEmail(subject, sender, content || '');
 
-      // Store in database
-      const { error: insertError } = await supabase
-        .from('emails')
-        .insert({
-          user_id: userId,
-          message_id: message_id || `enhanced_${Date.now()}_${i}`,
-          subject,
-          sender,
-          content: content || '',
-          classification: classification.classification,
-          threat_level: classification.threat_level,
-          threat_type: classification.threat_type,
-          confidence: classification.confidence,
-          keywords: classification.keywords || [],
-          received_date: new Date().toISOString(),
-          processed_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
+      // Check user's privacy preference
+      let shouldStore = true;
+      try {
+        // For now, we'll implement a simple check - in a real app you'd fetch from user preferences
+        // This is a placeholder that will be enhanced with proper user preference storage
+        shouldStore = true; // Default to storing unless explicitly disabled
+      } catch (error) {
+        console.log('Could not check privacy preference, defaulting to store');
+        shouldStore = true;
+      }
 
-      if (insertError) {
-        console.error('Database error:', insertError);
-        results.push({
-          subject,
-          sender,
-          error: insertError.message,
-          success: false
-        });
+      if (shouldStore) {
+        // Store in database only if user allows it
+        const { error: insertError } = await supabase
+          .from('emails')
+          .insert({
+            user_id: userId,
+            message_id: message_id || `enhanced_${Date.now()}_${i}`,
+            subject,
+            sender,
+            content: content || '',
+            classification: classification.classification,
+            threat_level: classification.threat_level,
+            threat_type: classification.threat_type,
+            confidence: classification.confidence,
+            keywords: classification.keywords || [],
+            received_date: new Date().toISOString(),
+            processed_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error('Database error:', insertError);
+          results.push({
+            subject,
+            sender,
+            error: insertError.message,
+            success: false
+          });
+        } else {
+          results.push({
+            subject,
+            sender,
+            classification: classification.classification,
+            threat_level: classification.threat_level,
+            confidence: classification.confidence,
+            sender_trust: classification.sender_trust,
+            ml_probability: classification.ml_probability,
+            success: true,
+            stored: true
+          });
+        }
       } else {
+        // Process but don't store - just return the classification
         results.push({
           subject,
           sender,
@@ -362,7 +388,9 @@ serve(async (req) => {
           confidence: classification.confidence,
           sender_trust: classification.sender_trust,
           ml_probability: classification.ml_probability,
-          success: true
+          success: true,
+          stored: false,
+          message: "Email processed but not stored due to privacy settings"
         });
       }
     }

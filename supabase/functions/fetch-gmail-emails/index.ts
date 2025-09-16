@@ -65,6 +65,17 @@ serve(async (req) => {
       );
     }
 
+    // Check user's privacy preference for data storage
+    let neverStoreData = false;
+    try {
+      // This will be enhanced later to check from a user preferences table
+      // For now, we'll implement basic privacy checking
+      neverStoreData = false; // Default to allow storage
+    } catch (error) {
+      console.log('Could not check privacy preference, defaulting to allow storage');
+      neverStoreData = false;
+    }
+
     // Get Gmail token for the authenticated user
     console.log('Looking for Gmail tokens for user:', user_id);
     const { data: tokenData, error: tokenError } = await supabase
@@ -280,37 +291,41 @@ serve(async (req) => {
           classification = classificationResponse.data.results[0];
         }
 
-        // Check if email already exists in database
-        const { data: existingEmail } = await supabase
-          .from('emails')
-          .select('id')
-          .eq('gmail_id', message.id)
-          .eq('user_id', user_id)
-          .single();
-
-        if (!existingEmail) {
-          // Store the email analysis in the database
-          const { error: insertError } = await supabase
+        // Check if email already exists in database (only if we're storing data)
+        if (!neverStoreData) {
+          const { data: existingEmail } = await supabase
             .from('emails')
-            .insert({
-              user_id: user_id,
-              message_id: message.id, // Add the required message_id field
-              gmail_id: message.id,
-              subject,
-              sender,
-              content: content.substring(0, 1000), // Store limited content
-              raw_content: fullContent.substring(0, 5000), // Store more of the original
-              classification: classification.classification,
-              threat_level: classification.threat_level,
-              threat_type: classification.threat_type, // Add new threat_type field
-              confidence: classification.confidence,
-              keywords: classification.keywords,
-              received_date: new Date(date).toISOString(),
-            });
+            .select('id')
+            .eq('gmail_id', message.id)
+            .eq('user_id', user_id)
+            .single();
 
-          if (insertError) {
-            console.error('Error inserting email:', insertError);
+          if (!existingEmail) {
+            // Store the email analysis in the database only if privacy allows
+            const { error: insertError } = await supabase
+              .from('emails')
+              .insert({
+                user_id: user_id,
+                message_id: message.id,
+                gmail_id: message.id,
+                subject,
+                sender,
+                content: content.substring(0, 1000),
+                raw_content: fullContent.substring(0, 5000),
+                classification: classification.classification,
+                threat_level: classification.threat_level,
+                threat_type: classification.threat_type,
+                confidence: classification.confidence,
+                keywords: classification.keywords,
+                received_date: new Date(date).toISOString(),
+              });
+
+            if (insertError) {
+              console.error('Error inserting email:', insertError);
+            }
           }
+        } else {
+          console.log('Email not stored due to privacy settings - processing only');
         }
 
         return {
