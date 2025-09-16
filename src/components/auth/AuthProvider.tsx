@@ -6,6 +6,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  needsMfa: boolean;
+  setNeedsMfa: (needs: boolean) => void;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -25,6 +27,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [needsMfa, setNeedsMfa] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -42,8 +45,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (mounted) {
+          if (event === 'MFA_CHALLENGE_VERIFIED') {
+            setNeedsMfa(false);
+          }
+          
           setSession(session);
           setUser(session?.user ?? null);
           if (hasInitialized) {
@@ -64,6 +71,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       email,
       password,
     });
+    
+    if (error?.message?.includes('MFA')) {
+      setNeedsMfa(true);
+    }
+    
     return { error };
   };
 
@@ -88,6 +100,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     user,
     session,
     loading,
+    needsMfa,
+    setNeedsMfa,
     signIn,
     signUp,
     signOut,

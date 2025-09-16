@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock, LogOut, Plus, Brain, Bot, Cpu, Target, Radar, ScanLine, Database, ShieldX, Trash2, AlertCircle } from "lucide-react";
+import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock, LogOut, Plus, Brain, Bot, Cpu, Target, Radar, ScanLine, Database, ShieldX, Trash2, AlertCircle, Settings } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -361,6 +361,14 @@ const Index = () => {
                 <span className="text-xs sm:text-sm text-primary font-medium truncate max-w-[250px]">
                   Welcome, {userProfile?.username || user.email?.split('@')[0] || 'User'}
                 </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/settings')}
+                  className="ml-2 border-border/20 hover:border-primary/50"
+                >
+                  <Settings className="h-3 w-3" />
+                </Button>
               </div>
             )}
           </div>

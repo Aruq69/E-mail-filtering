@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Shield, Check, X, AlertTriangle } from "lucide-react";
 import UserOnboarding from "@/components/UserOnboarding";
+import MFAChallenge from "@/components/MFAChallenge";
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -24,7 +25,7 @@ const Auth = () => {
   const [breachCount, setBreachCount] = useState<number | null>(null);
   const [error, setError] = useState("");
   
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, needsMfa } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -89,6 +90,18 @@ const Auth = () => {
     
     return () => clearTimeout(timer);
   }, [password, isSignUp]);
+
+  // If MFA is required, show the MFA challenge
+  if (needsMfa) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <MFAChallenge 
+          onSuccess={() => navigate("/")}
+          onCancel={() => navigate("/auth")}
+        />
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
