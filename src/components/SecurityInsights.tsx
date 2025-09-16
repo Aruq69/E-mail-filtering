@@ -138,7 +138,7 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
   const safetyRate = stats ? Math.round((stats.safe_emails / stats.total_emails) * 100) : 0;
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -155,8 +155,8 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
           Dynamic security analysis based on your email patterns
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 overflow-hidden">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
+      <CardContent>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="patterns" className="flex items-center space-x-1">
               <TrendingUp className="h-4 w-4" />

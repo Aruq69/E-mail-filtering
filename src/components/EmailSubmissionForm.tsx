@@ -97,7 +97,7 @@ const EmailSubmissionForm = ({ onEmailSubmitted }: EmailSubmissionFormProps) => 
   };
 
   return (
-    <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
+    <Card className="h-full border-border/20 bg-card/50 backdrop-blur-sm hover-card">
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <Shield className="h-5 w-5 text-primary" />
