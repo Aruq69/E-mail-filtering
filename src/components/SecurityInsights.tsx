@@ -135,7 +135,7 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
   };
 
   const stats = calculateTotalStats();
-  const safetyRate = stats ? Math.round((stats.safe_emails / stats.total_emails) * 100) : 0;
+  const safetyRate = stats && stats.total_emails > 0 ? Math.round((stats.safe_emails / stats.total_emails) * 100) : 0;
 
   return (
     <Card className="h-full">
@@ -193,7 +193,7 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
               </Button>
             </div>
             
-            {stats && (
+            {stats && stats.total_emails > 0 ? (
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="text-center p-3 bg-muted rounded-lg">
                   <div className="text-2xl font-bold text-primary">{stats.total_emails}</div>
@@ -203,6 +203,11 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
                   <div className="text-2xl font-bold text-destructive">{stats.threat_emails}</div>
                   <div className="text-sm text-muted-foreground">Threats Detected</div>
                 </div>
+              </div>
+            ) : (
+              <div className="text-center p-6 bg-muted/50 rounded-lg mb-4">
+                <div className="text-muted-foreground">No email statistics available yet</div>
+                <div className="text-sm text-muted-foreground mt-1">Submit some emails to see analytics</div>
               </div>
             )}
 
