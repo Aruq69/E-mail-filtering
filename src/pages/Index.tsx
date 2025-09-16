@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import EmailSubmissionForm from "@/components/EmailSubmissionForm";
 import EmailSecurityAdvice from "@/components/EmailSecurityAdvice";
-import { SecurityInsights } from "@/components/SecurityInsights";
 import FloatingChatButton from "@/components/FloatingChatButton";
 import FeedbackSystem from "@/components/FeedbackSystem";
 import UserOnboarding from "@/components/UserOnboarding";
@@ -713,18 +712,7 @@ const Index = () => {
 
 
         {/* Email Submission Form */}
-        {/* Email Submission Form and Security Insights */}
-        <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <EmailSubmissionForm onEmailSubmitted={fetchEmails} />
-          </div>
-          <div className="lg:col-span-1">
-            <SecurityInsights 
-              selectedEmail={selectedEmail}
-              emailStats={emailStats}
-            />
-          </div>
-        </div>
+        <EmailSubmissionForm onEmailSubmitted={fetchEmails} />
 
         {/* Main Content - Full Width */}
         <div className="space-y-6">
