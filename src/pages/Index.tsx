@@ -134,8 +134,7 @@ const Index = () => {
         .from('emails')
         .select('*')
         .eq('user_id', user.id)
-        .order('received_date', { ascending: false })
-        .limit(100);
+        .order('received_date', { ascending: false });
       
       if (error) {
         console.error('Error fetching emails:', error);
