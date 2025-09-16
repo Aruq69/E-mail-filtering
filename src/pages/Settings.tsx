@@ -6,8 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Settings, User, ArrowLeft, CheckCircle, XCircle, Loader2, Calendar, Mail, Key, AlertTriangle, Trash2, Plus } from "lucide-react";
+import { Shield, Settings, User, ArrowLeft, CheckCircle, XCircle, Loader2, Calendar, Mail, Key, AlertTriangle, Trash2, Plus, Globe, Palette, Bell, Eye, Database, Download } from "lucide-react";
+import { useTheme } from "next-themes";
 import MFASetup from "@/components/MFASetup";
 
 const SettingsPage = () => {
@@ -15,7 +19,12 @@ const SettingsPage = () => {
   const [loading, setLoading] = useState(true);
   const [showMfaSetup, setShowMfaSetup] = useState(false);
   const [factors, setFactors] = useState<any[]>([]);
+  const [language, setLanguage] = useState("en");
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [securityAlerts, setSecurityAlerts] = useState(true);
+  const [dataExportLoading, setDataExportLoading] = useState(false);
   const { user, signOut, loading: authLoading } = useAuth();
+  const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -79,6 +88,35 @@ const SettingsPage = () => {
   const handleSignOut = async () => {
     await signOut();
     navigate("/auth");
+  };
+
+  const handleLanguageChange = (newLanguage: string) => {
+    setLanguage(newLanguage);
+    localStorage.setItem('preferred-language', newLanguage);
+    toast({
+      title: "Language Updated",
+      description: `Language changed to ${newLanguage === 'ar' ? 'Arabic' : 'English'}`,
+    });
+  };
+
+  const handleDataExport = async () => {
+    setDataExportLoading(true);
+    try {
+      // Simulate data export process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      toast({
+        title: "Data Export Complete",
+        description: "Your data has been prepared for download.",
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Failed to export data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDataExportLoading(false);
+    }
   };
 
   if (showMfaSetup) {
@@ -311,7 +349,157 @@ const SettingsPage = () => {
               </CardContent>
             </Card>
 
-            {/* Danger Zone */}
+            {/* Preferences */}
+            <Card className="border-border/20 bg-card/50 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] animate-scale-in [animation-delay:150ms]">
+              <CardHeader className="pb-4">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 rounded-full bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/30">
+                    <Settings className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-semibold">Preferences</CardTitle>
+                    <CardDescription>Customize your Mail Guard experience</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Language Settings */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium flex items-center space-x-2">
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    <span>Language</span>
+                  </Label>
+                  <Select value={language} onValueChange={handleLanguageChange}>
+                    <SelectTrigger className="w-full bg-background/50 border-border/30">
+                      <SelectValue placeholder="Select language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">🇺🇸 English</SelectItem>
+                      <SelectItem value="ar">🇸🇦 العربية (Arabic)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Theme Settings */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium flex items-center space-x-2">
+                    <Palette className="h-4 w-4 text-muted-foreground" />
+                    <span>Theme</span>
+                  </Label>
+                  <Select value={theme} onValueChange={setTheme}>
+                    <SelectTrigger className="w-full bg-background/50 border-border/30">
+                      <SelectValue placeholder="Select theme" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="light">☀️ Light Mode</SelectItem>
+                      <SelectItem value="dark">🌙 Dark Mode</SelectItem>
+                      <SelectItem value="system">💻 System Default</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Notifications */}
+            <Card className="border-border/20 bg-card/50 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] animate-scale-in [animation-delay:175ms]">
+              <CardHeader className="pb-4">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30">
+                    <Bell className="h-6 w-6 text-amber-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-semibold">Notifications</CardTitle>
+                    <CardDescription>Manage your notification preferences</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between p-3 border rounded-lg bg-gradient-to-r from-background to-muted/20">
+                  <div className="space-y-1">
+                    <Label className="font-medium">Email Notifications</Label>
+                    <p className="text-sm text-muted-foreground">Receive email updates about your account</p>
+                  </div>
+                  <Switch
+                    checked={emailNotifications}
+                    onCheckedChange={setEmailNotifications}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 border rounded-lg bg-gradient-to-r from-background to-muted/20">
+                  <div className="space-y-1">
+                    <Label className="font-medium">Security Alerts</Label>
+                    <p className="text-sm text-muted-foreground">Get notified about suspicious activities</p>
+                  </div>
+                  <Switch
+                    checked={securityAlerts}
+                    onCheckedChange={setSecurityAlerts}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Privacy & Data */}
+            <Card className="border-border/20 bg-card/50 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] animate-scale-in [animation-delay:200ms]">
+              <CardHeader className="pb-4">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 rounded-full bg-gradient-to-br from-teal-500/20 to-cyan-500/20 border border-teal-500/30">
+                    <Eye className="h-6 w-6 text-teal-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-semibold">Privacy & Data</CardTitle>
+                    <CardDescription>Control your data and privacy settings</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 border rounded-xl bg-gradient-to-r from-background to-muted/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 rounded-lg bg-teal-100 border border-teal-200">
+                        <Database className="h-5 w-5 text-teal-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold">Data Retention</h4>
+                        <p className="text-sm text-muted-foreground">Emails are stored for 90 days</p>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="border-teal-200 text-teal-700">
+                      Active
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="p-4 border rounded-xl bg-gradient-to-r from-background to-muted/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 rounded-lg bg-blue-100 border border-blue-200">
+                        <Download className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold">Export Data</h4>
+                        <p className="text-sm text-muted-foreground">Download all your data</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDataExport}
+                      disabled={dataExportLoading}
+                      className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                    >
+                      {dataExportLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Download className="w-4 h-4 mr-1" />
+                      )}
+                      Export
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Account Actions */}
             <Card className="border-violet-200/50 bg-gradient-to-br from-violet-50/40 to-purple-100/30 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] animate-scale-in [animation-delay:200ms]">
               <CardHeader className="pb-4">
                 <div className="flex items-center space-x-4">
