@@ -41,60 +41,98 @@ serve(async (req) => {
       );
     }
 
+    // Get Groq API key
+    const groqApiKey = Deno.env.get('GROQ_API_KEY');
+    if (!groqApiKey) {
+      console.error('GROQ_API_KEY not found');
+      return new Response(
+        JSON.stringify({ error: 'AI service not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    // For now, let's provide a simple response for patterns analysis
-    let advice = '';
+    // Prepare AI prompt based on analysis type
+    let systemPrompt = `You are MAIL GUARD AI, an expert email security advisor. Provide detailed, actionable security advice based on email analysis.
+
+Your responses should be:
+- Specific and actionable
+- Security-focused
+- Professional but approachable
+- Include bullet points for clear guidance
+- Mention specific threat indicators when relevant
+
+Format your response with clear sections using **bold headers** and • bullet points.`;
+
+    let userMessage = '';
 
     if (analysis_type === 'patterns') {
-      advice = `Based on your email analysis patterns, here are some key security recommendations:
-
-• **Monitor High-Risk Emails**: Stay vigilant for emails with urgent language, unusual sender domains, or unexpected attachments
-• **Verify Sender Identity**: Always double-check sender authenticity for financial or sensitive requests  
-• **Enable Two-Factor Authentication**: Protect your accounts with 2FA whenever possible
-• **Regular Security Audits**: Review your account security settings monthly
-• **Report Suspicious Activity**: Forward phishing attempts to your IT team or email provider
-
-Your current privacy settings ensure maximum data protection while still providing security insights.`;
-
-    } else if (analysis_type === 'individual' && email_data) {
-      const { subject, sender, threatLevel } = email_data;
+      userMessage = `Provide comprehensive email security advice based on overall email patterns and trends. Focus on proactive security measures and best practices for email safety.`;
       
-      advice = `**Analysis for: "${subject}"**
+    } else if (analysis_type === 'individual' && email_data) {
+      const { subject, sender, threatLevel, threatType, classification, keywords } = email_data;
+      
+      userMessage = `Analyze this specific email and provide targeted security advice:
 
-**Immediate Actions:**
-• DO NOT click any links or download attachments
-• Verify sender "${sender}" through alternative communication
-• Check sender domain carefully for misspellings
+Email Details:
+- Subject: "${subject}"
+- Sender: "${sender}"
+- Threat Level: ${threatLevel || 'Unknown'}
+- Threat Type: ${threatType || 'Unknown'}
+- Classification: ${classification || 'Unknown'}
+- Detected Keywords: ${keywords?.join(', ') || 'None'}
 
-**Security Assessment:**
-• Threat Level: ${threatLevel || 'Unknown'}
-• Recommendation: Treat with caution until verified
-
-**Next Steps:**
-• Report this email if suspicious
-• Delete if confirmed malicious
-• Contact sender through known channels if legitimate`;
+Provide specific advice for this email including immediate actions, risk assessment, and next steps.`;
 
     } else if (analysis_type === 'comprehensive') {
-      advice = `**Comprehensive Security Analysis**
-
-**Current Status:**
-• Email security monitoring is active
-• Privacy-first mode protects your data
-• Real-time threat detection enabled
-
-**Recommendations:**
-• Continue monitoring email patterns
-• Enable additional security features if available
-• Regular security awareness training
-• Backup important data regularly
-
-**Best Practices:**
-• Never share passwords via email
-• Be cautious with urgent financial requests
-• Verify all suspicious communications
-• Keep software updated`;
+      userMessage = `Provide a comprehensive email security analysis covering current security status, recommendations for improvement, and best practices for ongoing email safety.`;
     }
+
+    // Call Groq API
+    console.log('Calling Groq API for email security advice');
+    const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${groqApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt
+          },
+          {
+            role: 'user',
+            content: userMessage
+          }
+        ],
+        max_tokens: 1000,
+        temperature: 0.7,
+      }),
+    });
+
+    if (!groqResponse.ok) {
+      const errorData = await groqResponse.text();
+      console.error('Groq API error:', groqResponse.status, errorData);
+      
+      // Return fallback advice if AI fails
+      let fallbackAdvice = '';
+      if (analysis_type === 'individual' && email_data) {
+        const { subject, sender, threatLevel } = email_data;
+        fallbackAdvice = `**Security Alert for: "${subject}"**\n\n• Verify sender "${sender}" through alternative channels\n• Exercise caution with this ${threatLevel} threat level email\n• Do not click links or download attachments until verified`;
+      } else {
+        fallbackAdvice = `**Email Security Recommendations**\n\n• Verify sender authenticity before taking action\n• Be cautious with urgent requests\n• Enable two-factor authentication\n• Report suspicious emails`;
+      }
+      
+      return new Response(
+        JSON.stringify({ advice: fallbackAdvice }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const groqData = await groqResponse.json();
+    const advice = groqData.choices[0]?.message?.content || 'Unable to generate security advice at this time.';
 
     console.log('Generated advice successfully');
     
