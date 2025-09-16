@@ -14,13 +14,15 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    console.log('Request body received');
+    console.log('Request body received:', JSON.stringify(body));
     
     const { user_id, email_data, analysis_type = 'patterns' } = body;
     console.log('Analysis type:', analysis_type);
+    console.log('User ID:', user_id);
 
     // Basic validation
     if (!user_id) {
+      console.error('Missing user_id in request');
       return new Response(
         JSON.stringify({ error: 'user_id is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -82,7 +84,7 @@ Your current privacy settings ensure maximum data protection while still providi
 • Keep software updated`;
     }
 
-    console.log('Generated advice length:', advice.length);
+    console.log('Generated advice successfully');
     
     return new Response(
       JSON.stringify({ advice }),
@@ -91,6 +93,9 @@ Your current privacy settings ensure maximum data protection while still providi
 
   } catch (error) {
     console.error('Error in email-security-advisor function:', error);
+    console.error('Error details:', error.message);
+    console.error('Error stack:', error.stack);
+    
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error', 
