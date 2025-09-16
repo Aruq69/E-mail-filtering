@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { FormattedAdvice } from "@/components/ui/formatted-advice";
 import { Brain, AlertTriangle, Shield, RefreshCw, Lightbulb } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -137,11 +138,7 @@ const EmailSecurityAdvice = ({ email }: EmailSecurityAdviceProps) => {
         {advice && !loading && !error && (
           <div className="space-y-3">
             <div className="bg-background/50 border border-orange-500/20 rounded-lg p-4">
-              <div className="prose prose-sm max-w-none">
-                <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                  {advice}
-                </div>
-              </div>
+              <FormattedAdvice content={advice} />
             </div>
             
             <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground">

@@ -4,6 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FormattedAdvice } from '@/components/ui/formatted-advice';
 import { Shield, TrendingUp, AlertTriangle, Brain, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -117,29 +118,6 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
     }
   }, [selectedEmail, activeTab]);
 
-  const formatAdvice = (advice: string) => {
-    return advice.split('\n').map((line, index) => {
-      if (line.trim().startsWith('•') || line.trim().startsWith('-')) {
-        return (
-          <li key={index} className="ml-4 text-muted-foreground">
-            {line.replace(/^[•-]\s*/, '')}
-          </li>
-        );
-      }
-      if (line.trim().match(/^\d+\./)) {
-        return (
-          <div key={index} className="font-medium text-foreground mt-2">
-            {line}
-          </div>
-        );
-      }
-      return line.trim() ? (
-        <p key={index} className="text-muted-foreground">
-          {line}
-        </p>
-      ) : null;
-    });
-  };
 
   const calculateTotalStats = () => {
     if (!emailStats?.length) return null;
@@ -242,11 +220,11 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                       <p className="mt-2 text-muted-foreground">Analyzing your email patterns...</p>
                     </div>
-                  ) : insights.patterns ? (
-                    formatAdvice(insights.patterns)
-                  ) : (
-                    <p className="text-muted-foreground">No pattern analysis available. More emails needed for insights.</p>
-                  )}
+                   ) : insights.patterns ? (
+                     <FormattedAdvice content={insights.patterns} />
+                   ) : (
+                     <p className="text-muted-foreground">No pattern analysis available. More emails needed for insights.</p>
+                   )}
                 </div>
               </div>
             </ScrollArea>
@@ -295,11 +273,11 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                         <p className="mt-2 text-muted-foreground">Analyzing this email...</p>
                       </div>
-                    ) : insights.individual ? (
-                      formatAdvice(insights.individual)
-                    ) : (
-                      <p className="text-muted-foreground">Click "Analyze" to get specific advice for this email.</p>
-                    )}
+                     ) : insights.individual ? (
+                       <FormattedAdvice content={insights.individual} />
+                     ) : (
+                       <p className="text-muted-foreground">Click "Analyze" to get specific advice for this email.</p>
+                     )}
                   </div>
                 </div>
               ) : (
@@ -334,11 +312,11 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                       <p className="mt-2 text-muted-foreground">Generating comprehensive analysis...</p>
                     </div>
-                  ) : insights.comprehensive ? (
-                    formatAdvice(insights.comprehensive)
-                  ) : (
-                    <p className="text-muted-foreground">Click "Generate" to get a comprehensive security analysis of your email environment.</p>
-                  )}
+                   ) : insights.comprehensive ? (
+                     <FormattedAdvice content={insights.comprehensive} />
+                   ) : (
+                     <p className="text-muted-foreground">Click "Generate" to get a comprehensive security analysis of your email environment.</p>
+                   )}
                 </div>
               </div>
             </ScrollArea>
