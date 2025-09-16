@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      email_statistics: {
+        Row: {
+          created_at: string
+          date: string
+          high_threat_emails: number | null
+          id: string
+          low_threat_emails: number | null
+          malware_emails: number | null
+          medium_threat_emails: number | null
+          phishing_emails: number | null
+          safe_emails: number | null
+          spam_emails: number | null
+          suspicious_emails: number | null
+          total_emails: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          high_threat_emails?: number | null
+          id?: string
+          low_threat_emails?: number | null
+          malware_emails?: number | null
+          medium_threat_emails?: number | null
+          phishing_emails?: number | null
+          safe_emails?: number | null
+          spam_emails?: number | null
+          suspicious_emails?: number | null
+          total_emails?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          high_threat_emails?: number | null
+          id?: string
+          low_threat_emails?: number | null
+          malware_emails?: number | null
+          medium_threat_emails?: number | null
+          phishing_emails?: number | null
+          safe_emails?: number | null
+          spam_emails?: number | null
+          suspicious_emails?: number | null
+          total_emails?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       emails: {
         Row: {
           classification: string | null
@@ -227,6 +278,14 @@ export type Database = {
           updated_at: string
           user_id: string
         }
+      }
+      increment_email_statistics: {
+        Args: {
+          p_threat_level?: string
+          p_threat_type?: string
+          p_user_id: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
