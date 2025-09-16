@@ -376,7 +376,7 @@ Deno.serve(async (req) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '', // Use service role key for full access
       {
         auth: {
           autoRefreshToken: false,
@@ -397,12 +397,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Set the auth for the client
+    // Get user from auth token (we still validate the user but use service role for queries)
     const token = authHeader.replace('Bearer ', '');
-    supabaseClient.auth.session = () => ({ access_token: token });
 
-    // Get user from auth token
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+    // Verify user identity with a separate client using anon key
+    const authClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    );
+    const { data: { user }, error: userError } = await authClient.auth.getUser(token);
     
     if (userError || !user) {
       return new Response(
@@ -423,12 +426,24 @@ Deno.serve(async (req) => {
       .eq('user_id', user.id)
       .order('date', { ascending: false });
 
+    console.log('Email statistics query result:', { data: emailStats, error: statsError });
+
     // Fetch detailed emails only if privacy mode is off
     const { data: emails, error: emailsError } = await supabaseClient
       .from('emails')
       .select('*')
       .eq('user_id', user.id)
       .order('received_date', { ascending: false });
+
+    console.log('Emails query result:', { 
+      count: emails?.length || 0, 
+      error: emailsError,
+      sampleEmail: emails?.[0] ? {
+        id: emails[0].id,
+        subject: emails[0].subject,
+        user_id: emails[0].user_id
+      } : null
+    });
 
     if (statsError) {
       console.error('Error fetching email statistics:', statsError);
