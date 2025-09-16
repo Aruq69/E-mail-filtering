@@ -20,14 +20,13 @@ const SettingsPage = () => {
   const [loading, setLoading] = useState(true);
   const [showMfaSetup, setShowMfaSetup] = useState(false);
   const [factors, setFactors] = useState<any[]>([]);
-  const [language, setLanguage] = useState("en");
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [securityAlerts, setSecurityAlerts] = useState(true);
   const [neverStoreData, setNeverStoreData] = useState(true); // Privacy-first default
   const [dataExportLoading, setDataExportLoading] = useState(false);
   const { user, signOut, loading: authLoading } = useAuth();
   const { theme, setTheme } = useTheme();
-  const { language: currentLang, t } = useLanguage();
+  const { language: currentLang, setLanguage: setContextLanguage, t } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -58,7 +57,10 @@ const SettingsPage = () => {
         setNeverStoreData(preferences.never_store_data);
         setEmailNotifications(preferences.email_notifications);
         setSecurityAlerts(preferences.security_alerts);
-        setLanguage(preferences.language);
+        // Sync the language from database with language context
+        if (preferences.language !== currentLang) {
+          setContextLanguage(preferences.language);
+        }
       } else if (error?.code === 'PGRST116') {
         // No preferences found, create privacy-first defaults
         const { error: insertError } = await supabase
@@ -68,7 +70,7 @@ const SettingsPage = () => {
             never_store_data: true, // Privacy-first default
             email_notifications: true,
             security_alerts: true,
-            language: 'en',
+            language: currentLang, // Use current language context
             theme: 'system'
           });
         
@@ -137,7 +139,8 @@ const SettingsPage = () => {
   const handleLanguageChange = async (newLanguage: string) => {
     if (!user) return;
     
-    setLanguage(newLanguage);
+    // Update language context immediately for UI changes
+    setContextLanguage(newLanguage);
     
     try {
       // First check if preferences exist
@@ -182,7 +185,7 @@ const SettingsPage = () => {
           variant: "destructive",
         });
         // Revert the state if database update failed
-        setLanguage(language);
+        setContextLanguage(currentLang);
         return;
       }
 
@@ -215,7 +218,7 @@ const SettingsPage = () => {
         description: "Failed to update language setting. Please try again.",
         variant: "destructive",
       });
-      setLanguage(language);
+      setContextLanguage(currentLang);
     }
   };
 
@@ -570,7 +573,7 @@ const SettingsPage = () => {
                     <Languages className="h-4 w-4 text-muted-foreground" />
                     <span>{t('display_language')}</span>
                   </Label>
-                  <Select value={language} onValueChange={handleLanguageChange}>
+                  <Select value={currentLang} onValueChange={handleLanguageChange}>
                     <SelectTrigger className="w-full bg-background/50 border-border/30 hover:border-primary/50 hover:shadow-md hover:shadow-primary/10 transition-all duration-300 hover:scale-[1.02]">
                       <SelectValue placeholder={t('display_language')} />
                     </SelectTrigger>
