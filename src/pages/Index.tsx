@@ -172,12 +172,17 @@ const Index = () => {
       }
 
       if (data.success) {
+        console.log('📧 Gmail fetch response:', data);
+        console.log('📧 Privacy mode enabled:', userPreferences?.never_store_data);
+        console.log('📧 Emails in response:', data.emails?.length);
+        
         // Get current email count to see how many were actually new
         addRecentActivity(`Processed ${data.total} emails`, 
           userPreferences?.never_store_data ? "Analyzed without storing (Privacy Mode)" : "Analyzed and stored");
         
         // If privacy mode is enabled, store emails in session state
         if (userPreferences?.never_store_data && data.emails) {
+          console.log('📧 Setting session emails:', data.emails.length);
           setSessionEmails(data.emails);
         }
         
@@ -342,6 +347,13 @@ const Index = () => {
 
   // Use session emails when privacy mode is enabled, otherwise use stored emails
   const emailsToDisplay = userPreferences?.never_store_data ? sessionEmails : emails;
+  
+  console.log('📧 Debug display logic:', {
+    privacyMode: userPreferences?.never_store_data,
+    sessionEmailsCount: sessionEmails.length,
+    storedEmailsCount: emails.length,
+    displayEmailsCount: emailsToDisplay.length
+  });
   
   const filteredEmails = emailsToDisplay.filter(email => {
     // Apply search filter
