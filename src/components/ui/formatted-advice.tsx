@@ -49,9 +49,9 @@ export const FormattedAdvice = ({ content, className, variant = 'contained' }: F
           elements.push(
             <div key={index} className="flex items-start space-x-4 mb-4 group">
               <div className="flex-shrink-0 w-2 h-2 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full mt-2.5 group-hover:scale-110 transition-transform duration-200" />
-              <div className="flex-1">
-                <span className="font-semibold text-cyan-200 text-base">{boldPart}:</span>
-                <span className="text-slate-300 ml-2 leading-relaxed text-sm">{regularPart}</span>
+              <div className="flex-1 min-w-0">
+                <span className="font-semibold text-cyan-200 text-base break-words">{boldPart}:</span>
+                <span className="text-slate-300 ml-2 leading-relaxed text-sm block break-words overflow-wrap-anywhere">{regularPart}</span>
               </div>
             </div>
           );
@@ -59,7 +59,7 @@ export const FormattedAdvice = ({ content, className, variant = 'contained' }: F
           elements.push(
             <div key={index} className="flex items-start space-x-4 mb-4 group">
               <div className="flex-shrink-0 w-2 h-2 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full mt-2.5 group-hover:scale-110 transition-transform duration-200" />
-              <span className="text-slate-300 flex-1 leading-relaxed text-sm">{bulletText}</span>
+              <span className="text-slate-300 flex-1 leading-relaxed text-sm break-words overflow-wrap-anywhere min-w-0">{bulletText}</span>
             </div>
           );
         }
@@ -70,7 +70,7 @@ export const FormattedAdvice = ({ content, className, variant = 'contained' }: F
       if (trimmedLine.match(/^\d+\./)) {
         elements.push(
           <div key={index} className="mb-4 pl-4">
-            <span className="font-medium text-cyan-200 leading-relaxed text-sm">{trimmedLine}</span>
+            <span className="font-medium text-cyan-200 leading-relaxed text-sm break-words overflow-wrap-anywhere">{trimmedLine}</span>
           </div>
         );
         return;
@@ -83,7 +83,7 @@ export const FormattedAdvice = ({ content, className, variant = 'contained' }: F
         const formattedParts = parts.map((part, partIndex) => {
           if (part.startsWith('**') && part.endsWith('**')) {
             return (
-              <span key={partIndex} className="font-semibold text-cyan-200">
+              <span key={partIndex} className="font-semibold text-cyan-200 break-words">
                 {part.slice(2, -2)}
               </span>
             );
@@ -92,7 +92,7 @@ export const FormattedAdvice = ({ content, className, variant = 'contained' }: F
         });
         
         elements.push(
-          <p key={index} className="text-slate-300 leading-relaxed mb-4 text-sm">
+          <p key={index} className="text-slate-300 leading-relaxed mb-4 text-sm break-words overflow-wrap-anywhere">
             {formattedParts}
           </p>
         );
@@ -104,7 +104,7 @@ export const FormattedAdvice = ({ content, className, variant = 'contained' }: F
 
   if (variant === 'plain') {
     return (
-      <div className={cn("space-y-2", className)}>
+      <div className={cn("space-y-2 break-words overflow-wrap-anywhere", className)}>
         {formatContent(content)}
       </div>
     );
@@ -114,7 +114,7 @@ export const FormattedAdvice = ({ content, className, variant = 'contained' }: F
     <div className={cn(
       "relative overflow-hidden rounded-xl border border-slate-700/50",
       "bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-800/90",
-      "backdrop-blur-sm shadow-2xl",
+      "backdrop-blur-sm shadow-2xl break-words overflow-wrap-anywhere",
       "animate-fade-in",
       className
     )}>
