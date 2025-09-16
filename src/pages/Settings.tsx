@@ -22,6 +22,7 @@ const SettingsPage = () => {
   const [language, setLanguage] = useState("en");
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [securityAlerts, setSecurityAlerts] = useState(true);
+  const [neverStoreData, setNeverStoreData] = useState(false);
   const [dataExportLoading, setDataExportLoading] = useState(false);
   const { user, signOut, loading: authLoading } = useAuth();
   const { theme, setTheme } = useTheme();
@@ -117,6 +118,17 @@ const SettingsPage = () => {
     } finally {
       setDataExportLoading(false);
     }
+  };
+
+  const handleNeverStoreDataChange = (enabled: boolean) => {
+    setNeverStoreData(enabled);
+    localStorage.setItem('never-store-data', enabled.toString());
+    toast({
+      title: enabled ? "Data Storage Disabled" : "Data Storage Enabled",
+      description: enabled 
+        ? "New emails will not be stored permanently" 
+        : "Emails will be stored according to retention policy",
+    });
   };
 
   if (showMfaSetup) {
@@ -496,10 +508,29 @@ const SettingsPage = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="p-4 border rounded-xl bg-gradient-to-r from-background to-muted/20">
+                <div className="p-4 border rounded-xl bg-gradient-to-r from-background to-muted/20 hover:shadow-md hover:shadow-red-500/10 transition-all duration-300 group">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="p-2 rounded-lg bg-teal-100 border border-teal-200">
+                      <div className="p-2 rounded-lg bg-red-100 border border-red-200 group-hover:bg-red-200 transition-colors">
+                        <Database className="h-5 w-5 text-red-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-red-800">Never Store Data</h4>
+                        <p className="text-sm text-red-600">Disable permanent email storage for maximum privacy</p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={neverStoreData}
+                      onCheckedChange={handleNeverStoreDataChange}
+                      className="data-[state=checked]:bg-red-500 hover:shadow-lg hover:shadow-red-500/25 transition-all duration-300"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-4 border rounded-xl bg-gradient-to-r from-background to-muted/20 hover:shadow-md hover:shadow-teal-500/10 transition-all duration-300 group">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 rounded-lg bg-teal-100 border border-teal-200 group-hover:bg-teal-200 transition-colors">
                         <Database className="h-5 w-5 text-teal-600" />
                       </div>
                       <div>
@@ -507,16 +538,16 @@ const SettingsPage = () => {
                         <p className="text-sm text-muted-foreground">Emails are stored for 90 days</p>
                       </div>
                     </div>
-                    <Badge variant="outline" className="border-teal-200 text-teal-700">
-                      Active
+                    <Badge variant="outline" className={`border-teal-200 text-teal-700 transition-opacity ${neverStoreData ? 'opacity-50' : ''}`}>
+                      {neverStoreData ? 'Disabled' : 'Active'}
                     </Badge>
                   </div>
                 </div>
 
-                <div className="p-4 border rounded-xl bg-gradient-to-r from-background to-muted/20">
+                <div className="p-4 border rounded-xl bg-gradient-to-r from-background to-muted/20 hover:shadow-md hover:shadow-blue-500/10 transition-all duration-300 group">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="p-2 rounded-lg bg-blue-100 border border-blue-200">
+                      <div className="p-2 rounded-lg bg-blue-100 border border-blue-200 group-hover:bg-blue-200 transition-colors">
                         <Download className="h-5 w-5 text-blue-600" />
                       </div>
                       <div>
@@ -529,7 +560,7 @@ const SettingsPage = () => {
                       size="sm"
                       onClick={handleDataExport}
                       disabled={dataExportLoading}
-                      className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                      className="border-blue-200 text-blue-600 hover:bg-blue-50 hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105"
                     >
                       {dataExportLoading ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
