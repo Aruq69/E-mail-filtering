@@ -136,13 +136,14 @@ const EmailSecurityAdvice = ({ email }: EmailSecurityAdviceProps) => {
         )}
 
         {advice && !loading && !error && (
-          <div className="space-y-3">
-            <div className="bg-background/50 border border-orange-500/20 rounded-lg p-4">
-              <FormattedAdvice content={advice} />
-            </div>
+          <div className="space-y-4">
+            <FormattedAdvice content={advice} />
             
-            <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground">
-              <span>💡 AI-generated security guidance</span>
+            <div className="flex items-center justify-between pt-3 text-xs text-muted-foreground border-t border-orange-500/20">
+              <span className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full animate-pulse" />
+                <span>AI-generated security guidance</span>
+              </span>
               <Button 
                 onClick={retryAdvice} 
                 variant="ghost" 

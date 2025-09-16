@@ -383,25 +383,29 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
                 className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}
               >
                 <div
-                  className={`max-w-[85%] rounded-lg p-3 ${
+                  className={`max-w-[85%] rounded-xl ${
                     message.isBot
-                      ? 'bg-primary/10 border border-primary/20 text-foreground'
-                      : 'bg-secondary/10 border border-secondary/20 text-foreground'
+                      ? 'bg-gradient-to-br from-slate-800/90 to-slate-900/95 border border-slate-700/50 text-foreground shadow-lg backdrop-blur-sm'
+                      : 'bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 text-foreground shadow-md'
                   }`}
                 >
-                  <div className="flex items-start space-x-2">
+                  <div className="flex items-start space-x-3 p-4">
                     {message.isBot ? (
-                      <Bot className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                      <div className="flex-shrink-0">
+                        <Bot className="h-5 w-5 text-cyan-400 mt-0.5" />
+                      </div>
                     ) : (
-                      <User className="h-4 w-4 text-secondary mt-0.5 flex-shrink-0" />
+                      <div className="flex-shrink-0">
+                        <User className="h-5 w-5 text-primary mt-0.5" />
+                      </div>
                     )}
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       {message.isBot ? (
-                        <FormattedAdvice content={message.content} className="text-sm" />
+                        <FormattedAdvice content={message.content} className="!p-0 !bg-transparent !border-0 !shadow-none" />
                       ) : (
-                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
                       )}
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-xs text-muted-foreground mt-3 opacity-60">
                         {message.timestamp.toLocaleTimeString()}
                       </p>
                     </div>
@@ -411,15 +415,15 @@ const ChatAssistant = ({ selectedEmail, emails = [] }: ChatAssistantProps) => {
             ))}
             {(isLoading && isTyping) && (
               <div className="flex justify-start">
-                <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 max-w-[85%]">
-                  <div className="flex items-center space-x-2">
-                    <Bot className="h-4 w-4 text-primary" />
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                      <div className="w-2 h-2 bg-primary rounded-full animate-pulse delay-100"></div>
-                      <div className="w-2 h-2 bg-primary rounded-full animate-pulse delay-200"></div>
+                <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/95 border border-slate-700/50 rounded-xl p-4 max-w-[85%] shadow-lg backdrop-blur-sm">
+                  <div className="flex items-center space-x-3">
+                    <Bot className="h-5 w-5 text-cyan-400" />
+                    <div className="flex space-x-2">
+                      <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+                      <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse delay-100"></div>
+                      <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse delay-200"></div>
                     </div>
-                    <span className="text-sm text-muted-foreground">MAIL GUARD AI is analyzing...</span>
+                    <span className="text-sm text-slate-300">MAIL GUARD AI is analyzing...</span>
                   </div>
                 </div>
               </div>

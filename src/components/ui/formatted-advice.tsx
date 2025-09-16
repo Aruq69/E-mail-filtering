@@ -17,7 +17,7 @@ export const FormattedAdvice = ({ content, className }: FormattedAdviceProps) =>
       if (!trimmedLine) {
         // Skip empty lines but add spacing
         if (elements.length > 0) {
-          elements.push(<div key={`space-${index}`} className="h-3" />);
+          elements.push(<div key={`space-${index}`} className="h-4" />);
         }
         return;
       }
@@ -26,8 +26,8 @@ export const FormattedAdvice = ({ content, className }: FormattedAdviceProps) =>
       if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
         const headerText = trimmedLine.slice(2, -2);
         elements.push(
-          <div key={index} className="mt-5 first:mt-0">
-            <h3 className="font-semibold text-blue-300 dark:text-blue-300 text-base mb-3 leading-relaxed">
+          <div key={index} className="mt-6 first:mt-0">
+            <h3 className="font-semibold text-cyan-300 text-lg mb-4 leading-relaxed tracking-wide">
               {headerText}
             </h3>
           </div>
@@ -46,19 +46,19 @@ export const FormattedAdvice = ({ content, className }: FormattedAdviceProps) =>
           const regularPart = parts[1] || '';
           
           elements.push(
-            <div key={index} className="flex items-start space-x-3 mb-3">
-              <span className="text-blue-400 mt-1 text-sm font-bold flex-shrink-0">•</span>
+            <div key={index} className="flex items-start space-x-4 mb-4 group">
+              <div className="flex-shrink-0 w-2 h-2 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full mt-2.5 group-hover:scale-110 transition-transform duration-200" />
               <div className="flex-1">
-                <span className="font-medium text-blue-200">{boldPart}:</span>
-                <span className="text-gray-300 ml-1 leading-relaxed">{regularPart}</span>
+                <span className="font-semibold text-cyan-200 text-base">{boldPart}:</span>
+                <span className="text-slate-300 ml-2 leading-relaxed text-sm">{regularPart}</span>
               </div>
             </div>
           );
         } else {
           elements.push(
-            <div key={index} className="flex items-start space-x-3 mb-3">
-              <span className="text-blue-400 mt-1 text-sm font-bold flex-shrink-0">•</span>
-              <span className="text-gray-300 flex-1 leading-relaxed">{bulletText}</span>
+            <div key={index} className="flex items-start space-x-4 mb-4 group">
+              <div className="flex-shrink-0 w-2 h-2 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full mt-2.5 group-hover:scale-110 transition-transform duration-200" />
+              <span className="text-slate-300 flex-1 leading-relaxed text-sm">{bulletText}</span>
             </div>
           );
         }
@@ -68,8 +68,8 @@ export const FormattedAdvice = ({ content, className }: FormattedAdviceProps) =>
       // Numbered items
       if (trimmedLine.match(/^\d+\./)) {
         elements.push(
-          <div key={index} className="mb-3">
-            <span className="font-medium text-blue-200 leading-relaxed">{trimmedLine}</span>
+          <div key={index} className="mb-4 pl-4">
+            <span className="font-medium text-cyan-200 leading-relaxed text-sm">{trimmedLine}</span>
           </div>
         );
         return;
@@ -82,7 +82,7 @@ export const FormattedAdvice = ({ content, className }: FormattedAdviceProps) =>
         const formattedParts = parts.map((part, partIndex) => {
           if (part.startsWith('**') && part.endsWith('**')) {
             return (
-              <span key={partIndex} className="font-medium text-blue-200">
+              <span key={partIndex} className="font-semibold text-cyan-200">
                 {part.slice(2, -2)}
               </span>
             );
@@ -91,7 +91,7 @@ export const FormattedAdvice = ({ content, className }: FormattedAdviceProps) =>
         });
         
         elements.push(
-          <p key={index} className="text-gray-300 leading-relaxed mb-3 text-sm">
+          <p key={index} className="text-slate-300 leading-relaxed mb-4 text-sm">
             {formattedParts}
           </p>
         );
@@ -103,13 +103,24 @@ export const FormattedAdvice = ({ content, className }: FormattedAdviceProps) =>
 
   return (
     <div className={cn(
-      "bg-slate-800 dark:bg-slate-900 rounded-lg p-5 border border-slate-700",
-      "prose prose-sm max-w-none",
+      "relative overflow-hidden rounded-xl border border-slate-700/50",
+      "bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-800/90",
+      "backdrop-blur-sm shadow-2xl",
+      "animate-fade-in",
       className
     )}>
-      <div className="space-y-1">
-        {formatContent(content)}
+      {/* Subtle gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-transparent to-blue-500/5 pointer-events-none" />
+      
+      {/* Content */}
+      <div className="relative p-6">
+        <div className="space-y-2">
+          {formatContent(content)}
+        </div>
       </div>
+      
+      {/* Bottom glow effect */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
     </div>
   );
 };
