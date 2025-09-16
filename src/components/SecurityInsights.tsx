@@ -138,7 +138,7 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
   const safetyRate = stats ? Math.round((stats.safe_emails / stats.total_emails) * 100) : 0;
 
   return (
-    <Card className="h-[600px] flex flex-col">
+    <Card className="h-[450px] flex flex-col">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -177,7 +177,7 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
           </TabsList>
 
           <TabsContent value="patterns" className="flex-1 overflow-hidden">
-            <ScrollArea className="h-[400px]">
+            <ScrollArea className="h-[280px]">
               <div className="space-y-4 pr-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Security Pattern Analysis</h3>
@@ -223,7 +223,7 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
           </TabsContent>
 
           <TabsContent value="individual" className="flex-1 overflow-hidden">
-            <ScrollArea className="h-[400px]">
+            <ScrollArea className="h-[280px]">
               <div className="space-y-4 pr-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Current Email Analysis</h3>
@@ -282,7 +282,7 @@ export const SecurityInsights = ({ selectedEmail, emailStats }: SecurityInsights
           </TabsContent>
 
           <TabsContent value="comprehensive" className="flex-1 overflow-hidden">
-            <ScrollArea className="h-[400px]">
+            <ScrollArea className="h-[280px]">
               <div className="space-y-4 pr-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Comprehensive Security Analysis</h3>
