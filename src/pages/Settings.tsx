@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Settings, User, ArrowLeft, CheckCircle, XCircle, Loader2, Calendar, Mail, Key, AlertTriangle, Trash2, Plus, Globe, Palette, Bell, Eye, Database, Download, Sun, Moon, Monitor } from "lucide-react";
+import { Shield, Settings, User, ArrowLeft, CheckCircle, XCircle, Loader2, Calendar, Mail, Key, AlertTriangle, Trash2, Plus, Globe, Palette, Bell, Eye, Database, Download, Sun, Moon, Monitor, Link, Unlink } from "lucide-react";
 import { useTheme } from "next-themes";
 import MFASetup from "@/components/MFASetup";
 
@@ -24,6 +24,8 @@ const SettingsPage = () => {
   const [securityAlerts, setSecurityAlerts] = useState(true);
   const [neverStoreData, setNeverStoreData] = useState(true); // Privacy-first default
   const [dataExportLoading, setDataExportLoading] = useState(false);
+  const [gmailConnected, setGmailConnected] = useState(false);
+  const [gmailLoading, setGmailLoading] = useState(false);
   const { user, signOut, loading: authLoading } = useAuth();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
@@ -38,6 +40,7 @@ const SettingsPage = () => {
     if (user) {
       checkMfaStatus();
       loadUserPreferences();
+      checkGmailConnection();
     }
   }, [user, authLoading, navigate]);
 
@@ -333,6 +336,87 @@ const SettingsPage = () => {
         description: "Failed to update theme setting. Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  const checkGmailConnection = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('gmail_tokens')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
+      
+      if (!error && data && data.length > 0) {
+        setGmailConnected(true);
+      } else {
+        setGmailConnected(false);
+      }
+    } catch (error) {
+      console.error('Error checking Gmail connection:', error);
+      setGmailConnected(false);
+    }
+  };
+
+  const handleGmailConnect = async () => {
+    if (!user) return;
+    
+    setGmailLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('gmail-auth', {
+        body: { action: 'get_auth_url' }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.auth_url) {
+        // Open the auth URL in the current window
+        window.location.href = data.auth_url;
+      }
+    } catch (error) {
+      console.error('Error connecting Gmail:', error);
+      toast({
+        title: "Connection Error",
+        description: "Failed to connect to Gmail. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setGmailLoading(false);
+    }
+  };
+
+  const handleGmailDisconnect = async () => {
+    if (!user) return;
+    
+    setGmailLoading(true);
+    try {
+      const { error } = await supabase
+        .from('gmail_tokens')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      setGmailConnected(false);
+      toast({
+        title: "Gmail Disconnected",
+        description: "Your Gmail account has been disconnected successfully.",
+      });
+    } catch (error) {
+      console.error('Error disconnecting Gmail:', error);
+      toast({
+        title: "Disconnection Error",
+        description: "Failed to disconnect Gmail. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setGmailLoading(false);
     }
   };
 
@@ -645,6 +729,104 @@ const SettingsPage = () => {
                         <>
                           <Download className="h-4 w-4 mr-2" />
                           Export
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Gmail Integration Card */}
+            <Card className="group border-border/20 bg-card/50 backdrop-blur-md shadow-xl hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 hover:scale-[1.02] hover:border-orange-500/30 animate-scale-in [animation-delay:250ms]">
+              <CardHeader className="pb-4">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 rounded-full bg-gradient-to-br from-orange-500/20 to-red-500/20 border border-orange-500/30">
+                    <Mail className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-semibold">Gmail Integration</CardTitle>
+                    <CardDescription>Connect your Gmail account for email analysis</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-muted/30 to-muted/10 rounded-xl border">
+                  <div className="flex items-center space-x-3">
+                    <div className={`p-2 rounded-full border ${gmailConnected ? 'bg-emerald-500/20 border-emerald-500/30' : 'bg-orange-500/20 border-orange-500/30'}`}>
+                      {gmailConnected ? (
+                        <Link className="h-5 w-5 text-emerald-600" />
+                      ) : (
+                        <Unlink className="h-5 w-5 text-orange-600" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium">
+                        {gmailConnected ? "Gmail Connected" : "Gmail Not Connected"}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {gmailConnected 
+                          ? "Your Gmail account is connected and ready for analysis" 
+                          : "Connect your Gmail to enable email security analysis"
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge variant={gmailConnected ? "default" : "destructive"} className="text-xs">
+                      {gmailConnected ? "Connected" : "Disconnected"}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      {gmailConnected ? (
+                        <Unlink className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Link className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      <div>
+                        <p className="font-medium">
+                          {gmailConnected ? "Disconnect Gmail" : "Connect Gmail"}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {gmailConnected 
+                            ? "Remove Gmail connection and delete stored tokens"
+                            : "Authorize Mail Guard to access your Gmail for security analysis"
+                          }
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant={gmailConnected ? "destructive" : "default"}
+                      size="sm"
+                      onClick={gmailConnected ? handleGmailDisconnect : handleGmailConnect}
+                      disabled={gmailLoading}
+                      className={gmailConnected 
+                        ? "hover:shadow-md hover:shadow-red-500/10 transition-all duration-300"
+                        : "hover:shadow-md hover:shadow-primary/10 transition-all duration-300"
+                      }
+                    >
+                      {gmailLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          {gmailConnected ? "Disconnecting..." : "Connecting..."}
+                        </>
+                      ) : (
+                        <>
+                          {gmailConnected ? (
+                            <>
+                              <Unlink className="h-4 w-4 mr-2" />
+                              Disconnect
+                            </>
+                          ) : (
+                            <>
+                              <Link className="h-4 w-4 mr-2" />
+                              Connect Gmail
+                            </>
+                          )}
                         </>
                       )}
                     </Button>
