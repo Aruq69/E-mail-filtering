@@ -227,13 +227,12 @@ CREATE OR REPLACE FUNCTION public.increment_email_statistics(
 RETURNS VOID AS $$
 BEGIN
   INSERT INTO public.email_statistics (
-    user_id, date, total_emails, safe_emails, low_threat_emails,
+    user_id, date, total_emails, low_threat_emails,
     medium_threat_emails, high_threat_emails, spam_emails,
     phishing_emails, malware_emails, suspicious_emails
   )
   VALUES (
     p_user_id, CURRENT_DATE, 1,
-    CASE WHEN p_threat_level = 'safe' THEN 1 ELSE 0 END,
     CASE WHEN p_threat_level = 'low' THEN 1 ELSE 0 END,
     CASE WHEN p_threat_level = 'medium' THEN 1 ELSE 0 END,
     CASE WHEN p_threat_level = 'high' THEN 1 ELSE 0 END,
@@ -245,7 +244,6 @@ BEGIN
   ON CONFLICT (user_id, date)
   DO UPDATE SET
     total_emails = email_statistics.total_emails + 1,
-    safe_emails = email_statistics.safe_emails + CASE WHEN p_threat_level = 'safe' THEN 1 ELSE 0 END,
     low_threat_emails = email_statistics.low_threat_emails + CASE WHEN p_threat_level = 'low' THEN 1 ELSE 0 END,
     medium_threat_emails = email_statistics.medium_threat_emails + CASE WHEN p_threat_level = 'medium' THEN 1 ELSE 0 END,
     high_threat_emails = email_statistics.high_threat_emails + CASE WHEN p_threat_level = 'high' THEN 1 ELSE 0 END,
