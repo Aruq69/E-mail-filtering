@@ -9,7 +9,6 @@ function generateHTMLReport(emails: any[], userInfo: any, preferences: any, emai
   const totalStats = emailStats.reduce((acc, stat) => ({
     total_emails: acc.total_emails + (stat.total_emails || 0),
     safe_emails: acc.safe_emails + (stat.safe_emails || 0),
-    low_threat_emails: acc.low_threat_emails + (stat.low_threat_emails || 0),
     medium_threat_emails: acc.medium_threat_emails + (stat.medium_threat_emails || 0),
     high_threat_emails: acc.high_threat_emails + (stat.high_threat_emails || 0),
     spam_emails: acc.spam_emails + (stat.spam_emails || 0),
@@ -19,7 +18,6 @@ function generateHTMLReport(emails: any[], userInfo: any, preferences: any, emai
   }), {
     total_emails: 0,
     safe_emails: 0,
-    low_threat_emails: 0,
     medium_threat_emails: 0,
     high_threat_emails: 0,
     spam_emails: 0,
@@ -28,7 +26,7 @@ function generateHTMLReport(emails: any[], userInfo: any, preferences: any, emai
     suspicious_emails: 0
   });
 
-  const threatEmails = totalStats.low_threat_emails + totalStats.medium_threat_emails + totalStats.high_threat_emails;
+  const threatEmails = totalStats.medium_threat_emails + totalStats.high_threat_emails;
   const safetyRate = totalStats.total_emails > 0 ? Math.round((totalStats.safe_emails / totalStats.total_emails) * 100) : 0;
 
   return `
