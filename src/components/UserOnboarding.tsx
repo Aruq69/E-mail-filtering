@@ -8,15 +8,12 @@ import {
   Shield, 
   Mail, 
   MessageSquare, 
-  Search, 
-  Bot, 
   CheckCircle, 
   ArrowRight, 
   Target,
   Zap,
   Eye,
   PlayCircle,
-  X
 } from "lucide-react";
 
 interface OnboardingStep {
@@ -47,13 +44,13 @@ const UserOnboarding = () => {
     {
       id: 'welcome',
       title: 'Welcome to Mail Guard',
-      description: 'Your advanced email security system powered by AI. Let\'s take a quick tour of what you can do with Mail Guard.',
+      description: 'Your advanced email security system powered by ML\AI. Let\'s take a quick tour of what you can do with Mail Guard.',
       icon: Shield,
     },
     {
       id: 'security',
-      title: 'AI-Powered Protection',
-      description: 'Our advanced AI analyzes emails for phishing, spam, malware, and 24+ different threat types in real-time.',
+      title: 'AI and ML-Powered Protection',
+      description: 'Our advanced ML analyzes emails for phishing, spam, malware, and 24+ different threat types and provide AI chatbot assisstant in real-time.',
       icon: Zap,
     },
     {
