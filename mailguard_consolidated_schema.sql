@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS public.user_preferences (
     never_store_data BOOLEAN NOT NULL DEFAULT true,
     email_notifications BOOLEAN NOT NULL DEFAULT true,
     security_alerts BOOLEAN NOT NULL DEFAULT true,
-    language CHARACTER VARYING NOT NULL DEFAULT 'en',
-    theme CHARACTER VARYING NOT NULL DEFAULT 'system',
+    language VARCHAR NOT NULL DEFAULT 'en',
+    theme VARCHAR NOT NULL DEFAULT 'system',
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     CONSTRAINT user_preferences_user_id_key UNIQUE (user_id)
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS public.emails (
     confidence NUMERIC,
     threat_level TEXT,
     threat_type TEXT,
-    keywords TEXT[],
+    keywords JSONB,
     processed_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
