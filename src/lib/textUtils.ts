@@ -1,10 +1,3 @@
-/**
- * Utility functions for text processing and encoding
- */
-
-/**
- * Decodes HTML entities and cleans up malformed text content
- */
 export function cleanEmailContent(content: string): string {
   if (!content) return '';
 
