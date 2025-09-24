@@ -50,6 +50,15 @@ serve(async (req) => {
     // Parse request body
     const { senderEmail, ruleName, blockType, emailId }: CreateRuleRequest = await req.json();
     
+    console.log('=== REQUEST DEBUGGING ===');
+    console.log('Sender Email:', senderEmail);
+    console.log('Rule Name:', ruleName);
+    console.log('Block Type:', blockType);
+    console.log('Email ID for deletion:', emailId);
+    console.log('Email ID type:', typeof emailId);
+    console.log('Email ID is null/undefined?', emailId == null);
+    console.log('=== END REQUEST DEBUGGING ===');
+    
     if (!senderEmail || !ruleName) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields: senderEmail, ruleName', success: false }),
