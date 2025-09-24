@@ -23,9 +23,21 @@ const Auth = () => {
 
   // Redirect authenticated users to home page (but only after auth is fully loaded)
   useEffect(() => {
-    if (!authLoading && user) {
-      console.log('Auth: redirecting authenticated user to home');
-      navigate("/");
+    console.log('Auth: auth state changed', { user: !!user, authLoading, currentPath: window.location.pathname });
+    
+    // Wait for auth to fully load
+    if (authLoading) {
+      console.log('Auth: auth still loading, waiting...');
+      return;
+    }
+    
+    // Redirect authenticated users with a small delay to prevent race conditions
+    if (user) {
+      console.log('Auth: user authenticated, redirecting to home');
+      const timer = setTimeout(() => {
+        navigate("/");
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [user, authLoading, navigate]);
 

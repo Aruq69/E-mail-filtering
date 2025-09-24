@@ -53,16 +53,29 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/auth");
+    console.log('Index: auth state changed', { user: !!user, authLoading, currentPath: window.location.pathname });
+    
+    // Wait for auth to fully load before making redirect decisions
+    if (authLoading) {
+      console.log('Index: auth still loading, waiting...');
       return;
     }
     
+    // Only redirect to auth if we're certain there's no user
+    if (!user) {
+      console.log('Index: no user found, redirecting to auth');
+      const timer = setTimeout(() => {
+        navigate("/auth");
+      }, 100); // Small delay to prevent race conditions
+      return () => clearTimeout(timer);
+    }
+    
     if (user) {
+      console.log('Index: user authenticated, loading data');
       checkEmailConnection();
       fetchUserProfile();
       fetchUserPreferences();
-      fetchEmailStats(); // Add this to fetch email statistics
+      fetchEmailStats();
       const timer = setTimeout(() => {
         fetchEmails();
       }, 0);
