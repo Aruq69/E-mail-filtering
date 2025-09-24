@@ -112,7 +112,7 @@ serve(async (req) => {
       // Calculate expiry time
       const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000)).toISOString();
       
-      // Store tokens in database
+      // Store tokens in database using upsert with the unique constraint
       const { error: insertError } = await supabase
         .from('outlook_tokens')
         .upsert({
