@@ -10,7 +10,9 @@ import Auth from "./pages/Auth";
 import OutlookCallback from "./pages/OutlookCallback";
 import Settings from "./pages/Settings";
 import MLAnalytics from "./pages/MLAnalytics";
-
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import { AdminLayout } from "./components/admin/AdminLayout";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +31,10 @@ const App = () => (
               <Route path="/outlook-callback" element={<OutlookCallback />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/ml-analytics" element={<MLAnalytics />} />
+              
+              {/* Admin Routes */}
+              <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+              <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

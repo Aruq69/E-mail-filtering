@@ -15,6 +15,8 @@ import EmailSecurityAdvice from "@/components/EmailSecurityAdvice";
 import FloatingChatButton from "@/components/FloatingChatButton";
 import FeedbackSystem from "@/components/FeedbackSystem";
 import UserOnboarding from "@/components/UserOnboarding";
+import { AlertEmailButton } from "@/components/AlertEmailButton";
+import { useUserRole } from "@/hooks/useUserRole";
 import { cleanEmailContent, sanitizeText } from "@/lib/textUtils";
 
 interface Email {
@@ -50,6 +52,7 @@ const Index = () => {
   const [emailStats, setEmailStats] = useState<any[]>([]);
   const { toast } = useToast();
   const { user, signOut, loading: authLoading } = useAuth();
+  const { isAdmin } = useUserRole();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -567,6 +570,26 @@ const Index = () => {
                 </AlertDialogContent>
               </AlertDialog>
             )}
+            {isAdmin && (
+              <Button 
+                onClick={() => navigate('/admin')} 
+                variant="outline" 
+                className="w-full sm:w-auto border-primary/30 hover:border-primary/50 hover:bg-primary hover:text-primary-foreground transition-all duration-300 hover-button text-xs sm:text-sm"
+                size="sm"
+              >
+                <Shield className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                SOC Dashboard
+              </Button>
+            )}
+            <Button 
+              onClick={() => navigate('/settings')} 
+              variant="outline" 
+              className="w-full sm:w-auto border-muted-foreground/30 hover:border-muted hover:bg-muted hover:text-muted-foreground transition-all duration-300 hover-button text-xs sm:text-sm"
+              size="sm"
+            >
+              <Settings className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              Settings
+            </Button>
             <Button 
               onClick={() => setShowSignOutDialog(true)} 
               variant="outline" 
@@ -934,30 +957,37 @@ const Index = () => {
                                         </span>
                                       )}
                                     </div>
-                                  )}
-                                </div>
-                                
-                                {/* Confidence score - mobile responsive */}
-                                {email.confidence && (
-                                  <div className="text-right flex-shrink-0 self-start">
-                                    <div className="relative">
-                                      <div className="text-lg sm:text-2xl font-bold text-primary bg-gradient-to-b from-primary to-primary/70 bg-clip-text text-transparent">
-                                        {Math.round(email.confidence * 100)}%
-                                      </div>
-                                      <div className="text-[10px] sm:text-xs text-muted-foreground font-semibold uppercase tracking-wider">
-                                        CONFIDENCE
-                                      </div>
-                                      {/* Confidence indicator bar */}
-                                      <div className="mt-1 sm:mt-2 w-12 sm:w-16 h-1 sm:h-1.5 bg-muted/30 rounded-full overflow-hidden">
-                                        <div 
-                                          className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-500"
-                                          style={{ width: `${Math.round(email.confidence * 100)}%` }}
-                                        />
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
+                                   )}
+                                 </div>
+                                 
+                                 {/* Confidence score - mobile responsive */}
+                                 {email.confidence && (
+                                   <div className="text-right flex-shrink-0 self-start">
+                                     <div className="relative">
+                                       <div className="text-lg sm:text-2xl font-bold text-primary bg-gradient-to-b from-primary to-primary/70 bg-clip-text text-transparent">
+                                         {Math.round(email.confidence * 100)}%
+                                       </div>
+                                       <div className="text-[10px] sm:text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                                         CONFIDENCE
+                                       </div>
+                                       {/* Confidence indicator bar */}
+                                       <div className="mt-1 sm:mt-2 w-12 sm:w-16 h-1 sm:h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                                         <div 
+                                           className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-500"
+                                           style={{ width: `${Math.round(email.confidence * 100)}%` }}
+                                         />
+                                       </div>
+                                     </div>
+                                   </div>
+                                 )}
+                               </div>
+
+                               {/* Action buttons for non-admin users */}
+                               {!isAdmin && (
+                                 <div className="flex justify-end mt-3 pt-3 border-t border-border/20" onClick={(e) => e.stopPropagation()}>
+                                   <AlertEmailButton emailId={email.id} />
+                                 </div>
+                               )}
                               
                               {/* Hover indicator */}
                               <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">

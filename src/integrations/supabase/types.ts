@@ -14,6 +14,127 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action_details: Json | null
+          action_type: string
+          admin_user_id: string
+          created_at: string
+          id: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          action_details?: Json | null
+          action_type: string
+          admin_user_id: string
+          created_at?: string
+          id?: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          action_details?: Json | null
+          action_type?: string
+          admin_user_id?: string
+          created_at?: string
+          id?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: []
+      }
+      email_alerts: {
+        Row: {
+          admin_action: string | null
+          admin_notes: string | null
+          admin_user_id: string | null
+          alert_message: string | null
+          alert_type: string
+          created_at: string
+          email_id: string
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_action?: string | null
+          admin_notes?: string | null
+          admin_user_id?: string | null
+          alert_message?: string | null
+          alert_type?: string
+          created_at?: string
+          email_id: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_action?: string | null
+          admin_notes?: string | null
+          admin_user_id?: string | null
+          alert_message?: string | null
+          alert_type?: string
+          created_at?: string
+          email_id?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_alerts_email_id_fkey"
+            columns: ["email_id"]
+            isOneToOne: false
+            referencedRelation: "emails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_blocks: {
+        Row: {
+          block_reason: string
+          block_type: string
+          blocked_by_user_id: string
+          created_at: string
+          email_id: string
+          id: string
+          is_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          block_reason: string
+          block_type?: string
+          blocked_by_user_id: string
+          created_at?: string
+          email_id: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          block_reason?: string
+          block_type?: string
+          blocked_by_user_id?: string
+          created_at?: string
+          email_id?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_blocks_email_id_fkey"
+            columns: ["email_id"]
+            isOneToOne: false
+            referencedRelation: "emails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_statistics: {
         Row: {
           created_at: string
@@ -260,6 +381,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -279,6 +424,13 @@ export type Database = {
           user_id: string
         }
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       increment_email_statistics: {
         Args: {
           p_threat_level?: string
@@ -287,9 +439,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      is_admin: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -416,6 +572,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
