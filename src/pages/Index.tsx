@@ -115,10 +115,12 @@ const Index = () => {
         .from('profiles')
         .select('username')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
       if (!error && data) {
         setUserProfile(data);
+      } else if (error) {
+        console.error('Error fetching user profile:', error);
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
