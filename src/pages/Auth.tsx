@@ -14,7 +14,7 @@ import MFAChallenge from "@/components/MFAChallenge";
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [submitLoading, setLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState("");
   
   const { signIn, user, needsMfa, loading: authLoading } = useAuth();
@@ -43,7 +43,7 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitLoading(true);
     setError("");
 
     try {
@@ -63,13 +63,13 @@ const Auth = () => {
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
     } finally {
-      setLoading(false);
+      setSubmitLoading(false);
     }
   };
 
   const handleOutlookSignIn = async () => {
     try {
-      setLoading(true);
+      setSubmitLoading(true);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'azure',
         options: {
@@ -84,7 +84,7 @@ const Auth = () => {
     } catch (err) {
       setError("Failed to sign in with Outlook. Please try again.");
     } finally {
-      setLoading(false);
+      setSubmitLoading(false);
     }
   };
 
