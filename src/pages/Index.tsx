@@ -77,6 +77,17 @@ const Index = () => {
     fetchEmails();
   }, [user, authLoading, navigate]);
 
+  // Listen for sign out to clear session data in privacy mode
+  useEffect(() => {
+    const handleClearSessionData = () => {
+      console.log('📧 Clearing session data on sign out');
+      setSessionEmails([]);
+    };
+
+    window.addEventListener('clearSessionData', handleClearSessionData);
+    return () => window.removeEventListener('clearSessionData', handleClearSessionData);
+  }, []);
+
   // Fetch email statistics for insights
   const fetchEmailStats = async () => {
     if (!user) return;
@@ -231,12 +242,13 @@ const Index = () => {
         addRecentActivity(`Processed ${processedCount} emails`, 
           userPreferences?.never_store_data ? "Analyzed without storing (Privacy Mode)" : "Analyzed and stored");
         
-        // If privacy mode is enabled, store emails in session state
-        if (userPreferences?.never_store_data && data.emails) {
-          console.log('📧 Setting session emails:', data.emails.length, data.emails);
+        // Always store emails in session state for display, regardless of privacy mode
+        if (data.emails && data.emails.length > 0) {
+          console.log('📧 Setting session emails for display:', data.emails.length, data.emails);
           setSessionEmails(data.emails);
-        } else if (userPreferences?.never_store_data) {
-          console.log('📧 Privacy mode enabled but no emails in response');
+        } else if (data.debug_info?.emails_from_api > 0) {
+          console.log('📧 API returned emails but no processed emails in response');
+          // Still try to display something if we got emails from API but they're not in the processed response
         }
         
         // Show debug info in toast for troubleshooting
@@ -405,14 +417,16 @@ const Index = () => {
     }
   };
 
-  // Use session emails when privacy mode is enabled, otherwise use stored emails
-  const emailsToDisplay = userPreferences?.never_store_data ? sessionEmails : emails;
+  // Always display session emails first (for both privacy mode and regular mode)
+  // This ensures we show the latest fetched emails immediately
+  const emailsToDisplay = sessionEmails.length > 0 ? sessionEmails : emails;
   
   console.log('📧 Debug display logic:', {
     privacyMode: userPreferences?.never_store_data,
     sessionEmailsCount: sessionEmails.length,
     storedEmailsCount: emails.length,
-    displayEmailsCount: emailsToDisplay.length
+    displayEmailsCount: emailsToDisplay.length,
+    usingSessionEmails: sessionEmails.length > 0
   });
   
   const filteredEmails = emailsToDisplay.filter(email => {

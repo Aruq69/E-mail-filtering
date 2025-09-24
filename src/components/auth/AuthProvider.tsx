@@ -78,6 +78,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 
   const signOut = async () => {
+    // Clear session emails for privacy when signing out
+    window.dispatchEvent(new CustomEvent('clearSessionData'));
     await supabase.auth.signOut();
   };
 
