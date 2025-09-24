@@ -134,14 +134,10 @@ serve(async (req) => {
     // Create the mail rule in Outlook
     const ruleCondition = blockType === 'domain' 
       ? {
-          fromAddresses: {
-            addresses: [`@${senderEmail.split('@')[1]}`]
-          }
+          senderContains: [`@${senderEmail.split('@')[1]}`]
         }
       : {
-          fromAddresses: {
-            addresses: [senderEmail]
-          }
+          senderContains: [senderEmail]
         };
 
     const ruleBody = {
