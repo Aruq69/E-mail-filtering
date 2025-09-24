@@ -22,13 +22,10 @@ export default function AdminActions() {
   const { data: blockedEmails, isLoading, refetch } = useQuery({
     queryKey: ['admin-blocks', actionFilter],
     queryFn: async () => {
+      // Get email blocks first
       let query = supabase
         .from('email_blocks')
-        .select(`
-          *,
-          emails (subject, sender, threat_level),
-          profiles (username)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (actionFilter === 'active') {
@@ -37,9 +34,26 @@ export default function AdminActions() {
         query = query.eq('is_active', false);
       }
 
-      const { data, error } = await query;
+      const { data: blocks, error } = await query;
       if (error) throw error;
-      return data;
+
+      // Get related email data and profiles separately
+      const emailIds = [...new Set(blocks?.map(block => block.email_id) || [])];
+      const userIds = [...new Set(blocks?.map(block => block.blocked_by_user_id) || [])];
+
+      const [emails, profiles] = await Promise.all([
+        supabase.from('emails').select('id, subject, sender, threat_level').in('id', emailIds),
+        supabase.from('profiles').select('user_id, username').in('user_id', userIds)
+      ]);
+
+      // Map related data to blocks
+      const blocksWithData = blocks?.map(block => ({
+        ...block,
+        emails: emails.data?.find(e => e.id === block.email_id),
+        profiles: profiles.data?.find(p => p.user_id === block.blocked_by_user_id)
+      })) || [];
+
+      return blocksWithData;
     }
   });
 
