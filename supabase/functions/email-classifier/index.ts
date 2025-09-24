@@ -202,18 +202,38 @@ class EmailClassifier {
     
     const spamProbability = expSpam / total;
     
-    // Calculate confidence based on feature strength and count
+    // Calculate realistic ML confidence based on probability distribution
+    // More realistic approach: confidence = how far probability is from decision boundary (0.5)
+    const distanceFromBoundary = Math.abs(spamProbability - 0.5);
+    
+    // Convert distance to confidence (0.5 distance = max confidence)
+    let confidence = distanceFromBoundary * 2; // Scale to 0-1 range
+    
+    // Apply entropy-based uncertainty reduction
+    // Lower entropy = higher confidence
+    const entropy = -(spamProbability * Math.log2(spamProbability + 1e-10) + 
+                     (1 - spamProbability) * Math.log2(1 - spamProbability + 1e-10));
+    const normalizedEntropy = entropy / Math.log2(2); // Normalize to 0-1
+    const entropyBoost = (1 - normalizedEntropy) * 0.3; // Up to 30% boost for low entropy
+    
+    // Feature quality boost (strong features increase confidence)
     const strongFeatures = foundFeatures.filter(word => {
       const spamCount = this.spamWordCounts.get(word) || 0;
       const hamCount = this.hamWordCounts.get(word) || 0;
       return spamCount > 5 || hamCount > 5;
     }).length;
     
-    const baseConfidence = 0.7;
-    const featureBoost = Math.min(0.2, foundFeatures.length * 0.02);
-    const strongFeatureBoost = Math.min(0.1, strongFeatures * 0.03);
+    const featureQualityBoost = Math.min(0.15, strongFeatures * 0.02);
     
-    const confidence = Math.min(0.95, baseConfidence + featureBoost + strongFeatureBoost);
+    // Vocabulary coverage boost (more features from training = higher confidence)
+    const vocabularyCoverage = foundFeatures.length / Math.min(20, this.vocabulary.size / 100);
+    const coverageBoost = Math.min(0.1, vocabularyCoverage * 0.05);
+    
+    // Combine all confidence factors
+    confidence = Math.min(0.98, confidence + entropyBoost + featureQualityBoost + coverageBoost);
+    
+    // Apply realistic lower bound (ML models rarely have <40% confidence on real data)
+    confidence = Math.max(0.42, confidence);
     
     const endTime = performance.now();
     const processingTime = endTime - startTime;
