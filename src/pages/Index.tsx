@@ -219,6 +219,7 @@ const Index = () => {
         console.log('📧 Outlook fetch response:', data);
         console.log('📧 Privacy mode enabled:', userPreferences?.never_store_data);
         console.log('📧 Emails in response:', data.emails?.length);
+        console.log('🐛 Debug info:', data.debug_info);
         
         // Get current email count to see how many were actually new
         const processedCount = data.emails_processed || 0;
@@ -233,9 +234,14 @@ const Index = () => {
           setSessionEmails(data.emails);
         }
         
+        // Show debug info in toast for troubleshooting
+        const debugMsg = data.debug_info 
+          ? `Debug: API returned ${data.debug_info.emails_from_api} emails, processed ${data.debug_info.processed_count}`
+          : '';
+        
         toast({
           title: "Outlook sync completed",
-          description: `Processed ${processedCount} emails successfully`,
+          description: `Processed ${processedCount} emails successfully. ${debugMsg}`,
         });
         
         // Refresh the emails list
