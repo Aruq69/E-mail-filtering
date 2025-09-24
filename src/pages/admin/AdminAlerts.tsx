@@ -24,9 +24,7 @@ export default function AdminAlerts() {
       let query = supabase
         .from('email_alerts')
         .select(`
-          *,
-          profiles (username),
-          emails (subject, sender, threat_level)
+          *
         `)
         .order('created_at', { ascending: false });
 
@@ -34,9 +32,26 @@ export default function AdminAlerts() {
         query = query.eq('status', statusFilter);
       }
 
-      const { data, error } = await query;
+      const { data: alerts, error } = await query;
       if (error) throw error;
-      return data;
+
+      // Get related data separately
+      const userIds = [...new Set(alerts?.map(alert => alert.user_id) || [])];
+      const emailIds = [...new Set(alerts?.map(alert => alert.email_id) || [])];
+
+      const [profiles, emails] = await Promise.all([
+        supabase.from('profiles').select('user_id, username').in('user_id', userIds),
+        supabase.from('emails').select('id, subject, sender, threat_level').in('id', emailIds)
+      ]);
+
+      // Map related data to alerts
+      const alertsWithData = alerts?.map(alert => ({
+        ...alert,
+        profiles: profiles.data?.find(p => p.user_id === alert.user_id),
+        emails: emails.data?.find(e => e.id === alert.email_id)
+      })) || [];
+
+      return alertsWithData;
     }
   });
 

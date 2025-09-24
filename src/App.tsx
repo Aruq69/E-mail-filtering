@@ -12,6 +12,11 @@ import Settings from "./pages/Settings";
 import MLAnalytics from "./pages/MLAnalytics";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminEmails from "./pages/admin/AdminEmails";
+import AdminAlerts from "./pages/admin/AdminAlerts";
+import AdminActions from "./pages/admin/AdminActions";
+import AdminAudit from "./pages/admin/AdminAudit";
+import AdminSettings from "./pages/admin/AdminSettings";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import NotFound from "./pages/NotFound";
 
@@ -35,6 +40,11 @@ const App = () => (
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
               <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
+              <Route path="/admin/emails" element={<AdminLayout><AdminEmails /></AdminLayout>} />
+              <Route path="/admin/alerts" element={<AdminLayout><AdminAlerts /></AdminLayout>} />
+              <Route path="/admin/actions" element={<AdminLayout><AdminActions /></AdminLayout>} />
+              <Route path="/admin/audit" element={<AdminLayout><AdminAudit /></AdminLayout>} />
+              <Route path="/admin/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

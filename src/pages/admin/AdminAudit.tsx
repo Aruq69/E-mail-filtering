@@ -18,10 +18,7 @@ export default function AdminAudit() {
     queryFn: async () => {
       let query = supabase
         .from('admin_audit_log')
-        .select(`
-          *,
-          profiles (username)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (actionFilter !== 'all') {
@@ -36,9 +33,23 @@ export default function AdminAudit() {
         query = query.gte('created_at', cutoffDate.toISOString());
       }
 
-      const { data, error } = await query.limit(200);
+      const { data: auditLog, error } = await query.limit(200);
       if (error) throw error;
-      return data;
+
+      // Get user profiles separately
+      const userIds = [...new Set(auditLog?.map(log => log.admin_user_id) || [])];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, username')
+        .in('user_id', userIds);
+
+      // Map profiles to audit log
+      const auditLogWithProfiles = auditLog?.map(log => ({
+        ...log,
+        profiles: profiles?.find(p => p.user_id === log.admin_user_id)
+      })) || [];
+
+      return auditLogWithProfiles;
     }
   });
 

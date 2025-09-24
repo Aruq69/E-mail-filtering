@@ -23,8 +23,7 @@ export default function AdminEmails() {
       let query = supabase
         .from('emails')
         .select(`
-          *,
-          profiles (username)
+          *
         `)
         .order('received_date', { ascending: false });
 
@@ -36,9 +35,23 @@ export default function AdminEmails() {
         query = query.eq('user_id', userFilter);
       }
 
-      const { data, error } = await query.limit(100);
+      const { data: emails, error } = await query.limit(100);
       if (error) throw error;
-      return data;
+
+      // Get user profiles separately
+      const userIds = [...new Set(emails?.map(email => email.user_id) || [])];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, username')
+        .in('user_id', userIds);
+
+      // Map profiles to emails
+      const emailsWithProfiles = emails?.map(email => ({
+        ...email,
+        profiles: profiles?.find(p => p.user_id === email.user_id)
+      })) || [];
+
+      return emailsWithProfiles;
     }
   });
 
