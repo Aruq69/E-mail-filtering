@@ -110,12 +110,12 @@ export default function AdminEmails() {
             variant: 'default',
           });
         } else {
-          const wasEmailDeleted = ruleResult?.emailDeleted;
+          const wasEmailCategorized = ruleResult?.emailCategorized;
           toast({
             title: 'Email Blocked',
-            description: wasEmailDeleted 
-              ? 'Email blocked in app, deleted from mailbox, and Outlook rule created for future emails.'
-              : 'Email blocked in app and Outlook rule created for future emails. Could not delete from mailbox.',
+            description: wasEmailCategorized 
+              ? 'Email blocked in app, categorized as "Blocked" in Outlook, and rule created for future emails.'
+              : 'Email blocked in app and Outlook rule created for future emails. Could not categorize the existing email.',
           });
         }
       } catch (ruleError) {

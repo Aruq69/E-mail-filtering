@@ -205,75 +205,80 @@ serve(async (req) => {
     const ruleData = await graphResponse.json();
     console.log('Mail rule created successfully:', ruleData.id);
 
-    // If emailId is provided, try to move/delete the specific email from mailbox
-    let emailDeleted = false;
+    // If emailId is provided, try to categorize the specific email as "Blocked"
+    let emailCategorized = false;
     if (emailId) {
       try {
-        console.log('Attempting to delete/move email from mailbox:');
+        console.log('Attempting to categorize email as "Blocked":');
         console.log('Email ID:', emailId);
         
         const encodedEmailId = encodeURIComponent(emailId);
         
-        // Try moving to deleted items folder first (often more permissive than deletion)
-        console.log('Trying to move email to Deleted Items folder');
-        const moveResponse = await fetch(`https://graph.microsoft.com/v1.0/me/messages/${encodedEmailId}/move`, {
-          method: 'POST',
+        // First, ensure the "Blocked" category exists
+        console.log('Creating/ensuring "Blocked" category exists');
+        try {
+          const categoryResponse = await fetch('https://graph.microsoft.com/v1.0/me/outlook/masterCategories', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${tokenData.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              displayName: 'Blocked',
+              color: 'preset2' // Red color for blocked emails
+            }),
+          });
+          
+          if (categoryResponse.ok) {
+            console.log('Blocked category created successfully');
+          } else if (categoryResponse.status === 409) {
+            console.log('Blocked category already exists');
+          } else {
+            console.log('Category creation response status:', categoryResponse.status);
+          }
+        } catch (categoryError) {
+          console.log('Category creation error (continuing anyway):', categoryError.message);
+        }
+        
+        // Now try to add the "Blocked" category to the email
+        console.log('Adding "Blocked" category to email');
+        const updateResponse = await fetch(`https://graph.microsoft.com/v1.0/me/messages/${encodedEmailId}`, {
+          method: 'PATCH',
           headers: {
             'Authorization': `Bearer ${tokenData.access_token}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            destinationId: 'deleteditems'
+            categories: ['Blocked']
           }),
         });
 
-        console.log('Move response status:', moveResponse.status);
+        console.log('Email categorization response status:', updateResponse.status);
 
-        if (moveResponse.ok) {
-          emailDeleted = true;
-          console.log('Email moved to Deleted Items successfully');
-        } else if (moveResponse.status === 404) {
-          emailDeleted = true;
-          console.log('Email not found (404) - assuming already deleted/moved');
+        if (updateResponse.ok) {
+          emailCategorized = true;
+          console.log('Email categorized as "Blocked" successfully');
+        } else if (updateResponse.status === 404) {
+          console.log('Email not found (404) - may have been already processed');
         } else {
-          const moveErrorText = await moveResponse.text();
-          console.error('Move to Deleted Items failed. Status:', moveResponse.status);
-          console.error('Move error response:', moveErrorText);
-          
-          // If moving failed, try direct deletion as fallback
-          console.log('Trying direct deletion as fallback');
-          const deleteResponse = await fetch(`https://graph.microsoft.com/v1.0/me/messages/${encodedEmailId}`, {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${tokenData.access_token}`,
-            },
-          });
-
-          console.log('Delete response status:', deleteResponse.status);
-
-          if (deleteResponse.ok || deleteResponse.status === 404) {
-            emailDeleted = true;
-            console.log('Email deleted successfully via direct deletion');
-          } else {
-            const deleteErrorText = await deleteResponse.text();
-            console.error('Direct deletion also failed. Status:', deleteResponse.status);
-            console.error('Delete error response:', deleteErrorText);
-          }
+          const updateErrorText = await updateResponse.text();
+          console.error('Email categorization failed. Status:', updateResponse.status);
+          console.error('Categorization error response:', updateErrorText);
         }
       } catch (error) {
-        console.error('Exception during email deletion/move:', error);
+        console.error('Exception during email categorization:', error);
       }
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: emailDeleted 
-          ? 'Mail rule created and email deleted from mailbox successfully'
+        message: emailCategorized 
+          ? 'Mail rule created and email categorized as "Blocked" successfully'
           : 'Mail rule created successfully',
         ruleId: ruleData.id,
         ruleName: ruleData.displayName,
-        emailDeleted
+        emailCategorized
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
