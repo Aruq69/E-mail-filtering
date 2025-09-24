@@ -162,7 +162,8 @@ class EmailClassifier {
       .filter(word => word.length > 2 && word.length < 20);
   }
 
-  private async calculateNaiveBayesProbability(text: string): Promise<{ probability: number; confidence: number; features: string[] }> {
+  private async calculateNaiveBayesProbability(text: string): Promise<{ probability: number; confidence: number; features: string[]; processingTime: number }> {
+    const startTime = performance.now();
     await this.loadTrainingData();
     
     const words = this.tokenize(text);
@@ -214,10 +215,14 @@ class EmailClassifier {
     
     const confidence = Math.min(0.95, baseConfidence + featureBoost + strongFeatureBoost);
     
+    const endTime = performance.now();
+    const processingTime = endTime - startTime;
+    
     return {
       probability: spamProbability,
       confidence,
-      features: foundFeatures.slice(0, 10)
+      features: foundFeatures.slice(0, 10),
+      processingTime
     };
   }
 
@@ -270,6 +275,7 @@ class EmailClassifier {
 
   // Main classification method
   async classifyEmail(subject: string, sender: string, content: string) {
+    const classificationStartTime = performance.now();
     const fullText = `${subject} ${content}`;
     
     // Get ML-based probability using real training data
@@ -326,6 +332,9 @@ class EmailClassifier {
       }
     }
     
+    const classificationEndTime = performance.now();
+    const totalProcessingTime = classificationEndTime - classificationStartTime;
+    
     return {
       classification,
       threat_level: threatLevel,
@@ -336,7 +345,15 @@ class EmailClassifier {
       sender_issues: senderValidation.issues,
       ml_probability: Math.round(adjustedProbability * 100) / 100,
       training_info: `Trained on ${this.hamEmailCount + this.spamEmailCount} emails (${this.hamEmailCount} ham, ${this.spamEmailCount} spam)`,
-      reasoning: `Real dataset ML classification: ${classification}${threatType ? ` (${threatType})` : ''}, probability: ${Math.round(adjustedProbability * 100)}%, sender trust: ${Math.round(senderValidation.trustScore * 100)}%`
+      reasoning: `Real dataset ML classification: ${classification}${threatType ? ` (${threatType})` : ''}, probability: ${Math.round(adjustedProbability * 100)}%, sender trust: ${Math.round(senderValidation.trustScore * 100)}%`,
+      performance: {
+        total_processing_time_ms: Math.round(totalProcessingTime * 100) / 100,
+        ml_processing_time_ms: Math.round(mlResult.processingTime * 100) / 100,
+        algorithm: 'Naive Bayes with Laplace Smoothing',
+        training_size: this.hamEmailCount + this.spamEmailCount,
+        vocabulary_size: this.vocabulary.size,
+        features_detected: mlResult.features.length
+      }
     };
   }
 }
