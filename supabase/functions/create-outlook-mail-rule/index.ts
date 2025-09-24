@@ -262,24 +262,17 @@ serve(async (req) => {
       console.log('No email ID provided for categorization');
     }
 
-    console.log('=== FINAL RESPONSE DEBUG ===');
-    console.log('Email categorized:', emailCategorized);
-    console.log('Email categorized type:', typeof emailCategorized);
-    
     const responseData = {
       success: true,
       message: emailCategorized 
         ? 'Mail rule created and email categorized as "Blocked" successfully'
-        : 'Mail rule created successfully',
+        : 'Mail rule created successfully - future emails will be blocked',
       ruleId: ruleData.id,
       ruleName: ruleData.displayName,
-      emailCategorized: true, // FORCING TO TRUE FOR DEBUG
-      emailDeleted: true // FORCING TO TRUE FOR DEBUG
+      emailCategorized,
+      emailDeleted: emailCategorized, // For backward compatibility
+      hadOutlookId: !!emailId
     };
-    
-    console.log('Response data being sent:', JSON.stringify(responseData, null, 2));
-    console.log('responseData.emailCategorized:', responseData.emailCategorized);
-    console.log('responseData.emailDeleted:', responseData.emailDeleted);
     
     return new Response(
       JSON.stringify(responseData),

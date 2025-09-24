@@ -110,20 +110,21 @@ export default function AdminEmails() {
             variant: 'default',
           });
         } else {
-          console.log('=== FRONTEND RULE RESULT DEBUG ===');
-          console.log('Full ruleResult:', ruleResult);
-          console.log('ruleResult.emailCategorized:', ruleResult?.emailCategorized);
-          console.log('ruleResult.emailDeleted:', ruleResult?.emailDeleted);
-          
           const wasEmailCategorized = ruleResult?.emailCategorized || ruleResult?.emailDeleted;
-          console.log('wasEmailCategorized final value:', wasEmailCategorized);
-          console.log('wasEmailCategorized type:', typeof wasEmailCategorized);
+          const hadOutlookId = ruleResult?.hadOutlookId;
+          
+          let description;
+          if (wasEmailCategorized) {
+            description = 'Email blocked in app and categorized as "Blocked" in Outlook. Rule created for future emails.';
+          } else if (hadOutlookId === false) {
+            description = 'Email blocked in app and Outlook rule created for future emails. This email was not from Outlook so could not be categorized.';
+          } else {
+            description = 'Email blocked in app and Outlook rule created for future emails. Could not categorize the existing email.';
+          }
           
           toast({
             title: 'Email Blocked',
-            description: wasEmailCategorized 
-              ? 'Email blocked in app, categorized as "Blocked" in Outlook, and rule created for future emails.'
-              : 'Email blocked in app and Outlook rule created for future emails. Could not categorize the existing email.',
+            description,
           });
         }
       } catch (ruleError) {
