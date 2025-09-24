@@ -59,7 +59,7 @@ const Auth = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'azure',
         options: {
-          redirectTo: `${window.location.origin}/outlook-callback`,
+          redirectTo: `${window.location.origin}/`,
           scopes: 'email'
         }
       });
