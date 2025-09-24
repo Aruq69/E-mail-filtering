@@ -374,7 +374,7 @@ const SettingsPage = () => {
       }
 
       if (data?.auth_url) {
-        // Open the auth URL in the current window
+        // Redirect to the OAuth URL
         window.location.href = data.auth_url;
       }
     } catch (error) {
@@ -384,7 +384,6 @@ const SettingsPage = () => {
         description: "Failed to connect to Outlook. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setOutlookLoading(false);
     }
   };
