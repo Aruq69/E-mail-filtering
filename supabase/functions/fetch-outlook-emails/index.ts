@@ -35,25 +35,30 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Creating Supabase client...');
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
     
     // Get the authorization header to verify the user
     const authHeader = req.headers.get('Authorization');
+    console.log('Auth header present:', !!authHeader);
+    
     if (!authHeader) {
+      console.log('No authorization header provided');
       return new Response(
-        JSON.stringify({ error: 'Authorization header required' }),
+        JSON.stringify({ error: 'Authorization header required', success: false }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     // Verify the JWT token and get user info
     const jwt = authHeader.replace('Bearer ', '');
+    console.log('Verifying JWT token...');
     const { data: { user }, error: authError } = await supabase.auth.getUser(jwt);
     
     if (authError || !user) {
       console.error('Auth error:', authError);
       return new Response(
-        JSON.stringify({ error: 'Invalid or expired token' }),
+        JSON.stringify({ error: 'Invalid or expired token', success: false }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -61,6 +66,7 @@ serve(async (req) => {
     console.log('Authenticated user:', user.id);
 
     // Get the user's Outlook tokens
+    console.log('Fetching Outlook tokens for user:', user.id);
     const { data: tokenData, error: tokenError } = await supabase
       .from('outlook_tokens')
       .select('*')
@@ -70,10 +76,16 @@ serve(async (req) => {
     if (tokenError || !tokenData) {
       console.error('Token fetch error:', tokenError);
       return new Response(
-        JSON.stringify({ error: 'No Outlook token found. Please connect your Outlook account first.' }),
+        JSON.stringify({ 
+          error: 'No Outlook token found. Please connect your Outlook account first.',
+          success: false,
+          debug_info: { user_id: user.id, token_error: tokenError }
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('Found Outlook token for user, expires at:', tokenData.expires_at);
 
     // Check if token is expired and refresh if needed
     const now = new Date();
