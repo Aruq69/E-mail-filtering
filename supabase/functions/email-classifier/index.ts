@@ -111,7 +111,7 @@ class EmailClassifier {
   }
 
   private loadFallbackPatterns() {
-    // Enhanced fallback patterns when datasets aren't available
+    // when datasets aren't available
     const spamPatterns = {
       'free': 25, 'win': 23, 'winner': 24, 'prize': 22, 'cash': 20,
       'urgent': 21, 'claim': 26, 'limited': 19, 'offer': 18, 'deal': 17,
