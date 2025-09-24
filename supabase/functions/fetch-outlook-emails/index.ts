@@ -216,7 +216,13 @@ serve(async (req) => {
         success: true,
         message: `Successfully fetched and processed ${processedEmails.length} emails`,
         emails_processed: processedEmails.length,
-        total_emails_fetched: emails.length
+        total_emails_fetched: emails.length,
+        debug_info: {
+          user_id: user.id,
+          emails_from_api: emails.length,
+          processed_count: processedEmails.length,
+          sample_email_subjects: emails.slice(0, 3).map(e => e.subject)
+        }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
