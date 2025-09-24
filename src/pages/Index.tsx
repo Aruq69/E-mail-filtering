@@ -209,13 +209,21 @@ const Index = () => {
       console.log('🔄 Invoking Outlook email fetch...');
       
       const { data, error } = await supabase.functions.invoke('fetch-outlook-emails', {
-        body: { user_id: user.id }
+        body: { user_id: user.id },
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        }
       });
 
-      console.log('🔄 Fetch response received:', { data, error });
+      console.log('🔄 Fetch response received:', { data, error, hasData: !!data, hasError: !!error });
 
       if (error) {
         console.error('Outlook fetch error:', error);
+        toast({
+          title: "Function Error",
+          description: `Edge function error: ${error.message}`,
+          variant: "destructive",
+        });
         throw error;
       }
 
