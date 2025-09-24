@@ -86,7 +86,7 @@ const Auth = () => {
           </div>
           <h1 className="text-3xl font-bold text-foreground">Mail Guard</h1>
           <p className="text-muted-foreground mt-2">
-            Secure your inbox with AI-powered threat detection
+            Secure your inbox with AI & ML-powered threat detection
           </p>
         </div>
 
