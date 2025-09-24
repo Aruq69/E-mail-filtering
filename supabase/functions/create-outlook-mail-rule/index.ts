@@ -270,16 +270,24 @@ serve(async (req) => {
       }
     }
 
+    console.log('=== FINAL RESPONSE DEBUG ===');
+    console.log('Email categorized:', emailCategorized);
+    
+    const responseData = {
+      success: true,
+      message: emailCategorized 
+        ? 'Mail rule created and email categorized as "Blocked" successfully'
+        : 'Mail rule created successfully',
+      ruleId: ruleData.id,
+      ruleName: ruleData.displayName,
+      emailCategorized,
+      emailDeleted: emailCategorized // For backward compatibility
+    };
+    
+    console.log('Response data:', JSON.stringify(responseData, null, 2));
+    
     return new Response(
-      JSON.stringify({
-        success: true,
-        message: emailCategorized 
-          ? 'Mail rule created and email categorized as "Blocked" successfully'
-          : 'Mail rule created successfully',
-        ruleId: ruleData.id,
-        ruleName: ruleData.displayName,
-        emailCategorized
-      }),
+      JSON.stringify(responseData),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

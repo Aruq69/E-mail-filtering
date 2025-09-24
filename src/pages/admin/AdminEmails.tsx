@@ -110,7 +110,10 @@ export default function AdminEmails() {
             variant: 'default',
           });
         } else {
-          const wasEmailCategorized = ruleResult?.emailCategorized;
+          const wasEmailCategorized = ruleResult?.emailCategorized || ruleResult?.emailDeleted;
+          console.log('Rule result:', ruleResult);
+          console.log('Email categorized/deleted:', wasEmailCategorized);
+          
           toast({
             title: 'Email Blocked',
             description: wasEmailCategorized 
