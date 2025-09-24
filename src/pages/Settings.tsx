@@ -824,7 +824,7 @@ const SettingsPage = () => {
                           ) : (
                             <>
                               <Link className="h-4 w-4 mr-2" />
-                              Connect Outlook
+                              Connect Outlook Account
                             </>
                           )}
                         </>
