@@ -123,6 +123,35 @@ serve(async (req) => {
             .trim();
         }
 
+        // Call email classifier to analyze the email
+        const classificationResult = await fetch(`${supabaseUrl}/functions/v1/email-classifier`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            emails: [{
+              subject: email.subject || 'No Subject',
+              sender: email.from?.emailAddress?.address || 'Unknown Sender',
+              content: textContent,
+              userId: user.id,
+              message_id: email.id
+            }]
+          })
+        });
+
+        let classificationData = null;
+        if (classificationResult.ok) {
+          const classificationResponse = await classificationResult.json();
+          if (classificationResponse.success && classificationResponse.results && classificationResponse.results.length > 0) {
+            classificationData = classificationResponse.results[0];
+            console.log('Email classified successfully:', classificationData);
+          }
+        } else {
+          console.warn('Classification failed, proceeding without classification');
+        }
+
         const emailData = {
           user_id: user.id,
           outlook_id: email.id,
@@ -133,6 +162,12 @@ serve(async (req) => {
           raw_content: email.body?.content || '',
           received_date: email.receivedDateTime,
           processed_at: new Date().toISOString(),
+          // Add classification data if available
+          classification: classificationData?.classification || null,
+          threat_level: classificationData?.threat_level || null,
+          threat_type: classificationData?.threat_type || null,
+          confidence: classificationData?.confidence || null,
+          keywords: classificationData?.keywords || null,
         };
 
         // Insert email into database
