@@ -86,7 +86,7 @@ const Auth = () => {
         provider: 'azure',
         options: {
           redirectTo: `${window.location.origin}/`,
-          scopes: 'openid profile email'
+          scopes: 'email'
         }
       });
       
