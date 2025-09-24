@@ -14,6 +14,7 @@ interface CreateRuleRequest {
   senderEmail: string;
   ruleName: string;
   blockType: 'sender' | 'domain';
+  emailId?: string; // Outlook message ID to delete
 }
 
 serve(async (req) => {
@@ -47,7 +48,7 @@ serve(async (req) => {
     }
 
     // Parse request body
-    const { senderEmail, ruleName, blockType }: CreateRuleRequest = await req.json();
+    const { senderEmail, ruleName, blockType, emailId }: CreateRuleRequest = await req.json();
     
     if (!senderEmail || !ruleName) {
       return new Response(
@@ -179,12 +180,39 @@ serve(async (req) => {
     const ruleData = await graphResponse.json();
     console.log('Mail rule created successfully:', ruleData.id);
 
+    // If emailId is provided, delete the specific email from mailbox
+    let emailDeleted = false;
+    if (emailId) {
+      try {
+        console.log('Deleting email from mailbox:', emailId);
+        const deleteResponse = await fetch(`https://graph.microsoft.com/v1.0/me/messages/${emailId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${tokenData.access_token}`,
+          },
+        });
+
+        if (deleteResponse.ok || deleteResponse.status === 404) {
+          emailDeleted = true;
+          console.log('Email deleted successfully from mailbox');
+        } else {
+          const deleteErrorText = await deleteResponse.text();
+          console.warn('Failed to delete email from mailbox:', deleteErrorText);
+        }
+      } catch (deleteError) {
+        console.warn('Error deleting email from mailbox:', deleteError);
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Mail rule created successfully',
+        message: emailDeleted 
+          ? 'Mail rule created and email deleted from mailbox successfully'
+          : 'Mail rule created successfully',
         ruleId: ruleData.id,
-        ruleName: ruleData.displayName
+        ruleName: ruleData.displayName,
+        emailDeleted
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

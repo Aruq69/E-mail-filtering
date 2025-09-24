@@ -72,7 +72,7 @@ export default function AdminEmails() {
       // Get the email details first
       const { data: emailData, error: emailError } = await supabase
         .from('emails')
-        .select('sender, subject')
+        .select('sender, subject, outlook_id')
         .eq('id', emailId)
         .single();
 
@@ -97,7 +97,8 @@ export default function AdminEmails() {
           body: {
             senderEmail: emailData.sender,
             ruleName: `Block ${emailData.sender} - ${blockReason}`,
-            blockType: 'sender'
+            blockType: 'sender',
+            emailId: emailData.outlook_id // Pass the Outlook ID to delete the email
           }
         });
 
@@ -109,9 +110,12 @@ export default function AdminEmails() {
             variant: 'default',
           });
         } else {
+          const wasEmailDeleted = ruleResult?.emailDeleted;
           toast({
             title: 'Email Blocked',
-            description: 'Email blocked in app and Outlook rule created to block future emails from this sender.',
+            description: wasEmailDeleted 
+              ? 'Email blocked in app, deleted from mailbox, and Outlook rule created for future emails.'
+              : 'Email blocked in app and Outlook rule created for future emails. Could not delete from mailbox.',
           });
         }
       } catch (ruleError) {
