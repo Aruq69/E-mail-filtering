@@ -58,6 +58,7 @@ serve(async (req) => {
     }
 
     // Get the user's Outlook tokens
+    console.log('Fetching Outlook tokens for user:', user.id);
     const { data: tokenData, error: tokenError } = await supabase
       .from('outlook_tokens')
       .select('*')
@@ -65,6 +66,7 @@ serve(async (req) => {
       .single();
 
     if (tokenError || !tokenData) {
+      console.error('Token fetch error:', tokenError);
       return new Response(
         JSON.stringify({ 
           error: 'No Outlook token found. Please connect your Outlook account first.',
@@ -73,6 +75,9 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('Token found, scope:', tokenData.scope);
+    console.log('Token expires at:', tokenData.expires_at);
 
     // Check if token is expired and attempt refresh if needed
     const now = new Date();
