@@ -205,19 +205,17 @@ serve(async (req) => {
     const ruleData = await graphResponse.json();
     console.log('Mail rule created successfully:', ruleData.id);
 
-    // If emailId is provided, delete the specific email from mailbox
+    // If emailId is provided, try to delete the specific email from mailbox
     let emailDeleted = false;
     if (emailId) {
       try {
         console.log('Attempting to delete email from mailbox:');
         console.log('Email ID:', emailId);
-        console.log('Email ID type:', typeof emailId);
-        console.log('Email ID length:', emailId.length);
         
-        // URL encode the email ID to handle special characters
+        // First try direct deletion by message ID
         const encodedEmailId = encodeURIComponent(emailId);
         const deleteUrl = `https://graph.microsoft.com/v1.0/me/messages/${encodedEmailId}`;
-        console.log('Delete URL with encoded ID:', deleteUrl);
+        console.log('Trying direct deletion with URL:', deleteUrl);
         
         const deleteResponse = await fetch(deleteUrl, {
           method: 'DELETE',
@@ -227,29 +225,54 @@ serve(async (req) => {
         });
 
         console.log('Delete response status:', deleteResponse.status);
-        console.log('Delete response headers:', Object.fromEntries(deleteResponse.headers.entries()));
 
         if (deleteResponse.ok) {
           emailDeleted = true;
-          console.log('Email deleted successfully from mailbox');
+          console.log('Email deleted successfully via direct deletion');
         } else if (deleteResponse.status === 404) {
-          // Email not found - might have already been deleted by the mail rule or moved
           emailDeleted = true;
-          console.log('Email not found (404) - assuming already deleted by mail rule');
+          console.log('Email not found (404) - assuming already deleted');
         } else {
           const deleteErrorText = await deleteResponse.text();
-          console.error('Failed to delete email from mailbox. Status:', deleteResponse.status);
+          console.error('Direct deletion failed. Status:', deleteResponse.status);
           console.error('Error response:', deleteErrorText);
           
-          // Check if it's a specific Graph API error
+          // Try alternative: search for the message and delete it
+          console.log('Trying alternative: search and delete approach');
           try {
-            const errorJson = JSON.parse(deleteErrorText);
-            if (errorJson?.error?.code === 'ErrorItemNotFound') {
-              emailDeleted = true;
-              console.log('Email not found via Graph API error - assuming already deleted');
+            // Search for the message by its ID
+            const searchUrl = `https://graph.microsoft.com/v1.0/me/messages?$filter=id eq '${emailId}'`;
+            const searchResponse = await fetch(searchUrl, {
+              headers: {
+                'Authorization': `Bearer ${tokenData.access_token}`,
+              },
+            });
+            
+            if (searchResponse.ok) {
+              const searchData = await searchResponse.json();
+              if (searchData.value && searchData.value.length > 0) {
+                // Try to delete using the found message
+                const foundMessage = searchData.value[0];
+                const deleteFoundResponse = await fetch(`https://graph.microsoft.com/v1.0/me/messages/${foundMessage.id}`, {
+                  method: 'DELETE',
+                  headers: {
+                    'Authorization': `Bearer ${tokenData.access_token}`,
+                  },
+                });
+                
+                if (deleteFoundResponse.ok || deleteFoundResponse.status === 404) {
+                  emailDeleted = true;
+                  console.log('Email deleted successfully via search approach');
+                } else {
+                  console.error('Search-based deletion also failed:', deleteFoundResponse.status);
+                }
+              } else {
+                emailDeleted = true;
+                console.log('Email not found in search - assuming already deleted');
+              }
             }
-          } catch (parseError) {
-            // Ignore parse errors
+          } catch (searchError) {
+            console.error('Search approach failed:', searchError);
           }
         }
       } catch (deleteError) {
