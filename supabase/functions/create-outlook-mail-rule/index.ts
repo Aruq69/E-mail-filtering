@@ -205,8 +205,10 @@ serve(async (req) => {
         console.log('Email ID type:', typeof emailId);
         console.log('Email ID length:', emailId.length);
         
-        const deleteUrl = `https://graph.microsoft.com/v1.0/me/messages/${emailId}`;
-        console.log('Delete URL:', deleteUrl);
+        // URL encode the email ID to handle special characters
+        const encodedEmailId = encodeURIComponent(emailId);
+        const deleteUrl = `https://graph.microsoft.com/v1.0/me/messages/${encodedEmailId}`;
+        console.log('Delete URL with encoded ID:', deleteUrl);
         
         const deleteResponse = await fetch(deleteUrl, {
           method: 'DELETE',
