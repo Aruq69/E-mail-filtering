@@ -207,26 +207,17 @@ serve(async (req) => {
 
     // If emailId is provided, try to categorize the specific email as "Blocked"
     let emailCategorized = false;
-    if (emailId) {
+    if (emailId && emailId.trim() !== '') {
       console.log('=== EMAIL CATEGORIZATION ATTEMPT ===');
       console.log('Email ID received:', emailId);
-      console.log('Email ID type:', typeof emailId);
-      console.log('Email ID length:', emailId?.length);
-      console.log('Email ID is null/undefined?:', emailId == null);
       
-      if (emailId && emailId.trim() !== '') {
-        // For now, let's assume categorization works to test the message
-        // We'll implement the actual categorization once we confirm the flow works
-        emailCategorized = true;
-        console.log('Email categorization simulated as successful');
+      try {
+        const encodedEmailId = encodeURIComponent(emailId);
         
-        // TODO: Implement actual categorization here
-        /*
+        // First, ensure the "Blocked" category exists
+        console.log('Creating/ensuring "Blocked" category exists');
         try {
-          const encodedEmailId = encodeURIComponent(emailId);
-          
-          // Create "Blocked" category if it doesn't exist
-          await fetch('https://graph.microsoft.com/v1.0/me/outlook/masterCategories', {
+          const categoryResponse = await fetch('https://graph.microsoft.com/v1.0/me/outlook/masterCategories', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${tokenData.access_token}`,
@@ -238,28 +229,47 @@ serve(async (req) => {
             }),
           });
           
-          // Add category to email
-          const updateResponse = await fetch(`https://graph.microsoft.com/v1.0/me/messages/${encodedEmailId}`, {
-            method: 'PATCH',
-            headers: {
-              'Authorization': `Bearer ${tokenData.access_token}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              categories: ['Blocked']
-            }),
-          });
-          
-          emailCategorized = updateResponse.ok;
-        } catch (error) {
-          console.error('Categorization error:', error);
+          if (categoryResponse.ok) {
+            console.log('Blocked category created successfully');
+          } else if (categoryResponse.status === 409) {
+            console.log('Blocked category already exists');
+          } else {
+            console.log('Category creation response status:', categoryResponse.status);
+          }
+        } catch (categoryError) {
+          console.log('Category creation error (continuing anyway):', categoryError.message);
         }
-        */
-      } else {
-        console.log('Email ID is empty or invalid, skipping categorization');
+        
+        // Now try to add the "Blocked" category to the email
+        console.log('Adding "Blocked" category to email');
+        const updateResponse = await fetch(`https://graph.microsoft.com/v1.0/me/messages/${encodedEmailId}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${tokenData.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            categories: ['Blocked']
+          }),
+        });
+
+        console.log('Email categorization response status:', updateResponse.status);
+
+        if (updateResponse.ok) {
+          emailCategorized = true;
+          console.log('Email categorized as "Blocked" successfully');
+        } else if (updateResponse.status === 404) {
+          console.log('Email not found (404) - may have been already processed');
+        } else {
+          const updateErrorText = await updateResponse.text();
+          console.error('Email categorization failed. Status:', updateResponse.status);
+          console.error('Categorization error response:', updateErrorText);
+        }
+      } catch (error) {
+        console.error('Exception during email categorization:', error);
       }
     } else {
-      console.log('No email ID provided for categorization');
+      console.log('No valid email ID provided for categorization');
     }
 
     const responseData = {
