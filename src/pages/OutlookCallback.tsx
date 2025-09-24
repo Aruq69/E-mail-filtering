@@ -21,7 +21,16 @@ const OutlookCallback = () => {
       const state = urlParams.get('state');
       const error = urlParams.get('error');
 
-      // Handle errors first
+      // If this is just a regular auth sign-in (no code, no error), redirect to dashboard
+      if (!code && !error) {
+        console.log('OutlookCallback: Regular auth sign-in, redirecting to dashboard');
+        setStatus('success');
+        setMessage('Successfully signed in! Redirecting to dashboard...');
+        setTimeout(() => navigate("/"), 1000);
+        return;
+      }
+
+      // Handle OAuth errors
       if (error) {
         console.error('OAuth error:', error);
         setStatus('error');
