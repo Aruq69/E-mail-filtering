@@ -74,18 +74,18 @@ export default function AdminDashboard() {
         {statCards.map((stat) => (
           <Card 
             key={stat.title}
-            className="cursor-pointer hover:bg-muted/50 transition-colors"
+            className="cursor-pointer hover:bg-muted/50 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10 group animate-fade-in"
             onClick={() => navigate(stat.path)}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              <CardTitle className="text-sm font-medium group-hover:text-primary transition-colors duration-200">{stat.title}</CardTitle>
+              <stat.icon className={`h-4 w-4 ${stat.color} group-hover:scale-110 transition-transform duration-200`} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-2xl font-bold group-hover:text-primary transition-colors duration-200">
                 {isLoading ? '...' : stat.value.toLocaleString()}
               </div>
-              <p className="text-xs text-muted-foreground">{stat.description}</p>
+              <p className="text-xs text-muted-foreground group-hover:text-muted-foreground/80 transition-colors duration-200">{stat.description}</p>
             </CardContent>
           </Card>
         ))}
