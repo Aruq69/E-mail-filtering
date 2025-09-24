@@ -210,6 +210,8 @@ const Index = () => {
         body: { user_id: user.id }
       });
 
+      console.log('🔄 Fetch response received:', { data, error });
+
       if (error) {
         console.error('Outlook fetch error:', error);
         throw error;
