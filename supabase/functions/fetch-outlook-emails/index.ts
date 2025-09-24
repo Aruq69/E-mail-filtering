@@ -114,6 +114,11 @@ serve(async (req) => {
     const emails: OutlookEmail[] = graphData.value || [];
     
     console.log(`Fetched ${emails.length} emails from Outlook for user: ${user.id}`);
+    console.log('Sample email data:', emails.length > 0 ? {
+      id: emails[0].id,
+      subject: emails[0].subject,
+      hasFrom: !!emails[0].from
+    } : 'No emails returned');
 
     // Process and store emails
     const processedEmails = [];
