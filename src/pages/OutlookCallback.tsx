@@ -9,14 +9,22 @@ const OutlookCallback = () => {
   const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
+    console.log('OutlookCallback: Auth state:', { user: !!user, authLoading });
+    
     // Wait for auth to load, then redirect
     if (!authLoading) {
       if (user) {
+        console.log('OutlookCallback: User authenticated, redirecting to dashboard');
         // User is authenticated, redirect to dashboard
-        navigate("/");
+        setTimeout(() => {
+          navigate("/");
+        }, 1000);
       } else {
+        console.log('OutlookCallback: No user found, redirecting to auth');
         // No user found, redirect back to auth
-        navigate("/auth");
+        setTimeout(() => {
+          navigate("/auth");
+        }, 2000);
       }
     }
   }, [user, authLoading, navigate]);

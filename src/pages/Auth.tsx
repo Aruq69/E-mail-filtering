@@ -53,19 +53,24 @@ const Auth = () => {
   const handleOutlookSignIn = async () => {
     try {
       setSubmitLoading(true);
+      console.log('Starting Outlook OAuth flow...');
       
-      // Use Supabase's built-in Azure OAuth instead of our custom edge function
-      const { error } = await supabase.auth.signInWithOAuth({
+      // Use Supabase's built-in Azure OAuth
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'azure',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/outlook-callback`,
           scopes: 'email'
         }
       });
       
+      console.log('OAuth response:', { data, error });
+      
       if (error) {
         console.error('Azure OAuth error:', error);
         setError(error.message || "Failed to connect to Outlook. Please try again.");
+      } else {
+        console.log('OAuth initiated successfully');
       }
     } catch (err) {
       console.error('Outlook connection error:', err);
