@@ -705,8 +705,8 @@ const Index = () => {
                       <Mail className="h-8 w-8 text-primary" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-foreground">Gmail Integration</h3>
-                      <p className="text-sm text-muted-foreground">Secure OAuth 2.0 connection to your Gmail account</p>
+                      <h3 className="text-lg font-semibold text-foreground">Microsoft Outlook Integration</h3>
+                      <p className="text-sm text-muted-foreground">Secure OAuth 2.0 connection to your Microsoft account</p>
                     </div>
                   </div>
                   <Button onClick={connectGmail} className="w-full gradient-button" size="lg">

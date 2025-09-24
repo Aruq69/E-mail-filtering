@@ -745,8 +745,8 @@ const SettingsPage = () => {
                     <Mail className="h-6 w-6 text-orange-600" />
                   </div>
                   <div>
-                    <CardTitle className="text-xl font-semibold">Gmail Integration</CardTitle>
-                    <CardDescription>Connect your Gmail account for email analysis</CardDescription>
+                    <CardTitle className="text-xl font-semibold">Microsoft Outlook Integration</CardTitle>
+                    <CardDescription>Connect your Microsoft account for email analysis</CardDescription>
                   </div>
                 </div>
               </CardHeader>
