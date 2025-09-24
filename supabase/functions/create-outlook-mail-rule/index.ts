@@ -151,6 +151,7 @@ serve(async (req) => {
     };
 
     console.log('Creating mail rule:', JSON.stringify(ruleBody, null, 2));
+    console.log('Using access token (last 20 chars):', tokenData.access_token.slice(-20));
 
     const graphResponse = await fetch('https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messageRules', {
       method: 'POST',
@@ -161,13 +162,27 @@ serve(async (req) => {
       body: JSON.stringify(ruleBody)
     });
 
+    console.log('Microsoft Graph response status:', graphResponse.status);
+    console.log('Microsoft Graph response headers:', Object.fromEntries(graphResponse.headers.entries()));
+
     if (!graphResponse.ok) {
       const errorText = await graphResponse.text();
-      console.error('Failed to create mail rule:', errorText);
+      console.error('Microsoft Graph API error response:', errorText);
+      
+      // Try to parse as JSON for better error details
+      let errorDetails;
+      try {
+        errorDetails = JSON.parse(errorText);
+        console.error('Parsed error details:', JSON.stringify(errorDetails, null, 2));
+      } catch (parseError) {
+        console.error('Could not parse error as JSON:', parseError);
+      }
+      
       return new Response(
         JSON.stringify({ 
           error: `Failed to create mail rule: ${graphResponse.status} - ${errorText}`,
-          success: false 
+          success: false,
+          microsoftError: errorDetails || errorText
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
