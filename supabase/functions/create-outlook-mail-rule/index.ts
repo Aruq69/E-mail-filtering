@@ -131,13 +131,20 @@ serve(async (req) => {
       }
     }
 
-    // Create the mail rule in Outlook
+    // Create the mail rule in Outlook - using proper Microsoft Graph schema
     const ruleCondition = blockType === 'domain' 
       ? {
           senderContains: [`@${senderEmail.split('@')[1]}`]
         }
       : {
-          senderContains: [senderEmail]
+          fromAddresses: [
+            {
+              emailAddress: {
+                address: senderEmail,
+                name: senderEmail
+              }
+            }
+          ]
         };
 
     const ruleBody = {
