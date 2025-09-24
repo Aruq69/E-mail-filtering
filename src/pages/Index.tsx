@@ -247,13 +247,9 @@ const Index = () => {
         }
         
         // Show success message without debug info
-        const debugMsg = data.debug_info 
-          ? `Debug: API returned ${data.debug_info.emails_from_api} emails, processed ${data.debug_info.processed_count}`
-          : '';
-        
         toast({
           title: "Outlook sync completed",
-          description: `Processed ${processedCount} emails successfully. ${debugMsg}`,
+          description: `Successfully processed ${processedCount} emails`,
         });
         
         // Only refresh database emails if not in privacy mode
@@ -265,7 +261,6 @@ const Index = () => {
       }
       
     } catch (error) {
-      console.error('🚨 Outlook fetch error:', error);
       toast({
         title: "Outlook sync failed",
         description: error.message || "Failed to fetch emails from Outlook. Please try again.",
