@@ -168,21 +168,37 @@ serve(async (req) => {
     const graphData = await graphResponse.json();
     const emails = graphData.value || [];
     
-    // Delete all previous emails for this user before adding new ones
-    const { error: deleteError } = await supabase
+    // Get already processed email IDs to avoid duplicates
+    const { data: existingEmails } = await supabase
       .from('emails')
-      .delete()
+      .select('outlook_id')
       .eq('user_id', user.id);
     
-    if (deleteError) {
-      // Continue anyway - this is not a critical error
+    const existingIds = new Set(existingEmails?.map(e => e.outlook_id) || []);
+    
+    // Filter out emails that have already been processed
+    const newEmails = emails.filter((email: any) => !existingIds.has(email.id));
+    
+    console.log(`Found ${emails.length} total emails, ${newEmails.length} new emails to process`);
+    
+    if (newEmails.length === 0) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'No new emails to process',
+          emails_processed: 0,
+          total_emails_fetched: emails.length,
+          emails: [],
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
     
     // Process emails with ML analysis
     const processedEmails = [];
-    console.log(`Processing ${emails.length} emails with ML analysis...`);
+    console.log(`Processing ${newEmails.length} new emails with ML analysis...`);
     
-    for (const email of emails) {
+    for (const email of newEmails) {
       try {
 
         // Extract text content
@@ -290,14 +306,15 @@ serve(async (req) => {
     }
 
     console.log(`=== ML ANALYSIS COMPLETE ===`);
-    console.log(`Processed ${processedEmails.length}/${emails.length} emails successfully`);
+    console.log(`Processed ${processedEmails.length}/${newEmails.length} new emails successfully`);
     
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Successfully processed ${processedEmails.length} emails`,
+        message: `Successfully processed ${processedEmails.length} new emails out of ${emails.length} total`,
         emails_processed: processedEmails.length,
         total_emails_fetched: emails.length,
+        new_emails_found: newEmails.length,
         emails: processedEmails, // Return processed emails for display
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
