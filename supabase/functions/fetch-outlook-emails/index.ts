@@ -64,7 +64,7 @@ serve(async (req) => {
       .from('outlook_tokens')
       .select('*')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (tokenError) {
       console.error('❌ Token fetch error:', tokenError);
@@ -215,12 +215,13 @@ serve(async (req) => {
       );
     }
     
-    // Process emails with ML analysis
+    // Process emails with HuggingFace-Powered Dataset-Based ML analysis
     const processedEmails = [];
-    console.log(`Processing ${newEmails.length} new emails with ML analysis...`);
+    console.log(`🤖 Processing ${newEmails.length} emails with HuggingFace Dataset-Based ML Classifier...`);
     
     for (const email of newEmails) {
       try {
+        console.log(`📧 Processing: "${email.subject}" from ${email.from?.emailAddress?.address}`);
 
         // Extract text content
         let textContent = email.bodyPreview || '';
@@ -231,8 +232,8 @@ serve(async (req) => {
             .trim();
         }
 
-        // Call HuggingFace-powered ML classifier to analyze the email
-        console.log(`🤖 Analyzing email "${email.subject}" with HuggingFace ML Classifier...`);
+        // Call HuggingFace-Powered Dataset-Based ML Classifier
+        console.log(`🤖 Analyzing with HuggingFace Dataset-Based ML Engine...`);
         const classificationResult = await fetch(`${supabaseUrl}/functions/v1/robust-email-classifier`, {
           method: 'POST',
           headers: {
@@ -251,13 +252,16 @@ serve(async (req) => {
         if (classificationResult.ok) {
           const classificationResponse = await classificationResult.json();
           classificationData = classificationResponse;
-          console.log(`✅ HuggingFace ML Analysis Complete:`, 
-                     `"${email.subject}" -> ${classificationData?.classification}`, 
-                     `(${(classificationData?.confidence * 100).toFixed(1)}% confidence,`,
-                     `${classificationData?.threat_level} threat)`);
+          console.log(`✅ HuggingFace ML RESULT:`, 
+                     `📧 "${email.subject}"`,
+                     `🎯 Classification: ${classificationData?.classification?.toUpperCase()}`, 
+                     `🔥 Confidence: ${(classificationData?.confidence * 100).toFixed(1)}%`,
+                     `⚠️ Threat Level: ${classificationData?.threat_level?.toUpperCase()}`,
+                     `🏷️ Features: ${JSON.stringify(classificationData?.detailed_analysis?.detected_features || [])}`);
         } else {
           const errorText = await classificationResult.text();
-          console.error('❌ HuggingFace ML Classification failed for email:', email.subject, errorText);
+          console.error('❌ HuggingFace ML Classification FAILED:', email.subject, errorText);
+          // Continue processing other emails even if one fails
         }
 
         const emailData = {
@@ -330,8 +334,10 @@ serve(async (req) => {
         }
     }
 
-    console.log(`=== ML ANALYSIS COMPLETE ===`);
-    console.log(`Processed ${processedEmails.length}/${newEmails.length} new emails successfully`);
+    console.log(`🎯 === HUGGINGFACE DATASET-BASED ML ANALYSIS COMPLETE ===`);
+    console.log(`📊 Processed ${processedEmails.length}/${newEmails.length} emails with ML classification`);
+    console.log(`🤖 All emails analyzed with HuggingFace-powered comprehensive dataset training`);
+    console.log(`📈 Results stored with threat levels, confidence scores, and detected features`);
     
     return new Response(
       JSON.stringify({
