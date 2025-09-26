@@ -83,8 +83,8 @@ const UserAlerts = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
+      <div className="min-h-screen bg-background">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6 py-6">
           <div className="flex items-center gap-4">
             <div className="h-10 w-24 bg-muted animate-pulse rounded" />
             <div className="h-8 w-64 bg-muted animate-pulse rounded" />
@@ -101,8 +101,8 @@ const UserAlerts = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-        <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen bg-background">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
           <Alert variant="destructive" className="animate-fade-in">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
@@ -115,60 +115,56 @@ const UserAlerts = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Header Section */}
-      <div className="bg-white border-b shadow-sm">
-        <div className="max-w-6xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/')}
-                className="hover-scale"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              <Separator orientation="vertical" className="h-6" />
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-100">
-                  <Shield className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-slate-900">Security Alerts</h1>
-                  <p className="text-slate-600 text-sm">
-                    Monitor and review your email security notifications
-                  </p>
-                </div>
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6 py-6">
+        {/* Header Section */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/')}
+              className="hover-scale"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+            <div className="h-6 w-px bg-border" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Shield className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold">Security Alerts</h1>
+                <p className="text-muted-foreground">
+                  Monitor and review your email security notifications
+                </p>
               </div>
             </div>
-            
-            {alerts && alerts.length > 0 && (
-              <div className="text-right">
-                <div className="text-sm text-slate-600">Total Alerts</div>
-                <div className="text-2xl font-bold text-slate-900">{alerts.length}</div>
-              </div>
-            )}
           </div>
+          
+          {alerts && alerts.length > 0 && (
+            <div className="text-right">
+              <div className="text-sm text-muted-foreground">Total Alerts</div>
+              <div className="text-2xl font-bold">{alerts.length}</div>
+            </div>
+          )}
         </div>
-      </div>
 
-      {/* Content Section */}
-      <div className="max-w-6xl mx-auto px-6 py-8">
+        {/* Content Section */}
         {alerts && alerts.length === 0 ? (
-          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm animate-fade-in">
+          <Card className="animate-fade-in">
             <CardContent className="flex flex-col items-center justify-center py-16 px-8">
-              <div className="p-4 rounded-full bg-emerald-100 mb-6">
+              <div className="p-4 rounded-full bg-emerald-500/10 mb-6">
                 <CheckCircle className="h-12 w-12 text-emerald-600" />
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-3">All Clear!</h3>
-              <p className="text-slate-600 text-center max-w-md leading-relaxed">
+              <h3 className="text-xl font-semibold mb-3">All Clear!</h3>
+              <p className="text-muted-foreground text-center max-w-md leading-relaxed">
                 No security alerts detected. Mail Guard is actively monitoring your emails 
                 and will notify you of any potential threats.
               </p>
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-center gap-2 text-blue-700 text-sm">
+              <div className="mt-6 p-4 bg-primary/5 rounded-lg border border-primary/20">
+                <div className="flex items-center gap-2 text-primary text-sm">
                   <Shield className="h-4 w-4" />
                   <span className="font-medium">Protected by ML&AI-powered security</span>
                 </div>
@@ -180,25 +176,25 @@ const UserAlerts = () => {
             {alerts?.map((alert, index) => (
               <Card 
                 key={alert.id} 
-                className={`border-0 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02] animate-fade-in bg-white/90 backdrop-blur-sm ${getAlertSeverityColor(alert.alert_type)}`}
+                className={`transition-all duration-300 hover:shadow-lg hover:scale-[1.02] animate-fade-in ${getAlertSeverityColor(alert.alert_type)}`}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-4">
-                      <div className="p-3 rounded-lg bg-white shadow-sm">
+                      <div className="p-3 rounded-lg bg-background shadow-sm border">
                         {getAlertIcon(alert.alert_type)}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <CardTitle className="text-lg font-semibold text-slate-900">
+                          <CardTitle className="text-lg font-semibold">
                             Security Alert Detected
                           </CardTitle>
                           <Badge variant={getAlertTypeBadgeVariant(alert.alert_type)} className="capitalize">
                             {alert.alert_type}
                           </Badge>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-slate-600">
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
                             {format(new Date(alert.created_at), 'PPp')}
@@ -225,43 +221,43 @@ const UserAlerts = () => {
                 
                 <CardContent className="space-y-5">
                   {alert.alert_message && (
-                    <div className="bg-white rounded-lg p-4 border border-slate-200">
-                      <h4 className="font-medium text-slate-900 mb-3 flex items-center gap-2">
+                    <div className="bg-muted/50 rounded-lg p-4 border">
+                      <h4 className="font-medium mb-3 flex items-center gap-2">
                         <AlertTriangle className="h-4 w-4 text-amber-500" />
                         Alert Details
                       </h4>
-                      <p className="text-slate-700 leading-relaxed">
+                      <p className="text-sm leading-relaxed">
                         {alert.alert_message}
                       </p>
                     </div>
                   )}
 
                   {alert.admin_action && (
-                    <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
-                      <h4 className="font-medium text-emerald-900 mb-3 flex items-center gap-2">
+                    <div className="bg-emerald-50 dark:bg-emerald-950 rounded-lg p-4 border border-emerald-200 dark:border-emerald-800">
+                      <h4 className="font-medium text-emerald-900 dark:text-emerald-100 mb-3 flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-emerald-600" />
                         Actions Taken
                       </h4>
-                      <p className="text-emerald-800 leading-relaxed">
+                      <p className="text-emerald-800 dark:text-emerald-200 text-sm leading-relaxed">
                         {alert.admin_action}
                       </p>
                     </div>
                   )}
 
                   {alert.admin_notes && (
-                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                      <h4 className="font-medium text-blue-900 mb-3 flex items-center gap-2">
+                    <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                      <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2">
                         <Eye className="h-4 w-4 text-blue-600" />
                         Admin Notes
                       </h4>
-                      <p className="text-blue-800 leading-relaxed">
+                      <p className="text-blue-800 dark:text-blue-200 text-sm leading-relaxed">
                         {alert.admin_notes}
                       </p>
                     </div>
                   )}
 
                   {alert.status === 'resolved' && (
-                    <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200">
+                    <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950 px-3 py-2 rounded-lg border border-emerald-200 dark:border-emerald-800">
                       <CheckCircle className="h-4 w-4" />
                       <span className="text-sm font-medium">This alert has been resolved and no further action is required.</span>
                     </div>
