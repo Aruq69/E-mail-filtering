@@ -25,7 +25,11 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const feedback: FeedbackEmailRequest = await req.json();
-    console.log('Sending feedback email:', feedback);
+    console.log('=== SEND-FEEDBACK-EMAIL FUNCTION CALLED ===');
+    console.log('Feedback type:', feedback.feedback_type);
+    console.log('Email recipient:', feedback.email);
+    console.log('Category:', feedback.category);
+    console.log('Full feedback object:', JSON.stringify(feedback, null, 2));
 
     // Create different email templates based on type
     let emailHtml = '';
@@ -158,6 +162,12 @@ const handler = async (req: Request): Promise<Response> => {
       subject = getSubject();
     }
 
+    console.log('=== ATTEMPTING TO SEND EMAIL ===');
+    console.log('From: Mail Guard <onboarding@resend.dev>');
+    console.log('To:', [feedback.email]);
+    console.log('Subject:', subject);
+    console.log('Resend API Key present:', !!Deno.env.get("RESEND_API_KEY"));
+
     const emailResponse = await resend.emails.send({
       from: "Mail Guard <onboarding@resend.dev>",
       to: [feedback.email],
@@ -165,7 +175,8 @@ const handler = async (req: Request): Promise<Response> => {
       html: emailHtml,
     });
 
-    console.log("Feedback email sent successfully:", emailResponse);
+    console.log("=== EMAIL SEND RESULT ===");
+    console.log("Email sent successfully:", emailResponse);
 
     return new Response(JSON.stringify({ success: true, emailResponse }), {
       status: 200,
@@ -176,9 +187,12 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
   } catch (error: any) {
-    console.error("Error sending feedback email:", error);
+    console.error("=== ERROR IN SEND-FEEDBACK-EMAIL FUNCTION ===");
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+    console.error("Full error object:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message, details: error }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

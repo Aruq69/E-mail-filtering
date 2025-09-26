@@ -240,23 +240,61 @@ export default function AdminEmails() {
       // Send security alert email using the dedicated function
       console.log('=== SENDING SECURITY ALERT EMAIL ===');
       try {
-        // Get the user's actual email address from auth.users via Supabase Admin API
-        const { data: userData, error: userError } = await supabase.auth.admin.getUserById(emailData.user_id);
-         
-        console.log('User data retrieved:', userData?.user?.email);
+        // Get the user's actual email address - try different approaches
+        console.log('Attempting to get user email for user_id:', emailData.user_id);
         
-        if (userData?.user?.email) {
-          await supabase.functions.invoke('send-feedback-email', {
+        // Method 1: Try to get from profiles table first (more likely to work)
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('user_id', emailData.user_id)
+          .single();
+        
+        console.log('Profile data:', profileData);
+        console.log('Profile error:', profileError);
+        
+        let userEmail = null;
+        
+        if (profileData?.username && profileData.username.includes('@')) {
+          // If username is an email address, use it
+          userEmail = profileData.username;
+          console.log('Using email from profiles:', userEmail);
+        } else {
+          // Method 2: Try admin method (might fail due to permissions)
+          console.log('Trying admin getUserById method...');
+          const { data: userData, error: userError } = await supabase.auth.admin.getUserById(emailData.user_id);
+          console.log('Admin method - User data:', userData?.user?.email);
+          console.log('Admin method - Error:', userError);
+          
+          if (userData?.user?.email) {
+            userEmail = userData.user.email;
+            console.log('Using email from admin method:', userEmail);
+          }
+        }
+        
+        if (userEmail) {
+          console.log('=== CALLING SEND-FEEDBACK-EMAIL FUNCTION ===');
+          const { data: emailResult, error: emailSendError } = await supabase.functions.invoke('send-feedback-email', {
             body: {
               feedback_type: 'security',
               category: 'Security Alert',
               feedback_text: `Suspicious email blocked from ${emailData.sender}. Reason: ${blockReason}. A mail rule has been created to automatically block future emails from this sender.`,
-              email: userData.user.email
+              email: userEmail
             }
-           });
-          console.log('Security alert email sent successfully');
+          });
+          
+          console.log('Email send result:', emailResult);
+          console.log('Email send error:', emailSendError);
+          
+          if (emailSendError) {
+            console.error('Error sending security alert email:', emailSendError);
+          } else {
+            console.log('Security alert email sent successfully');
+          }
         } else {
           console.log('No user email found, skipping security alert');
+          console.log('Profile username:', profileData?.username);
+          console.log('Could not retrieve user email address');
         }
       } catch (emailError) {
         console.error('Failed to send security alert:', emailError);
