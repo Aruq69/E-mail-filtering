@@ -82,6 +82,21 @@ export default function AdminEmails() {
     console.log('Email ID:', emailId);
     console.log('Block Reason:', blockReason);
     
+    // Check authentication first
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    console.log('Current user:', user);
+    console.log('Auth error:', authError);
+    
+    if (!user) {
+      console.error('User not authenticated');
+      toast({
+        title: 'Authentication Error',
+        description: 'You must be logged in to perform this action. Please log in and try again.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     // Add email to blocking set
     setBlockingEmails(prev => new Set(prev).add(emailId));
     
@@ -106,17 +121,39 @@ export default function AdminEmails() {
       
       console.log('Email data retrieved:', emailData);
 
+      // Check if user has admin permissions
+      const { data: userRoles, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id);
+      
+      console.log('User roles:', userRoles);
+      console.log('Role error:', roleError);
+      
+      const isAdmin = userRoles?.some(role => role.role === 'admin');
+      console.log('Is admin:', isAdmin);
+      
+      if (!isAdmin) {
+        console.error('User does not have admin permissions');
+        toast({
+          title: 'Permission Denied',
+          description: 'You do not have admin permissions to block emails. Please contact your administrator.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       // Block in app database
       console.log('=== BLOCKING IN APP DATABASE ===');
       const { error } = await supabase
         .from('email_blocks')
         .insert({
           email_id: emailId,
-          blocked_by_user_id: (await supabase.auth.getUser()).data.user?.id,
+          blocked_by_user_id: user.id,
           block_reason: blockReason,
           block_type: 'admin_action',
           is_active: true
-         });
+        });
 
       if (error) {
         console.error('Error inserting email block:', error);
@@ -176,7 +213,7 @@ export default function AdminEmails() {
       await supabase
         .from('admin_audit_log')
         .insert({
-          admin_user_id: (await supabase.auth.getUser()).data.user?.id,
+          admin_user_id: user.id,
           action_type: 'block_email',
           target_type: 'email',
           target_id: emailId,
@@ -248,9 +285,12 @@ export default function AdminEmails() {
   };
 
   const openBlockDialog = (emailId: string) => {
+    console.log('=== OPENING BLOCK DIALOG ===');
+    console.log('Email ID to block:', emailId);
     setSelectedEmailId(emailId);
     setBlockReason('');
     setBlockDialogOpen(true);
+    console.log('Block dialog opened');
   };
 
   const openDetailsDialog = async (emailId: string) => {
@@ -276,7 +316,12 @@ export default function AdminEmails() {
   };
 
   const confirmBlockEmail = async () => {
+    console.log('=== CONFIRMING BLOCK EMAIL ===');
+    console.log('Block reason:', blockReason);
+    console.log('Selected email ID:', selectedEmailId);
+    
     if (!blockReason.trim()) {
+      console.log('Block reason is empty');
       toast({
         title: 'Error',
         description: 'Please provide a reason for blocking this email',
@@ -285,7 +330,9 @@ export default function AdminEmails() {
       return;
     }
     
+    console.log('Block reason is valid, proceeding...');
     setBlockDialogOpen(false);
+    console.log('Dialog closed, calling handleBlockEmail...');
     await handleBlockEmail(selectedEmailId, blockReason);
   };
 
