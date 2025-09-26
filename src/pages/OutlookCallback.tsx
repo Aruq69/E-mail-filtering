@@ -15,6 +15,12 @@ const OutlookCallback = () => {
     const handleOAuthCallback = async () => {
       console.log('OutlookCallback: Starting OAuth callback handling');
       
+      // Prevent multiple calls by checking if we're already processing
+      if (status !== 'processing') {
+        console.log('OutlookCallback: Already processed, skipping');
+        return;
+      }
+      
       // Get URL parameters immediately
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
@@ -35,7 +41,7 @@ const OutlookCallback = () => {
         console.error('OAuth error:', error);
         setStatus('error');
         setMessage(`OAuth error: ${error}. Please try again.`);
-        setTimeout(() => navigate("/settings"), 3000); // Back to settings to retry
+        setTimeout(() => navigate("/"), 3000);
         return;
       }
 
@@ -43,12 +49,17 @@ const OutlookCallback = () => {
         console.error('No authorization code received');
         setStatus('error');
         setMessage('No authorization code received. Please try again.');
-        setTimeout(() => navigate("/settings"), 3000); // Back to settings to retry
+        setTimeout(() => navigate("/"), 3000);
         return;
       }
 
-      // Don't wait for auth loading if we have the code - process immediately
-      if (!user && !authLoading) {
+      // Wait for auth to complete
+      if (authLoading) {
+        console.log('OutlookCallback: Auth still loading, waiting...');
+        return;
+      }
+
+      if (!user) {
         console.log('OutlookCallback: No user found, redirecting to auth');
         setStatus('error');
         setMessage('User not authenticated. Redirecting to login...');
@@ -56,54 +67,51 @@ const OutlookCallback = () => {
         return;
       }
 
-      // If auth is still loading, wait for it
-      if (authLoading) {
-        return;
-      }
+      // Clear URL parameters to prevent re-processing
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
 
-      // If we have a user, process the callback immediately
-      if (user) {
-        try {
-          console.log('OutlookCallback: Processing authorization code immediately');
-          setMessage('Exchanging authorization code for access tokens...');
+      try {
+        console.log('OutlookCallback: Processing authorization code for user:', user.id);
+        setMessage('Exchanging authorization code for access tokens...');
 
-          const { data, error: functionError } = await supabase.functions.invoke('outlook-auth', {
-            body: { 
-              action: 'handle_callback',
-              code: code 
-            }
-          });
-
-          if (functionError) {
-            console.error('Function error:', functionError);
-            setStatus('error');
-            setMessage(`Connection failed: ${functionError.message || 'Unknown error'}. Please try again.`);
-            setTimeout(() => navigate("/settings"), 3000); // Back to settings to retry
-            return;
+        const { data, error: functionError } = await supabase.functions.invoke('outlook-auth', {
+          body: { 
+            action: 'handle_callback',
+            code: code 
           }
+        });
 
-          if (data?.success) {
-            console.log('OutlookCallback: Connection successful');
-            setStatus('success');
-            setMessage('Outlook connected successfully! Your emails are being fetched...');
-            setTimeout(() => navigate("/"), 1500); // Only redirect to dashboard on SUCCESS
-          } else {
-            console.error('Connection failed:', data);
-            setStatus('error');
-            setMessage(`Failed to connect: ${data?.error || 'Unknown error'}. Please try again.`);
-            setTimeout(() => navigate("/settings"), 3000); // Back to settings to retry
-          }
-        } catch (error) {
-          console.error('Error handling OAuth callback:', error);
+        if (functionError) {
+          console.error('Function error:', functionError);
           setStatus('error');
-          setMessage('An unexpected error occurred. Please try again.');
-          setTimeout(() => navigate("/settings"), 3000); // Back to settings to retry
+          setMessage(`Connection failed: Edge Function returned a non-2xx status code. Please try again.`);
+          setTimeout(() => navigate("/"), 3000);
+          return;
         }
+
+        if (data?.success) {
+          console.log('OutlookCallback: Connection successful');
+          setStatus('success');
+          setMessage('Outlook connected successfully! Redirecting to dashboard...');
+          setTimeout(() => navigate("/"), 1500);
+        } else {
+          console.error('Connection failed:', data);
+          setStatus('error');
+          setMessage(`Failed to connect: ${data?.error || 'Unknown error'}. Please try again.`);
+          setTimeout(() => navigate("/"), 3000);
+        }
+      } catch (error) {
+        console.error('Error handling OAuth callback:', error);
+        setStatus('error');
+        setMessage('An unexpected error occurred. Please try again.');
+        setTimeout(() => navigate("/"), 3000);
       }
     };
 
+    // Only run once when component mounts and dependencies change
     handleOAuthCallback();
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, status]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">

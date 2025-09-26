@@ -92,8 +92,27 @@ serve(async (req) => {
       if (!tokenResponse.ok) {
         const errorText = await tokenResponse.text();
         console.error('Token exchange error:', errorText);
+        
+        // Parse the error for better user feedback
+        let errorMessage = 'Failed to exchange authorization code for tokens';
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData.error_description?.includes('code has expired')) {
+            errorMessage = 'Authorization code has expired. Please try connecting again - the OAuth process took too long.';
+          } else if (errorData.error_description?.includes('invalid_grant')) {
+            errorMessage = 'Invalid authorization code. Please try connecting again.';
+          } else if (errorData.error_description) {
+            errorMessage = errorData.error_description;
+          }
+        } catch (e) {
+          // Keep default message if parsing fails
+        }
+        
         return new Response(
-          JSON.stringify({ error: 'Failed to exchange authorization code for tokens' }),
+          JSON.stringify({ 
+            error: errorMessage,
+            success: false 
+          }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
