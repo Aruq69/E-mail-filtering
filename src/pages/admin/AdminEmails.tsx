@@ -10,7 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Mail, Search, Shield, AlertTriangle, Clock, CheckCircle, Ban, FileText, Loader2 } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Mail, Search, Shield, AlertTriangle, Clock, CheckCircle, Ban, FileText, Loader2, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AlertEmailButton } from '@/components/AlertEmailButton';
 
@@ -20,7 +21,9 @@ export default function AdminEmails() {
   const [userFilter, setUserFilter] = useState<string>('all');
   const [blockingEmails, setBlockingEmails] = useState<Set<string>>(new Set());
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedEmailId, setSelectedEmailId] = useState<string>('');
+  const [selectedEmailDetails, setSelectedEmailDetails] = useState<any>(null);
   const [blockReason, setBlockReason] = useState('');
   const { toast } = useToast();
 
@@ -218,6 +221,28 @@ export default function AdminEmails() {
     setBlockDialogOpen(true);
   };
 
+  const openDetailsDialog = async (emailId: string) => {
+    try {
+      const { data: emailDetails, error } = await supabase
+        .from('emails')
+        .select('*')
+        .eq('id', emailId)
+        .single();
+      
+      if (error) throw error;
+      
+      setSelectedEmailDetails(emailDetails);
+      setDetailsDialogOpen(true);
+    } catch (error) {
+      console.error('Error fetching email details:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load email details',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const confirmBlockEmail = async () => {
     if (!blockReason.trim()) {
       toast({
@@ -366,6 +391,15 @@ export default function AdminEmails() {
                         <div className="flex gap-2">
                           <Button
                             size="sm"
+                            variant="ghost"
+                            onClick={() => openDetailsDialog(email.id)}
+                            className="animate-scale-in hover-scale"
+                          >
+                            <Eye className="h-3 w-3 mr-1" />
+                            View
+                          </Button>
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={() => openBlockDialog(email.id)}
                             disabled={blockingEmails.has(email.id)}
@@ -393,6 +427,120 @@ export default function AdminEmails() {
           )}
         </CardContent>
       </Card>
+
+      {/* Email Details Dialog */}
+      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Email Details & ML Analysis</DialogTitle>
+            <DialogDescription>
+              Complete email content with machine learning analysis scores
+            </DialogDescription>
+          </DialogHeader>
+          {selectedEmailDetails && (
+            <ScrollArea className="h-[60vh] pr-4">
+              <div className="space-y-6">
+                {/* Basic Info */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Subject</Label>
+                    <p className="text-sm text-muted-foreground break-words">{selectedEmailDetails.subject}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Sender</Label>
+                    <p className="text-sm text-muted-foreground break-words">{selectedEmailDetails.sender}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Received Date</Label>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(selectedEmailDetails.received_date).toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Message ID</Label>
+                    <p className="text-sm text-muted-foreground break-all">{selectedEmailDetails.message_id}</p>
+                  </div>
+                </div>
+
+                {/* ML Analysis Scores */}
+                <div className="border rounded-lg p-4 bg-muted/20">
+                  <h3 className="font-medium mb-3 flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    ML Analysis Results
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <Label className="text-xs font-medium">Threat Level</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        {getThreatIcon(selectedEmailDetails.threat_level)}
+                        <Badge variant={getThreatBadgeVariant(selectedEmailDetails.threat_level)}>
+                          {selectedEmailDetails.threat_level || 'Unknown'}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs font-medium">Classification</Label>
+                      <p className="text-sm font-mono">
+                        {selectedEmailDetails.classification || 'Pending'}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-xs font-medium">Threat Type</Label>
+                      <p className="text-sm font-mono">
+                        {selectedEmailDetails.threat_type || 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-xs font-medium">Confidence Score</Label>
+                      <p className="text-sm font-mono">
+                        {selectedEmailDetails.confidence ? 
+                          `${(parseFloat(selectedEmailDetails.confidence) * 100).toFixed(1)}%` : 
+                          'N/A'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {selectedEmailDetails.keywords && selectedEmailDetails.keywords.length > 0 && (
+                    <div className="mt-4">
+                      <Label className="text-xs font-medium">Detected Keywords</Label>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {selectedEmailDetails.keywords.map((keyword: string, index: number) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {keyword}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Email Content */}
+                <div>
+                  <Label className="text-sm font-medium">Email Content</Label>
+                  <div className="mt-2 p-4 border rounded-lg bg-background">
+                    <pre className="whitespace-pre-wrap text-sm leading-relaxed">
+                      {selectedEmailDetails.content || 'No content available'}
+                    </pre>
+                  </div>
+                </div>
+
+                {/* Raw Content (if available) */}
+                {selectedEmailDetails.raw_content && (
+                  <div>
+                    <Label className="text-sm font-medium">Raw Email Content</Label>
+                    <div className="mt-2 p-4 border rounded-lg bg-muted/50">
+                      <pre className="whitespace-pre-wrap text-xs text-muted-foreground overflow-x-auto">
+                        {selectedEmailDetails.raw_content}
+                      </pre>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Block Email Dialog */}
       <Dialog open={blockDialogOpen} onOpenChange={setBlockDialogOpen}>
