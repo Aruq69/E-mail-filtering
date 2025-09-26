@@ -38,19 +38,19 @@ const UserAlerts = () => {
 
   const getAlertIcon = (alertType: string) => {
     switch (alertType.toLowerCase()) {
-      case 'suspicious': return <AlertTriangle className="h-5 w-5 text-amber-500" />;
-      case 'malware': return <XCircle className="h-5 w-5 text-red-500" />;
-      case 'phishing': return <XCircle className="h-5 w-5 text-red-600" />;
-      default: return <AlertTriangle className="h-5 w-5 text-orange-500" />;
+      case 'suspicious': return <AlertTriangle className="h-5 w-5 text-secondary" />;
+      case 'malware': return <XCircle className="h-5 w-5 text-destructive" />;
+      case 'phishing': return <XCircle className="h-5 w-5 text-destructive" />;
+      default: return <AlertTriangle className="h-5 w-5 text-muted-foreground" />;
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'resolved': return <CheckCircle className="h-4 w-4 text-emerald-500" />;
-      case 'pending': return <Clock className="h-4 w-4 text-amber-500" />;
-      case 'investigating': return <Eye className="h-4 w-4 text-blue-500" />;
-      default: return <Clock className="h-4 w-4 text-slate-500" />;
+      case 'resolved': return <CheckCircle className="h-4 w-4 text-accent" />;
+      case 'pending': return <Clock className="h-4 w-4 text-secondary" />;
+      case 'investigating': return <Eye className="h-4 w-4 text-primary" />;
+      default: return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -74,10 +74,10 @@ const UserAlerts = () => {
 
   const getAlertSeverityColor = (alertType: string) => {
     switch (alertType.toLowerCase()) {
-      case 'malware': return 'bg-red-50 border-red-200 hover:bg-red-100';
-      case 'phishing': return 'bg-red-50 border-red-200 hover:bg-red-100';
-      case 'suspicious': return 'bg-amber-50 border-amber-200 hover:bg-amber-100';
-      default: return 'bg-slate-50 border-slate-200 hover:bg-slate-100';
+      case 'malware': return 'threat-high hover-card';
+      case 'phishing': return 'threat-high hover-card';
+      case 'suspicious': return 'threat-medium hover-card';
+      default: return 'hover-card';
     }
   };
 
@@ -153,10 +153,10 @@ const UserAlerts = () => {
 
         {/* Content Section */}
         {alerts && alerts.length === 0 ? (
-          <Card className="animate-fade-in">
+          <Card className="hover-card">
             <CardContent className="flex flex-col items-center justify-center py-16 px-8">
-              <div className="p-4 rounded-full bg-emerald-500/10 mb-6">
-                <CheckCircle className="h-12 w-12 text-emerald-600" />
+              <div className="p-4 rounded-full bg-accent/10 mb-6">
+                <CheckCircle className="h-12 w-12 text-accent" />
               </div>
               <h3 className="text-xl font-semibold mb-3">All Clear!</h3>
               <p className="text-muted-foreground text-center max-w-md leading-relaxed">
@@ -176,8 +176,7 @@ const UserAlerts = () => {
             {alerts?.map((alert, index) => (
               <Card 
                 key={alert.id} 
-                className={`transition-all duration-300 hover:shadow-lg hover:scale-[1.02] animate-fade-in ${getAlertSeverityColor(alert.alert_type)}`}
-                style={{ animationDelay: `${index * 100}ms` }}
+                className={`${getAlertSeverityColor(alert.alert_type)}`}
               >
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between">
@@ -223,7 +222,7 @@ const UserAlerts = () => {
                   {alert.alert_message && (
                     <div className="bg-muted/50 rounded-lg p-4 border">
                       <h4 className="font-medium mb-3 flex items-center gap-2">
-                        <AlertTriangle className="h-4 w-4 text-amber-500" />
+                        <AlertTriangle className="h-4 w-4 text-secondary" />
                         Alert Details
                       </h4>
                       <p className="text-sm leading-relaxed">
@@ -233,33 +232,33 @@ const UserAlerts = () => {
                   )}
 
                   {alert.admin_action && (
-                    <div className="bg-emerald-50 dark:bg-emerald-950 rounded-lg p-4 border border-emerald-200 dark:border-emerald-800">
-                      <h4 className="font-medium text-emerald-900 dark:text-emerald-100 mb-3 flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-emerald-600" />
+                    <div className="bg-accent/10 rounded-lg p-4 border border-accent/20">
+                      <h4 className="font-medium mb-3 flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-accent" />
                         Actions Taken
                       </h4>
-                      <p className="text-emerald-800 dark:text-emerald-200 text-sm leading-relaxed">
+                      <p className="text-sm leading-relaxed">
                         {alert.admin_action}
                       </p>
                     </div>
                   )}
 
                   {alert.admin_notes && (
-                    <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
-                      <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2">
-                        <Eye className="h-4 w-4 text-blue-600" />
+                    <div className="bg-primary/10 rounded-lg p-4 border border-primary/20">
+                      <h4 className="font-medium mb-3 flex items-center gap-2">
+                        <Eye className="h-4 w-4 text-primary" />
                         Admin Notes
                       </h4>
-                      <p className="text-blue-800 dark:text-blue-200 text-sm leading-relaxed">
+                      <p className="text-sm leading-relaxed">
                         {alert.admin_notes}
                       </p>
                     </div>
                   )}
 
                   {alert.status === 'resolved' && (
-                    <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950 px-3 py-2 rounded-lg border border-emerald-200 dark:border-emerald-800">
-                      <CheckCircle className="h-4 w-4" />
-                      <span className="text-sm font-medium">This alert has been resolved and no further action is required.</span>
+                    <div className="flex items-center gap-2 bg-accent/10 px-3 py-2 rounded-lg border border-accent/20">
+                      <CheckCircle className="h-4 w-4 text-accent" />
+                      <span className="text-sm font-medium text-accent">This alert has been resolved and no further action is required.</span>
                     </div>
                   )}
                 </CardContent>
