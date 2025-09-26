@@ -46,8 +46,14 @@ serve(async (req) => {
     const { action, code } = await req.json();
 
     if (action === 'get_auth_url') {
-      // Generate OAuth URL for Microsoft Graph
-      const redirectUri = 'https://mailguard5123.vercel.app/outlook-callback';
+      // Generate OAuth URL for Microsoft Graph - use dynamic redirect based on origin
+      const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'https://mailguard5123.vercel.app';
+      const redirectUri = `${origin}/outlook-callback`;
+      
+      console.log('Using redirect URI:', redirectUri);
+      console.log('Origin header:', req.headers.get('origin'));
+      console.log('Referer header:', req.headers.get('referer'));
+      
       const scopes = 'https://graph.microsoft.com/MailboxSettings.ReadWrite https://graph.microsoft.com/Mail.ReadWrite https://graph.microsoft.com/Mail.Read https://graph.microsoft.com/User.Read offline_access';
       
       const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
@@ -65,8 +71,9 @@ serve(async (req) => {
     }
 
     if (action === 'handle_callback') {
-      // Handle OAuth callback with authorization code
-      const redirectUri = 'https://mailguard5123.vercel.app/outlook-callback';
+      // Handle OAuth callback with authorization code - use dynamic redirect
+      const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'https://mailguard5123.vercel.app';
+      const redirectUri = `${origin}/outlook-callback`;
       
       const tokenResponse = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
         method: 'POST',
