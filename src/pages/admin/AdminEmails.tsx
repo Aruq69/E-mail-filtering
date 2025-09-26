@@ -186,10 +186,8 @@ export default function AdminEmails() {
             body: {
               feedback_type: 'security',
               category: 'Security Alert',
-              feedback_text: `🛡️ SECURITY ALERT: Suspicious email blocked from ${emailData.sender}. Reason: ${blockReason}. A mail rule has been created to automatically block future emails from this sender.`,
-              email: userData.user.email, // Use actual email instead of username
-              page_url: window.location.href,
-              user_agent: navigator.userAgent
+              feedback_text: `Suspicious email blocked from ${emailData.sender}. Reason: ${blockReason}. A mail rule has been created to automatically block future emails from this sender.`,
+              email: userData.user.email
             }
           });
         }
