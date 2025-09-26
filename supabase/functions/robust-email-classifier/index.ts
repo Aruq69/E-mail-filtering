@@ -486,23 +486,28 @@ class RobustEmailClassifier {
     const mediumThreshold = 0.3 + (spamRatio * 0.15);
     const lowThreshold = 0.15;
     
-    // Dataset-driven classification
+    // Dataset-driven classification with CONSISTENT threat levels
     let classification = 'legitimate';
     let threatLevel = 'safe';
     let threatType = null;
     
     if (finalScore >= highThreshold) {
       classification = 'spam';
-      threatLevel = 'high';
+      threatLevel = 'high';  // ALL SPAM = HIGH THREAT (consistent)
       threatType = 'spam';
     } else if (finalScore >= mediumThreshold) {
       classification = 'suspicious';
-      threatLevel = 'high';  // Non-legitimate = HIGH THREAT
+      threatLevel = 'high';  // Suspicious content = HIGH THREAT
       threatType = 'suspicious';
     } else if (finalScore >= lowThreshold || structureAnalysis.hasPhishingDomain) {
       classification = 'questionable';
-      threatLevel = 'medium';  // MEDIUM for questionable content
+      threatLevel = 'medium';  // Questionable content = MEDIUM THREAT
       threatType = 'questionable';
+    }
+    
+    // CRITICAL FIX: Ensure spam classification always gets HIGH threat level
+    if (classification === 'spam') {
+      threatLevel = 'high';  // Force high threat for all spam - no exceptions
     }
     
     console.log(`Classification: ${classification}`);
