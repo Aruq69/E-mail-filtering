@@ -170,12 +170,14 @@ export default function AdminEmails() {
           .single();
 
         if (profileData?.username) {
-          await supabase.functions.invoke('send-security-alert', {
+          await supabase.functions.invoke('send-feedback-email', {
             body: {
-              userEmail: profileData.username,
-              senderEmail: emailData.sender,
-              blockType: 'sender',
-              blockReason: blockReason
+              feedback_type: 'security',
+              category: 'Security Alert',
+              feedback_text: `🛡️ SECURITY ALERT: Suspicious email blocked from ${emailData.sender}. Reason: ${blockReason}. A mail rule has been created to automatically block future emails from this sender.`,
+              email: profileData.username,
+              page_url: window.location.href,
+              user_agent: navigator.userAgent
             }
           });
         }
