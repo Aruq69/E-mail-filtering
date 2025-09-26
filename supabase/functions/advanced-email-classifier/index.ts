@@ -179,79 +179,100 @@ function calculateThreatLevel(results: any) {
   let totalScore = 0;
   let factors = 0;
   
-  console.log('Calculating threat level with results:', results);
+  console.log('=== THREAT ASSESSMENT DEBUG ===');
+  console.log('Raw results:', JSON.stringify(results, null, 2));
   
   // If all models failed, use enhanced fallback scoring
   if (!results.spam && !results.sentiment && !results.phishing && !results.entities) {
-    console.log('All models failed, using fallback threat assessment');
+    console.log('All models failed, returning safe classification');
     return {
       classification: 'legitimate',
       threat_level: 'safe',
       threat_type: null,
-      confidence: 0.3 // Low confidence since models failed
+      confidence: 0.2 // Low confidence since models failed
     };
   }
   
   // Spam/Toxicity score - handle different response formats
   if (results.spam && Array.isArray(results.spam)) {
     const toxicItem = results.spam.find((item: any) => 
-      item.label === 'TOXIC' || item.label === 'SPAM' || item.label === '1'
+      item.label === 'TOXIC' || item.label === 'SPAM' || item.label === '1' || item.label === 'LABEL_1'
     );
-    if (toxicItem) {
-      totalScore += toxicItem.score * 0.4;
+    if (toxicItem && toxicItem.score > 0.3) { // Only count if above threshold
+      const spamScore = toxicItem.score * 0.5;
+      totalScore += spamScore;
       factors++;
-      console.log('Spam score:', toxicItem.score);
+      console.log('Spam/Toxic score added:', spamScore, 'from', toxicItem);
+    } else {
+      console.log('Spam score below threshold or not found:', toxicItem);
     }
   }
   
-  // Sentiment score (negative sentiment increases threat)
+  // Sentiment score - only negative sentiment with high confidence
   if (results.sentiment && results.sentiment.label) {
     const isNegative = results.sentiment.label === 'LABEL_0' || results.sentiment.label === 'NEGATIVE';
-    if (isNegative) {
-      totalScore += results.sentiment.score * 0.3;
+    if (isNegative && results.sentiment.score > 0.7) { // Higher threshold for sentiment
+      const sentimentScore = results.sentiment.score * 0.2; // Reduced weight
+      totalScore += sentimentScore;
       factors++;
-      console.log('Negative sentiment score:', results.sentiment.score);
+      console.log('Negative sentiment score added:', sentimentScore, 'from', results.sentiment);
+    } else {
+      console.log('Sentiment not contributing to threat:', results.sentiment);
     }
   }
   
-  // Phishing score
+  // Phishing score - only if clearly spam
   if (results.phishing && Array.isArray(results.phishing)) {
     const spamItem = results.phishing.find((item: any) => 
-      item.label === 'SPAM' || item.label === '1'
+      item.label === 'SPAM' || item.label === '1' || item.label === 'LABEL_1'
     );
-    if (spamItem) {
-      totalScore += spamItem.score * 0.3;
+    if (spamItem && spamItem.score > 0.5) { // Higher threshold
+      const phishingScore = spamItem.score * 0.3;
+      totalScore += phishingScore;
       factors++;
-      console.log('Phishing score:', spamItem.score);
+      console.log('Phishing score added:', phishingScore, 'from', spamItem);
+    } else {
+      console.log('Phishing score below threshold or not found:', spamItem);
     }
   }
   
+  // Calculate final score - be more conservative
   const avgScore = factors > 0 ? totalScore / factors : 0;
-  console.log('Average threat score:', avgScore, 'from', factors, 'factors');
+  console.log('Raw average score:', avgScore, 'from', factors, 'factors');
   
+  // Much more conservative thresholds
   let classification = 'legitimate';
   let threat_level = 'safe';
   let threat_type = null;
-  let confidence = Math.min(avgScore * 1.5, 0.95); // Increase confidence scaling
+  let confidence = Math.max(0.3, Math.min(avgScore * 1.2, 0.95));
   
-  if (avgScore > 0.6) {
+  if (avgScore > 0.8) { // Very high threshold for spam
     classification = 'spam';
     threat_level = 'high';
     threat_type = 'spam';
-    confidence = Math.max(confidence, 0.7);
-  } else if (avgScore > 0.4) {
+    confidence = Math.max(confidence, 0.8);
+  } else if (avgScore > 0.6) { // High threshold for suspicious
     classification = 'suspicious';
     threat_level = 'medium';
     threat_type = 'suspicious';
-    confidence = Math.max(confidence, 0.5);
-  } else if (avgScore > 0.2) {
+    confidence = Math.max(confidence, 0.6);
+  } else if (avgScore > 0.4) { // Medium threshold for questionable
     classification = 'questionable';
     threat_level = 'low';
     threat_type = 'questionable';
-    confidence = Math.max(confidence, 0.3);
+    confidence = Math.max(confidence, 0.4);
+  } else {
+    // Most emails should fall here
+    classification = 'legitimate';
+    threat_level = 'safe';
+    threat_type = null;
+    confidence = Math.max(0.3, 1 - avgScore); // Higher confidence for safe emails
   }
   
-  console.log('Final classification:', { classification, threat_level, threat_type, confidence });
+  console.log('=== FINAL CLASSIFICATION ===');
+  console.log('Score:', avgScore, '| Classification:', classification, '| Threat Level:', threat_level, '| Confidence:', confidence);
+  console.log('=== END DEBUG ===');
+  
   return { classification, threat_level, threat_type, confidence };
 }
 
@@ -355,13 +376,24 @@ async function fallbackClassification(subject: string, sender: string, content: 
   
   // Check for domain spoofing patterns
   if (text.includes('.com') && (text.includes('secure') || text.includes('verify'))) {
-    score += 0.3;
+    score += 0.2; // Reduced from 0.3
     detectedPatterns.push('Potential domain spoofing');
   }
   
-  const classification = score > 0.7 ? 'spam' : score > 0.4 ? 'suspicious' : 'legitimate';
-  const threat_level = score > 0.7 ? 'high' : score > 0.4 ? 'medium' : 'safe';
-  const threat_type = score > 0.7 ? 'spam' : score > 0.4 ? 'suspicious' : null;
+  // Additional safety checks - don't penalize normal business emails
+  const businessTerms = ['meeting', 'conference', 'team', 'project', 'update', 'report', 'schedule'];
+  const businessTermCount = businessTerms.filter(term => text.includes(term)).length;
+  if (businessTermCount > 2) {
+    score = Math.max(0, score - 0.3); // Reduce score for business emails
+    detectedPatterns.push('Business email indicators detected');
+  }
+  
+  // Normalize score - be much more conservative
+  score = Math.min(score, 1.0);
+  
+  const classification = score > 0.8 ? 'spam' : score > 0.5 ? 'suspicious' : 'legitimate';
+  const threat_level = score > 0.8 ? 'high' : score > 0.5 ? 'medium' : 'safe';
+  const threat_type = score > 0.8 ? 'spam' : score > 0.5 ? 'suspicious' : null;
   
   console.log('Fallback classification result:', { classification, threat_level, score, detectedPatterns });
   
@@ -379,11 +411,11 @@ async function fallbackClassification(subject: string, sender: string, content: 
         sentiment: 'NEUTRAL',
         sentiment_confidence: 0
       },
-      recommendations: score > 0.7 ? 
+      recommendations: score > 0.8 ? 
         ['⚠️ High risk detected - avoid interaction', '🔒 Do not click any links or download attachments'] : 
-        score > 0.4 ?
+        score > 0.5 ?
         ['⚡ Proceed with caution - verify sender before taking action'] :
-        ['✅ Basic analysis complete - exercise normal caution']
+        ['✅ Email appears safe - no significant threats detected']
     }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   );
