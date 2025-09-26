@@ -76,7 +76,7 @@ export default function AdminEmails() {
       // Get the email details first
       const { data: emailData, error: emailError } = await supabase
         .from('emails')
-        .select('sender, subject, outlook_id')
+        .select('sender, subject, outlook_id, user_id')
         .eq('id', emailId)
         .single();
 
@@ -147,6 +147,30 @@ export default function AdminEmails() {
           target_id: emailId,
           action_details: { block_reason: blockReason, sender: emailData.sender }
         });
+      
+      // Send security alert email using the feedback email function
+      try {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('user_id', emailData.user_id)
+          .single();
+
+        if (profileData?.username) {
+          await supabase.functions.invoke('send-feedback-email', {
+            body: {
+              feedback_type: 'security',
+              category: 'Security Alert',
+              feedback_text: `Security Alert: Suspicious email blocked from ${emailData.sender}. Block reason: ${blockReason}. A mail rule has been created to automatically block future emails from this sender.`,
+              email: profileData.username,
+              page_url: window.location.href,
+              user_agent: navigator.userAgent
+            }
+          });
+        }
+      } catch (emailError) {
+        console.error('Failed to send security alert:', emailError);
+      }
       
       refetch();
     } catch (error) {
