@@ -71,7 +71,7 @@ export const MLDashboard: React.FC = () => {
     
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('advanced-email-classifier', {
+      const { data, error } = await supabase.functions.invoke('robust-email-classifier', {
         body: {
           subject: 'Test Email',
           sender: 'test@example.com',

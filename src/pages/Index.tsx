@@ -322,6 +322,75 @@ const Index = () => {
     }
   };
 
+  // Re-classify email with robust ML classifier
+  const reclassifyEmail = async (emailId: string) => {
+    if (!user) return;
+    
+    try {
+      // Find the email
+      const email = emails.find(e => e.id === emailId) || sessionEmails.find(e => e.id === emailId);
+      if (!email) {
+        toast({
+          title: "Error",
+          description: "Email not found",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsProcessing(true);
+      toast({
+        title: "Re-analyzing email",
+        description: "Using latest ML classifier...",
+      });
+
+      // Call robust classifier
+      const { data: classificationData, error } = await supabase.functions.invoke('robust-email-classifier', {
+        body: {
+          subject: email.subject,
+          sender: email.sender,
+          content: email.content,
+          user_id: user.id
+        }
+      });
+
+      if (error) throw error;
+
+      // Update the email in database
+      const { error: updateError } = await supabase
+        .from('emails')
+        .update({
+          classification: classificationData.classification,
+          threat_level: classificationData.threat_level,
+          threat_type: classificationData.threat_type,
+          confidence: classificationData.confidence,
+          keywords: classificationData.detailed_analysis?.detected_features || null,
+          processed_at: new Date().toISOString()
+        })
+        .eq('id', emailId);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Re-analysis complete",
+        description: `Email classified as: ${classificationData.classification} (${classificationData.threat_level} threat)`,
+      });
+
+      // Refresh emails to show updated classification
+      await fetchEmails();
+
+    } catch (error) {
+      console.error('Re-classification error:', error);
+      toast({
+        title: "Re-analysis failed", 
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const connectOutlook = async () => {
     try {
       
@@ -1098,10 +1167,24 @@ const Index = () => {
                           {selectedEmail.threat_level === 'high' ? 'HIGH RISK - Immediate attention required' :
                            selectedEmail.threat_level === 'medium' ? 'MEDIUM RISK - Review recommended' :
                            'LOW RISK - Safe to proceed'}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                         </p>
+                       </div>
+                       
+                       {/* Re-classify Button */}
+                       <div className="pt-2 border-t">
+                         <Button
+                           variant="outline"
+                           size="sm"
+                           onClick={() => reclassifyEmail(selectedEmail.id)}
+                           disabled={isProcessing}
+                           className="w-full"
+                         >
+                           <Brain className="h-4 w-4 mr-2" />
+                           Re-analyze with Latest ML
+                         </Button>
+                       </div>
+                     </CardContent>
+                   </Card>
                 </div>
 
                 {/* AI Security Advice Section - Only for high/medium threats */}

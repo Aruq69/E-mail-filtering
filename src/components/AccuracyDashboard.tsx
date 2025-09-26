@@ -210,22 +210,12 @@ export const AccuracyDashboard = () => {
       toast.info('Running ML accuracy test...');
       
       // Simulate running a test batch of emails through the classifier
-      const testResult = await supabase.functions.invoke('email-classifier', {
+      const testResult = await supabase.functions.invoke('robust-email-classifier', {
         body: {
-          emails: [
-            {
-              subject: "Congratulations! You won $1,000,000!",
-              sender: "winner-notifications@lottery-scam.tk",
-              content: "Click here to claim your prize immediately! Limited time offer!",
-              userId: user?.id
-            },
-            {
-              subject: "Meeting scheduled for tomorrow",
-              sender: "colleague@company.com", 
-              content: "Hi, I've scheduled our meeting for 2 PM tomorrow. Please confirm.",
-              userId: user?.id
-            }
-          ]
+          subject: "Congratulations! You won $1,000,000!",
+          sender: "winner-notifications@lottery-scam.tk", 
+          content: "Click here to claim your prize immediately! Limited time offer!",
+          user_id: user?.id
         }
       });
 
