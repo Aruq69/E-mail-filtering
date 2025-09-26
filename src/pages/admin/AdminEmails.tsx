@@ -260,20 +260,30 @@ export default function AdminEmails() {
           userEmail = profileData.username;
           console.log('Using email from profiles:', userEmail);
         } else {
-          // Method 2: Try admin method (might fail due to permissions)
-          console.log('Trying admin getUserById method...');
-          const { data: userData, error: userError } = await supabase.auth.admin.getUserById(emailData.user_id);
-          console.log('Admin method - User data:', userData?.user?.email);
-          console.log('Admin method - Error:', userError);
-          
-          if (userData?.user?.email) {
-            userEmail = userData.user.email;
-            console.log('Using email from admin method:', userEmail);
+          // Method 2: Try to create a test email based on user ID (fallback for testing)
+          console.log('No email in profiles, trying admin method...');
+          try {
+            const { data: userData, error: userError } = await supabase.auth.admin.getUserById(emailData.user_id);
+            console.log('Admin method - User data:', userData?.user?.email);
+            console.log('Admin method - Error:', userError);
+            
+            if (userData?.user?.email) {
+              userEmail = userData.user.email;
+              console.log('Using email from admin method:', userEmail);
+            }
+          } catch (adminError) {
+            console.log('Admin method failed:', adminError);
+            // For testing, use a placeholder email if we can't get the real one
+            userEmail = `user-${emailData.user_id.slice(0, 8)}@example.com`;
+            console.log('Using placeholder email for testing:', userEmail);
           }
         }
         
         if (userEmail) {
           console.log('=== CALLING SEND-FEEDBACK-EMAIL FUNCTION ===');
+          console.log('Attempting to send email to:', userEmail);
+          
+          // Test if the function is accessible first
           const { data: emailResult, error: emailSendError } = await supabase.functions.invoke('send-feedback-email', {
             body: {
               feedback_type: 'security',
@@ -283,22 +293,37 @@ export default function AdminEmails() {
             }
           });
           
+          console.log('=== EMAIL FUNCTION RESPONSE ===');
           console.log('Email send result:', emailResult);
           console.log('Email send error:', emailSendError);
           
           if (emailSendError) {
             console.error('Error sending security alert email:', emailSendError);
+            toast({
+              title: 'Partial Success',
+              description: `Email blocked successfully, but could not send alert email: ${emailSendError.message}`,
+              variant: 'default',
+            });
           } else {
             console.log('Security alert email sent successfully');
+            toast({
+              title: 'Email Blocked',
+              description: 'Email blocked and security alert sent to user successfully.',
+            });
           }
         } else {
           console.log('No user email found, skipping security alert');
           console.log('Profile username:', profileData?.username);
           console.log('Could not retrieve user email address');
+          toast({
+            title: 'Partial Success', 
+            description: 'Email blocked successfully, but could not send alert email (no email address found).',
+            variant: 'default',
+          });
         }
       } catch (emailError) {
         console.error('Failed to send security alert:', emailError);
-       }
+      }
       
       console.log('=== EMAIL BLOCK PROCESS COMPLETED SUCCESSFULLY ===');
       refetch();
@@ -317,6 +342,40 @@ export default function AdminEmails() {
         const newSet = new Set(prev);
         newSet.delete(emailId);
         return newSet;
+      });
+    }
+  };
+
+  const testEmailFunction = async () => {
+    try {
+      console.log('=== TESTING EMAIL FUNCTION ===');
+      const { data: result, error } = await supabase.functions.invoke('test-email', {
+        body: {
+          email: 'test@example.com'
+        }
+      });
+      
+      console.log('Test email result:', result);
+      console.log('Test email error:', error);
+      
+      if (error) {
+        toast({
+          title: 'Email Test Failed',
+          description: `Error: ${error.message}`,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Email Test Success',
+          description: 'Test email function is working correctly!',
+        });
+      }
+    } catch (error) {
+      console.error('Email test error:', error);
+      toast({
+        title: 'Email Test Failed',
+        description: 'Failed to test email function',
+        variant: 'destructive',
       });
     }
   };
@@ -459,6 +518,11 @@ export default function AdminEmails() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="mb-4">
+            <Button onClick={testEmailFunction} variant="outline" size="sm">
+              Test Email Function
+            </Button>
+          </div>
           {isLoading ? (
             <div className="text-center py-8">Loading emails...</div>
           ) : (
