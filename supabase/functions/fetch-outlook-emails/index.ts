@@ -234,34 +234,26 @@ serve(async (req) => {
 
         // Call Dataset-Based ML Email Classifier (same as ML Analytics real-time testing)
         console.log(`🤖 Analyzing with Dataset-Based ML Email Classifier...`);
-        const classificationResult = await fetch(`${supabaseUrl}/functions/v1/robust-email-classifier`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${supabaseServiceKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
+        
+        const { data: classificationData, error: classificationError } = await supabase.functions.invoke('robust-email-classifier', {
+          body: {
             subject: email.subject || 'No Subject',
             sender: email.from?.emailAddress?.address || 'Unknown Sender',
             content: textContent,
             user_id: user.id
-          })
+          }
         });
 
-        let classificationData = null;
-        if (classificationResult.ok) {
-          const classificationResponse = await classificationResult.json();
-          classificationData = classificationResponse;
+        if (classificationError) {
+          console.error('❌ Dataset-Based ML Classification FAILED:', email.subject, classificationError);
+          // Continue processing other emails even if one fails
+        } else if (classificationData) {
           console.log(`✅ HuggingFace ML RESULT:`, 
                      `📧 "${email.subject}"`,
                      `🎯 Classification: ${classificationData?.classification?.toUpperCase()}`, 
                      `🔥 Confidence: ${(classificationData?.confidence * 100).toFixed(1)}%`,
                      `⚠️ Threat Level: ${classificationData?.threat_level?.toUpperCase()}`,
                      `🏷️ Features: ${JSON.stringify(classificationData?.detailed_analysis?.detected_features || [])}`);
-        } else {
-          const errorText = await classificationResult.text();
-          console.error('❌ Dataset-Based ML Classification FAILED:', email.subject, errorText);
-          // Continue processing other emails even if one fails
         }
 
         const emailData = {
