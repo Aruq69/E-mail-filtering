@@ -174,16 +174,14 @@ const Index = () => {
         return;
       }
       
-      // Auto-reclassify emails that don't have robust ML classification or have old classifications
+      // Only auto-reclassify emails that don't have any classification yet
       const emailsNeedingUpdate = (data || []).filter(email => 
-        !email.processed_at || 
-        !email.classification || 
-        email.threat_level === 'medium' // Update medium threat emails as they might be misclassified
+        !email.processed_at || !email.classification
       );
       
       if (emailsNeedingUpdate.length > 0) {
-        console.log(`🔄 Auto-updating ${emailsNeedingUpdate.length} emails with robust ML classifier`);
-        // Update emails in background without blocking UI
+        console.log(`🔄 Auto-updating ${emailsNeedingUpdate.length} emails with robust ML classifier (one-time only)`);
+        // Update emails in background without blocking UI or triggering refresh
         updateEmailsWithRobustClassifier(emailsNeedingUpdate);
       }
       
@@ -233,8 +231,13 @@ const Index = () => {
       }
     }
     
-    // Refresh emails after updates
-    setTimeout(() => fetchEmails(), 1000);
+    // Update the local state with new classifications without triggering a full refresh
+    setEmails(prevEmails => 
+      prevEmails.map(email => {
+        const updatedEmail = emailsToUpdate.find(e => e.id === email.id);
+        return updatedEmail ? { ...email, processed_at: new Date().toISOString() } : email;
+      })
+    );
   };
 
   const addRecentActivity = (action: string, details?: string) => {
