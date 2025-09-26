@@ -1,7 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@2.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,6 +14,73 @@ interface FeedbackEmailRequest {
   email: string;
   page_url?: string;
   user_agent?: string;
+  user_id?: string; // Add user_id to get their Outlook tokens
+}
+
+// Function to refresh Microsoft Graph access token
+async function refreshMicrosoftToken(refreshToken: string) {
+  const clientId = Deno.env.get('MICROSOFT_CLIENT_ID');
+  const clientSecret = Deno.env.get('MICROSOFT_CLIENT_SECRET');
+  
+  const tokenUrl = 'https://login.microsoftonline.com/common/oauth2/v2.0/token';
+  
+  const params = new URLSearchParams({
+    client_id: clientId!,
+    client_secret: clientSecret!,
+    grant_type: 'refresh_token',
+    refresh_token: refreshToken,
+    scope: 'https://graph.microsoft.com/Mail.Send https://graph.microsoft.com/Mail.ReadWrite offline_access'
+  });
+
+  const response = await fetch(tokenUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to refresh token: ${response.statusText}`);
+  }
+
+  return await response.json();
+}
+
+// Function to send email via Microsoft Graph
+async function sendEmailViaGraph(accessToken: string, emailData: any) {
+  const graphUrl = 'https://graph.microsoft.com/v1.0/me/sendMail';
+  
+  const response = await fetch(graphUrl, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      message: {
+        subject: emailData.subject,
+        body: {
+          contentType: 'HTML',
+          content: emailData.html
+        },
+        toRecipients: [
+          {
+            emailAddress: {
+              address: emailData.to
+            }
+          }
+        ]
+      }
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to send email via Graph: ${response.status} ${errorText}`);
+  }
+
+  return { success: true, status: response.status };
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -24,11 +89,16 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
     const feedback: FeedbackEmailRequest = await req.json();
     console.log('=== SEND-FEEDBACK-EMAIL FUNCTION CALLED ===');
     console.log('Feedback type:', feedback.feedback_type);
     console.log('Email recipient:', feedback.email);
     console.log('Category:', feedback.category);
+    console.log('User ID:', feedback.user_id);
     console.log('Full feedback object:', JSON.stringify(feedback, null, 2));
 
     // Create different email templates based on type
@@ -162,34 +232,90 @@ const handler = async (req: Request): Promise<Response> => {
       subject = getSubject();
     }
 
+    // Get user's Outlook tokens if user_id is provided
+    let accessToken = null;
+    if (feedback.user_id) {
+      console.log('=== FETCHING OUTLOOK TOKENS ===');
+      const { data: tokenData, error: tokenError } = await supabase
+        .from('outlook_tokens')
+        .select('access_token, refresh_token, expires_at, email_address')
+        .eq('user_id', feedback.user_id)
+        .single();
+
+      if (tokenError) {
+        console.error('Error fetching tokens:', tokenError);
+      } else if (tokenData) {
+        console.log('Token found for email:', tokenData.email_address);
+        
+        // Check if token needs refresh
+        const now = new Date();
+        const expiresAt = new Date(tokenData.expires_at);
+        
+        if (now >= expiresAt) {
+          console.log('Token expired, refreshing...');
+          try {
+            const refreshedTokens = await refreshMicrosoftToken(tokenData.refresh_token);
+            
+            // Update tokens in database
+            const newExpiresAt = new Date(Date.now() + (refreshedTokens.expires_in * 1000));
+            await supabase
+              .from('outlook_tokens')
+              .update({
+                access_token: refreshedTokens.access_token,
+                expires_at: newExpiresAt.toISOString(),
+              })
+              .eq('user_id', feedback.user_id);
+            
+            accessToken = refreshedTokens.access_token;
+            console.log('Token refreshed successfully');
+          } catch (refreshError) {
+            console.error('Failed to refresh token:', refreshError);
+          }
+        } else {
+          accessToken = tokenData.access_token;
+          console.log('Using existing valid token');
+        }
+      }
+    }
+
     console.log('=== ATTEMPTING TO SEND EMAIL ===');
-    console.log('From: Mail Guard <onboarding@resend.dev>');
-    console.log('To:', [feedback.email]);
+    console.log('Using Microsoft Graph:', !!accessToken);
+    console.log('To:', feedback.email);
     console.log('Subject:', subject);
-    console.log('Resend API Key present:', !!Deno.env.get("RESEND_API_KEY"));
 
-    // For testing, use verified email address to avoid Resend domain restrictions
-    const testRecipient = "arfalqtan@gmail.com"; // Your verified Resend email
-    const actualRecipient = feedback.email;
+    let emailResponse;
     
-    console.log(`=== EMAIL SEND (TEST MODE) ===`);
-    console.log(`Original recipient: ${actualRecipient}`);
-    console.log(`Test recipient: ${testRecipient}`);
-
-    const emailResponse = await resend.emails.send({
-      from: "Mail Guard <onboarding@resend.dev>",
-      to: [testRecipient], // Using verified email for testing
-      subject: `${subject} (Originally for: ${actualRecipient})`,
-      html: `
-        <div style="background-color: #f0f0f0; padding: 10px; margin-bottom: 20px; border-left: 4px solid #007bff;">
-          <strong>Test Mode:</strong> This email was originally intended for: ${actualRecipient}
-        </div>
-        ${emailHtml}
-      `,
-    });
-
-    console.log("=== EMAIL SEND RESULT ===");
-    console.log("Email sent successfully:", emailResponse);
+    if (accessToken) {
+      // Send via Microsoft Graph
+      try {
+        emailResponse = await sendEmailViaGraph(accessToken, {
+          to: feedback.email,
+          subject: subject,
+          html: emailHtml
+        });
+        console.log('=== EMAIL SENT VIA MICROSOFT GRAPH ===');
+        console.log('Response:', emailResponse);
+      } catch (graphError: any) {
+        console.error('Microsoft Graph send failed:', graphError);
+        throw new Error(`Failed to send email via Microsoft Graph: ${graphError.message || graphError}`);
+      }
+    } else {
+      // Fallback: Send notification that email couldn't be sent
+      console.log('=== NO OUTLOOK TOKEN AVAILABLE ===');
+      console.log('Cannot send email - user needs to connect Outlook account');
+      
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'User needs to connect Outlook account to send emails',
+        requiresOutlookAuth: true 
+      }), {
+        status: 400,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      });
+    }
 
     return new Response(JSON.stringify({ success: true, emailResponse }), {
       status: 200,

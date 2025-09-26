@@ -289,7 +289,8 @@ export default function AdminEmails() {
               feedback_type: 'security',
               category: 'Security Alert',
               feedback_text: `Suspicious email blocked from ${emailData.sender}. Reason: ${blockReason}. A mail rule has been created to automatically block future emails from this sender.`,
-              email: userEmail
+              email: userEmail,
+              user_id: emailData.user_id // Add user_id to get Outlook tokens
             }
           });
           
