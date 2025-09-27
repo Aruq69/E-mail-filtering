@@ -419,7 +419,7 @@ export default function AdminEmails() {
       case 'high': return 'destructive';
       case 'medium': return 'secondary'; // Yellow for suspicious
       case 'low': return 'secondary'; // Yellow for questionable  
-      case 'safe': return 'default'; // Green for safe
+      case 'safe': return 'safe'; // Green for safe
       default: return 'outline';
     }
   };

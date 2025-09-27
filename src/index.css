@@ -155,8 +155,8 @@
     --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
     
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --accent: 142 69% 58%; /* Green for safe emails */
+    --accent-foreground: 142 10% 5%; /* Dark text on green */
     
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -211,8 +211,8 @@
     --muted: 220 15% 18%;
     --muted-foreground: 196 48% 65%;
     
-    --accent: 142 69% 58%;
-    --accent-foreground: 220 13% 9%;
+    --accent: 142 69% 58%; /* Green for safe emails */
+    --accent-foreground: 142 10% 95%; /* Light text on green for dark mode */
     
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
