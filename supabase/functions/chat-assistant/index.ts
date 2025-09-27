@@ -6,6 +6,17 @@ const groqApiKey = Deno.env.get('GROQ_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
+// Validate required environment variables
+if (!groqApiKey) {
+  console.error('GROQ_API_KEY environment variable is missing');
+}
+if (!supabaseUrl) {
+  console.error('SUPABASE_URL environment variable is missing');
+}
+if (!supabaseServiceKey) {
+  console.error('SUPABASE_SERVICE_ROLE_KEY environment variable is missing');
+}
+
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const corsHeaders = {
@@ -19,6 +30,17 @@ serve(async (req) => {
   }
 
   try {
+    // Check if required API key is available
+    if (!groqApiKey) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'AI service unavailable', 
+          details: 'GROQ_API_KEY is not configured' 
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { message, emailData, conversationHistory } = await req.json();
 
     if (!message) {
