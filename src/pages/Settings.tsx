@@ -69,7 +69,7 @@ const SettingsPage = () => {
           .from('user_preferences')
           .insert({
             user_id: user.id,
-            never_store_data: true, // Privacy-first default
+            never_store_data: false, // Always store emails by default
             email_notifications: true,
             security_alerts: true,
             language: 'en',
@@ -307,7 +307,7 @@ const SettingsPage = () => {
           .from('user_preferences')
           .insert({
             user_id: user.id,
-            never_store_data: true,
+            never_store_data: false, // Always store emails by default
             email_notifications: true,
             security_alerts: true,
             language: 'en',

@@ -339,10 +339,9 @@ const Index = () => {
         const processedCount = data.emails_processed || 0;
         const totalFetched = data.total_emails_fetched || 0;
         
-        addRecentActivity(`Processed ${processedCount} emails`, 
-          userPreferences?.never_store_data ? "Analyzed without storing (Privacy Mode)" : "Analyzed and stored");
+        addRecentActivity(`Processed ${processedCount} emails`, "Analyzed and stored");
         
-        // Always store emails in session state for display, regardless of privacy mode
+        // Always store emails in session state for display
         if (data.emails && data.emails.length > 0) {
           setSessionEmails(data.emails);
         }
@@ -352,10 +351,8 @@ const Index = () => {
           description: `Successfully fetched ${totalFetched} emails`,
         });
         
-        // Only refresh database emails if not in privacy mode
-        if (!userPreferences?.never_store_data) {
-          fetchEmails();
-        }
+        // Always refresh database emails to show persisted data
+        fetchEmails();
       } else {
         // Check if it's a session timeout / reconnect required error
         if (data.reconnect_required) {
@@ -593,10 +590,11 @@ const Index = () => {
     }
   };
 
-  // Always display session emails first (for both privacy mode and regular mode)
-  // This ensures we show the latest fetched emails immediately
+  // Display stored emails first, then session emails for immediate feedback
+  // This ensures emails persist in database and are shown until manually cleared
   const emailsToDisplay = React.useMemo(() => {
-    const displayEmails = sessionEmails.length > 0 ? sessionEmails : emails;
+    // Use stored emails as primary source, session emails for immediate feedback
+    const displayEmails = emails.length > 0 ? emails : sessionEmails;
     
     // DEDUPLICATE emails by ID to prevent any UI duplicates
     const uniqueEmails = displayEmails.reduce((acc, email) => {
@@ -614,7 +612,7 @@ const Index = () => {
       firstEmailId: uniqueEmails[0]?.id
     });
     return uniqueEmails;
-  }, [sessionEmails, emails]);
+  }, [emails, sessionEmails]);
   
   const filteredEmails = React.useMemo(() => {
     return emailsToDisplay.filter(email => {
@@ -834,10 +832,7 @@ const Index = () => {
             <CardContent className="pt-1 px-3 sm:px-6 pb-3 sm:pb-6">
               <div className="text-lg sm:text-xl font-bold text-primary">{emailsToDisplay.length}</div>
               <div className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">
-                {userPreferences?.never_store_data ? 
-                  'Session only (privacy mode)' : 
-                  (threatFilter === 'all' ? 'All emails selected' : `Showing ${emailsToDisplay.length} most recent`)
-                }
+                {threatFilter === 'all' ? 'All emails selected' : `Showing ${emailsToDisplay.length} emails`}
               </div>
             </CardContent>
           </Card>
