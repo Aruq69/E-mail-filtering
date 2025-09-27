@@ -436,8 +436,9 @@ export default function AdminEmails() {
   const getThreatBadgeVariant = (threatLevel: string | null) => {
     switch (threatLevel?.toLowerCase()) {
       case 'high': return 'destructive';
-      case 'medium': return 'secondary';
-      case 'low': return 'outline';
+      case 'medium': return 'secondary'; // Yellow for suspicious
+      case 'low': return 'secondary'; // Yellow for questionable  
+      case 'safe': return 'default'; // Green for safe
       default: return 'outline';
     }
   };

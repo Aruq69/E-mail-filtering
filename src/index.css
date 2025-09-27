@@ -149,8 +149,8 @@
     --primary: 196 100% 50%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
+    --secondary: 45 93% 47%; /* Yellow for suspicious/questionable */
+    --secondary-foreground: 45 10% 5%; /* Dark text on yellow */
     
     --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
@@ -205,8 +205,8 @@
     --primary: 196 100% 50%;
     --primary-foreground: 220 13% 9%;
     
-    --secondary: 271 81% 56%;
-    --secondary-foreground: 220 13% 9%;
+    --secondary: 45 93% 47%; /* Yellow for suspicious/questionable */
+    --secondary-foreground: 45 10% 95%; /* Light text on yellow for dark mode */
     
     --muted: 220 15% 18%;
     --muted-foreground: 196 48% 65%;
