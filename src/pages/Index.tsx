@@ -278,15 +278,27 @@ const Index = () => {
     setIsProcessing(true);
     addRecentActivity("Outlook sync initiated", "Checking for new emails...");
     
+    // Add timeout to prevent getting stuck
+    const timeout = 180000; // 3 minutes timeout
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Sync timeout - operation took too long')), timeout)
+    );
+    
     try {
       console.log('🔄 Invoking Outlook email fetch...');
       
-      const { data, error } = await supabase.functions.invoke('fetch-outlook-emails', {
+      const fetchPromise = supabase.functions.invoke('fetch-outlook-emails', {
         body: { user_id: user.id },
         headers: {
           'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
         }
       });
+
+      // Race between the actual fetch and timeout
+      const { data, error } = await Promise.race([
+        fetchPromise,
+        timeoutPromise
+      ]) as any;
 
       console.log('🔄 Fetch response received:', { data, error, hasData: !!data, hasError: !!error });
 
@@ -305,8 +317,14 @@ const Index = () => {
         
         const processedCount = data.emails_processed || 0;
         const totalFetched = data.total_emails_fetched || 0;
+        const remainingEmails = data.remaining_emails || 0;
         
-        addRecentActivity(`Processed ${processedCount} emails`, 
+        let activityMessage = `Processed ${processedCount} emails`;
+        if (remainingEmails > 0) {
+          activityMessage += ` (${remainingEmails} queued for next sync)`;
+        }
+        
+        addRecentActivity(activityMessage, 
           userPreferences?.never_store_data ? "Analyzed without storing (Privacy Mode)" : "Analyzed and stored");
         
         // Always store emails in session state for display, regardless of privacy mode
@@ -314,9 +332,14 @@ const Index = () => {
           setSessionEmails(data.emails);
         }
         
+        let toastMessage = `Successfully processed ${processedCount} out of ${totalFetched} emails`;
+        if (remainingEmails > 0) {
+          toastMessage += `. ${remainingEmails} emails will be processed in the next sync to prevent timeouts.`;
+        }
+        
         toast({
           title: "Outlook sync completed",
-          description: `Successfully fetched ${totalFetched} emails`,
+          description: toastMessage,
         });
         
         // Only refresh database emails if not in privacy mode
@@ -333,11 +356,18 @@ const Index = () => {
         }
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Outlook sync error:', error);
+      addRecentActivity("Sync failed", error.message || "Unknown error");
+      
+      let errorMessage = "Failed to fetch emails from Outlook. Please try again.";
+      if (error.message?.includes('timeout')) {
+        errorMessage = "Sync timed out. Your inbox might be large - try again or contact support.";
+      }
+      
       toast({
         title: "Outlook sync failed",
-        description: error.message || "Failed to fetch emails from Outlook. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -683,7 +713,7 @@ const Index = () => {
             {outlookConnected && (
               <Button 
                 onClick={fetchOutlookEmails} 
-                disabled={loading} 
+                disabled={loading || isProcessing} 
                 variant="outline" 
                 className={`w-full sm:w-auto border-primary/30 hover:border-primary/50 hover-button text-xs sm:text-sm ${isProcessing ? 'animate-pulse' : ''}`}
                 size="sm"
@@ -694,6 +724,24 @@ const Index = () => {
                   <Activity className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 )}
                 {isProcessing ? 'Processing...' : 'Sync Outlook'}
+              </Button>
+            )}
+            {outlookConnected && (
+              <Button 
+                onClick={() => {
+                  // Reset stuck processing states
+                  setLoading(false);
+                  setIsProcessing(false);
+                  toast({
+                    title: "States Reset",
+                    description: "Processing states have been reset. You can now sync again.",
+                  });
+                }}
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                Reset if Stuck
               </Button>
             )}
             {outlookConnected && (
