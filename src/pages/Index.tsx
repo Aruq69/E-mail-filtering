@@ -52,6 +52,9 @@ const Index = () => {
   const [userPreferences, setUserPreferences] = useState<{never_store_data: boolean} | null>(null);
   const [recentActivity, setRecentActivity] = useState<Array<{id: string, action: string, timestamp: Date, details?: string}>>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [alertClicked, setAlertClicked] = useState(false);
+  const [highThreatClicked, setHighThreatClicked] = useState(false);
+  const [mediumThreatClicked, setMediumThreatClicked] = useState(false);
   const [emailStats, setEmailStats] = useState<any[]>([]);
   const { toast } = useToast();
   const { user, signOut, loading: authLoading } = useAuth();
@@ -701,17 +704,20 @@ const Index = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => navigate('/alerts')}
+                  onClick={() => {
+                    setAlertClicked(true);
+                    navigate('/alerts');
+                  }}
                   className={`ml-2 border-border/20 hover:border-primary/50 relative ${
-                    pendingAlerts.length > 0 
+                    pendingAlerts.length > 0 && !alertClicked
                       ? 'animate-pulse bg-red-500/10 border-red-500/30 hover:border-red-500/50' 
                       : ''
                   }`}
                 >
                   <AlertTriangle className={`h-3 w-3 ${
-                    pendingAlerts.length > 0 ? 'text-red-500 animate-pulse' : ''
+                    pendingAlerts.length > 0 && !alertClicked ? 'text-red-500 animate-pulse' : ''
                   }`} />
-                  {pendingAlerts.length > 0 && (
+                  {pendingAlerts.length > 0 && !alertClicked && (
                     <>
                       {/* Alert count badge */}
                       <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center animate-pulse">
@@ -720,6 +726,12 @@ const Index = () => {
                       {/* Pulsing ring animation */}
                       <span className="absolute inset-0 rounded-md border-2 border-red-500/50 animate-ping" />
                     </>
+                  )}
+                  {pendingAlerts.length > 0 && alertClicked && (
+                    /* Static count badge when clicked */
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                      {pendingAlerts.length}
+                    </span>
                   )}
                 </Button>
               </div>
@@ -834,14 +846,17 @@ const Index = () => {
             className={`threat-high border-border/20 bg-card/50 backdrop-blur-sm hover-card cursor-pointer transition-all duration-300 hover:scale-105 ${
               threatFilter === 'high' ? 'ring-2 ring-red-500/50 bg-red-500/10' : ''
             } ${
-              (threatStats.high || 0) > 0 ? 'animate-pulse bg-red-500/5 border-red-500/20' : ''
+              (threatStats.high || 0) > 0 && !highThreatClicked ? 'animate-pulse bg-red-500/5 border-red-500/20' : ''
             }`}
-            onClick={() => setThreatFilter(threatFilter === 'high' ? null : 'high')}
+            onClick={() => {
+              setHighThreatClicked(true);
+              setThreatFilter(threatFilter === 'high' ? null : 'high');
+            }}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 sm:px-6 pt-3 sm:pt-6">
               <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground">HIGH THREATS</CardTitle>
               <AlertTriangle className={`h-2 w-2 sm:h-3 sm:w-3 text-destructive ${
-                (threatStats.high || 0) > 0 ? 'animate-bounce' : ''
+                (threatStats.high || 0) > 0 && !highThreatClicked ? 'animate-bounce' : ''
               }`} />
             </CardHeader>
             <CardContent className="pt-1 px-3 sm:px-6 pb-3 sm:pb-6">
@@ -856,14 +871,17 @@ const Index = () => {
             className={`threat-medium border-border/20 bg-card/50 backdrop-blur-sm hover-card cursor-pointer transition-all duration-300 hover:scale-105 ${
               threatFilter === 'medium' ? 'ring-2 ring-yellow-500/50 bg-yellow-500/10' : ''
             } ${
-              (threatStats.medium || 0) > 0 ? 'animate-pulse bg-yellow-500/5 border-yellow-500/20' : ''
+              (threatStats.medium || 0) > 0 && !mediumThreatClicked ? 'animate-pulse bg-yellow-500/5 border-yellow-500/20' : ''
             }`}
-            onClick={() => setThreatFilter(threatFilter === 'medium' ? null : 'medium')}
+            onClick={() => {
+              setMediumThreatClicked(true);
+              setThreatFilter(threatFilter === 'medium' ? null : 'medium');
+            }}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 sm:px-6 pt-3 sm:pt-6">
               <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground">MEDIUM THREATS</CardTitle>
               <Clock className={`h-2 w-2 sm:h-3 sm:w-3 text-yellow-500 ${
-                (threatStats.medium || 0) > 0 ? 'animate-pulse' : ''
+                (threatStats.medium || 0) > 0 && !mediumThreatClicked ? 'animate-pulse' : ''
               }`} />
             </CardHeader>
             <CardContent className="pt-1 px-3 sm:px-6 pb-3 sm:pb-6">
