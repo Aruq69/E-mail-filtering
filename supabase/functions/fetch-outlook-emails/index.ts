@@ -162,9 +162,9 @@ serve(async (req) => {
       }
     }
 
-    // Fetch emails from Microsoft Graph API
-    console.log('📧 Fetching emails from Microsoft Graph API...');
-    const graphResponse = await fetch('https://graph.microsoft.com/v1.0/me/messages?$top=10&$orderby=receivedDateTime desc', {
+    // Fetch ALL emails from Microsoft Graph API (no limit)
+    console.log('📧 Fetching ALL emails from Microsoft Graph API...');
+    const graphResponse = await fetch('https://graph.microsoft.com/v1.0/me/messages?$orderby=receivedDateTime desc', {
       headers: {
         'Authorization': `Bearer ${tokenData.access_token}`,
         'Content-Type': 'application/json',
