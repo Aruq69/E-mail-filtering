@@ -624,7 +624,7 @@ const Index = () => {
         (threatFilter === 'all') ||
         (threatFilter === 'high' && email.threat_level === 'high') ||
         (threatFilter === 'medium' && email.threat_level === 'medium') ||
-        (threatFilter === 'low' && email.threat_level === 'low');
+        (threatFilter === 'low' && (email.threat_level === 'low' || email.threat_level === 'safe' || email.classification === 'legitimate'));
       
       return matchesSearch && matchesThreatFilter;
     });
