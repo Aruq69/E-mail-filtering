@@ -189,37 +189,40 @@ serve(async (req) => {
     const graphData = await graphResponse.json();
     const emails = graphData.value || [];
     
-    // Get already processed email IDs to avoid duplicates
-    const { data: existingEmails } = await supabase
+    // Clear all existing emails for this user to prevent duplicates
+    console.log('🗑️ Clearing existing emails to prevent duplicates...');
+    const { error: deleteError } = await supabase
       .from('emails')
-      .select('outlook_id')
+      .delete()
       .eq('user_id', user.id);
     
-    const existingIds = new Set(existingEmails?.map(e => e.outlook_id) || []);
+    if (deleteError) {
+      console.error('❌ Failed to clear existing emails:', deleteError);
+      // Continue anyway - we'll use upsert to handle duplicates
+    } else {
+      console.log('✅ Cleared existing emails for fresh sync');
+    }
     
-    // Filter out emails that have already been processed
-    const newEmails = emails.filter((email: any) => !existingIds.has(email.id));
+    console.log(`Found ${emails.length} total emails, processing all emails for fresh sync`);
     
-    console.log(`Found ${emails.length} total emails, ${newEmails.length} new emails to process`);
-    
-    if (newEmails.length === 0) {
+    if (emails.length === 0) {
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'No new emails to process',
+          message: 'No emails found in Outlook',
           emails_processed: 0,
-          total_emails_fetched: emails.length,
+          total_emails_fetched: 0,
           emails: [],
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
-    // Process emails with HuggingFace-Powered Dataset-Based ML analysis
+    // Process all emails with HuggingFace-Powered Dataset-Based ML analysis
     const processedEmails = [];
-    console.log(`🤖 Processing ${newEmails.length} emails with HuggingFace Dataset-Based ML Classifier...`);
+    console.log(`🤖 Processing ${emails.length} emails with HuggingFace Dataset-Based ML Classifier...`);
     
-    for (const email of newEmails) {
+    for (const email of emails) {
       try {
         console.log(`📧 Processing: "${email.subject}" from ${email.from?.emailAddress?.address}`);
 
@@ -327,7 +330,7 @@ serve(async (req) => {
     }
 
     console.log(`🎯 === DATASET-BASED ML ANALYSIS COMPLETE ===`);
-    console.log(`📊 Processed ${processedEmails.length}/${newEmails.length} emails with Dataset-Based ML`);
+    console.log(`📊 Processed ${processedEmails.length}/${emails.length} emails with Dataset-Based ML`);
     console.log(`🤖 All emails analyzed with same classifier as ML Analytics real-time testing`);
     console.log(`📈 Results: classification, threat levels, confidence scores, and detected features`);
     
@@ -337,7 +340,7 @@ serve(async (req) => {
         message: `Successfully processed ${processedEmails.length} new emails out of ${emails.length} total`,
         emails_processed: processedEmails.length,
         total_emails_fetched: emails.length,
-        new_emails_found: newEmails.length,
+        new_emails_found: emails.length,
         emails: processedEmails, // Return processed emails for display
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
