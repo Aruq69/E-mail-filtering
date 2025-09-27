@@ -780,8 +780,11 @@ serve(async (req: Request) => {
 
     console.log('Robust ML classification completed:', result);
 
-    // Store result in database if user_id provided
-    if (user_id) {
+    // Only store result in database for new emails, not for re-analysis
+    // Re-analysis calls should only return classification data
+    const isReanalysis = req.headers.get('x-reanalysis') === 'true';
+    
+    if (user_id && !isReanalysis) {
       await storeClassificationResult(
         user_id, 
         subject, 

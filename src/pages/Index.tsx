@@ -412,13 +412,16 @@ const Index = () => {
         description: "Using latest ML classifier...",
       });
 
-      // Call robust classifier
+      // Call robust classifier with re-analysis header
       const { data: classificationData, error } = await supabase.functions.invoke('robust-email-classifier', {
         body: {
           subject: email.subject,
           sender: email.sender,
           content: email.content,
           user_id: user.id
+        },
+        headers: {
+          'x-reanalysis': 'true'  // Tell classifier this is a re-analysis, don't store new record
         }
       });
 
