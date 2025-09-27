@@ -365,17 +365,17 @@ const SettingsPage = () => {
     
     setOutlookLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('outlook-auth', {
-        body: { action: 'get_auth_url' }
+      // Use the unified Outlook OAuth flow (same as sign-in)
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'azure',
+        options: {
+          redirectTo: `${window.location.origin}/outlook-callback`,
+          scopes: 'openid email profile offline_access https://graph.microsoft.com/Mail.Read https://graph.microsoft.com/Mail.ReadWrite https://graph.microsoft.com/MailboxSettings.Read https://graph.microsoft.com/User.Read'
+        }
       });
 
       if (error) {
         throw error;
-      }
-
-      if (data?.auth_url) {
-        // Redirect to the OAuth URL
-        window.location.href = data.auth_url;
       }
     } catch (error) {
       console.error('Error connecting Outlook:', error);
@@ -788,12 +788,12 @@ const SettingsPage = () => {
                       )}
                       <div>
                         <p className="font-medium">
-                          {outlookConnected ? "Disconnect Outlook" : "Connect Outlook"}
+                          {outlookConnected ? "Disconnect Outlook" : "Reconnect Outlook"}
                         </p>
                         <p className="text-sm text-muted-foreground">
                           {outlookConnected 
                             ? "Remove Outlook connection and delete stored tokens"
-                            : "Authorize Mail Guard to access your Outlook for security analysis"
+                            : "Reconnect your Outlook account to refresh access tokens"
                           }
                         </p>
                       </div>
@@ -820,12 +820,12 @@ const SettingsPage = () => {
                               <Unlink className="h-4 w-4 mr-2" />
                               Disconnect
                             </>
-                          ) : (
-                            <>
-                              <Link className="h-4 w-4 mr-2" />
-                              Connect Outlook Account
-                            </>
-                          )}
+                           ) : (
+                             <>
+                               <Link className="h-4 w-4 mr-2" />
+                               Reconnect
+                             </>
+                           )}
                         </>
                       )}
                     </Button>

@@ -830,94 +830,43 @@ const Index = () => {
           </Card>
         </div>
 
-        {/* Outlook Connection */}
+        {/* Connection Status */}
         {!outlookConnected && (
           <Card className="border-border/20 bg-card/50 backdrop-blur-sm hover-card">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Mail className="h-5 w-5 text-primary" />
-                <span>Connect Outlook Account</span>
+                <span>Outlook Connection Required</span>
               </CardTitle>
               <CardDescription>
-                Connect your Microsoft Outlook account to start analyzing emails for threats
+                Please refresh to reconnect your Outlook account or manage connections in Settings
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Feature Cards Section */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center mb-6">
-                {/* Universal */}
-                <div className="border border-border/20 bg-gradient-to-br from-orange-500/10 via-orange-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
-                  <div className="relative mb-3">
-                    <div className="p-3 rounded-full bg-orange-500/20 w-fit mx-auto">
-                      <Shield className="h-6 w-6 text-orange-500" />
-                    </div>
-                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-orange-500 rounded-full animate-pulse" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-foreground mb-1">Universal</h3>
-                  <p className="text-xs text-muted-foreground">Works with Outlook</p>
+            <CardContent className="space-y-4">
+              <div className="text-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center justify-center space-x-2 mb-2">
+                  <Mail className="h-6 w-6 text-blue-600" />
+                  <span className="font-medium text-blue-800">Connection Status</span>
                 </div>
-                
-                {/* AI Analysis */}
-                <div className="border border-border/20 bg-gradient-to-br from-cyan-500/10 via-cyan-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
-                  <div className="relative mb-3">
-                    <div className="p-3 rounded-full bg-cyan-500/20 w-fit mx-auto">
-                      <Eye className="h-6 w-6 text-cyan-500" />
-                    </div>
-                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-cyan-500 rounded-full animate-pulse" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-foreground mb-1">AI Analysis</h3>
-                  <p className="text-xs text-muted-foreground">Real-time detection</p>
-                </div>
-                
-                {/* Secure */}
-                <div className="border border-border/20 bg-gradient-to-br from-pink-500/10 via-pink-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
-                  <div className="relative mb-3">
-                    <div className="p-3 rounded-full bg-pink-500/20 w-fit mx-auto">
-                      <Database className="h-6 w-6 text-pink-500" />
-                    </div>
-                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-pink-500 rounded-full animate-pulse" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-foreground mb-1">Secure</h3>
-                  <p className="text-xs text-muted-foreground">OAuth 2.0</p>
-                </div>
-                
-                {/* ML Engine */}
-                <div className="border border-border/20 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent backdrop-blur-sm rounded-lg p-4 text-center hover:scale-105 transition-all duration-300">
-                  <div className="relative mb-3">
-                    <div className="p-3 rounded-full bg-emerald-500/20 w-fit mx-auto">
-                      <Database className="h-6 w-6 text-emerald-500" />
-                    </div>
-                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-emerald-500 rounded-full animate-pulse" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-foreground mb-1">ML Engine</h3>
-                  <p className="text-xs text-muted-foreground">Adaptive learning</p>
-                </div>
+                <p className="text-sm text-blue-700">
+                  Your Outlook account needs to be connected to analyze emails. Go to Settings to manage your connection.
+                </p>
               </div>
-
-              {/* Outlook Connection Button */}
-              <div className="text-center space-y-4">
-                <div className="relative p-6 rounded-lg bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 backdrop-blur-sm">
-                  <div className="flex items-center justify-center space-x-4 mb-4">
-                    <div className="p-3 rounded-full bg-primary/20">
-                      <Mail className="h-8 w-8 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-foreground">Microsoft Outlook Integration</h3>
-                      <p className="text-sm text-muted-foreground">Secure OAuth 2.0 connection to your Microsoft account</p>
-                    </div>
-                  </div>
-                  <Button onClick={connectOutlook} className="w-full gradient-button" size="lg">
-                    <Mail className="h-5 w-5 mr-2" />
-                    Connect Outlook Account
-                  </Button>
-                </div>
-                
-                <div className="text-xs text-muted-foreground bg-muted/20 p-3 rounded border border-border/20">
-                  <div className="flex items-center space-x-2">
-                    <Shield className="h-4 w-4 text-primary" />
-                    <span>Secure OAuth 2.0 authentication • Read-only access • No passwords stored</span>
-                  </div>
-                </div>
+              
+              <div className="flex space-x-3">
+                <Button 
+                  onClick={() => window.location.reload()} 
+                  variant="outline" 
+                  className="flex-1"
+                >
+                  Refresh Page
+                </Button>
+                <Button 
+                  onClick={() => navigate("/settings")} 
+                  className="flex-1"
+                >
+                  Go to Settings
+                </Button>
               </div>
             </CardContent>
           </Card>
