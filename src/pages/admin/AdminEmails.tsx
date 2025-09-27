@@ -427,8 +427,9 @@ export default function AdminEmails() {
   const getThreatIcon = (threatLevel: string | null) => {
     switch (threatLevel?.toLowerCase()) {
       case 'high': return <AlertTriangle className="h-4 w-4 text-red-500" />;
-      case 'medium': return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'low': return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'medium': 
+      case 'low': return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+      case 'safe': return <CheckCircle className="h-4 w-4 text-green-500" />;
       default: return <Shield className="h-4 w-4 text-gray-500" />;
     }
   };

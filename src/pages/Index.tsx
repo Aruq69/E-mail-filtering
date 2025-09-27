@@ -528,12 +528,13 @@ const Index = () => {
           </div>
         );
       case 'medium': 
+      case 'low':
         return (
           <div className="flex items-center justify-center w-6 h-6 rounded-full bg-yellow-500 hover:bg-yellow-600 hover:shadow-lg hover:shadow-yellow-500/50 transition-all duration-300 cursor-pointer">
-            <Clock className="h-3 w-3 text-white" />
+            <AlertTriangle className="h-3 w-3 text-white" />
           </div>
         );
-      case 'low': 
+      case 'safe':
         return (
           <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500 hover:bg-green-600 hover:shadow-lg hover:shadow-green-500/50 transition-all duration-300 cursor-pointer">
             <CheckCircle className="h-3 w-3 text-white" />
@@ -541,7 +542,7 @@ const Index = () => {
         );
       default: 
         return (
-          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-500 hover:bg-gray-600 hover:shadow-lg hover:shadow-gray-500/50 transition-all duration-300 cursor-pointer">
+          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-400 hover:bg-gray-500 hover:shadow-lg hover:shadow-gray-400/50 transition-all duration-300 cursor-pointer">
             <Shield className="h-3 w-3 text-white" />
           </div>
         );
@@ -553,8 +554,9 @@ const Index = () => {
       case 'high': 
         return 'hover:shadow-[0_0_20px_rgba(239,68,68,0.5)] hover:border-red-500/50';
       case 'medium': 
+      case 'low':
         return 'hover:shadow-[0_0_20px_rgba(234,179,8,0.5)] hover:border-yellow-500/50';
-      case 'low': 
+      case 'safe':
         return 'hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] hover:border-green-500/50';
       default: 
         return 'hover:shadow-[0_0_20px_rgba(107,114,128,0.5)] hover:border-gray-500/50';
