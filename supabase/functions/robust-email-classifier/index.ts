@@ -593,9 +593,10 @@ class RobustEmailClassifier {
     
     if (isWhitelistedDomain) {
       isLegitimate = true;
-      suspiciousScore = 0; // Override any suspicious patterns for legitimate domains
+      // Don't override completely - just reduce suspicious score as a bonus
+      suspiciousScore = Math.max(0, suspiciousScore - 0.3); // Give legitimate domains a bonus, not an override
       detectedPatterns.push(`Verified legitimate domain: ${domain}`);
-      return { suspiciousScore, detectedPatterns, isLegitimate };
+      // Continue with analysis instead of returning early
     }
     
     // Check against known suspicious domains
@@ -764,13 +765,8 @@ class RobustEmailClassifier {
     let threatLevel = 'safe';
     let threatType = null;
     
-    // Check if sender is from a legitimate domain first
-    if (senderSecurity.isLegitimate) {
-      classification = 'legitimate';
-      threatLevel = 'safe';
-      threatType = null;
-      console.log(`✅ Legitimate sender detected: ${sender} - Overriding other classification`);
-    } else if (hfAnalysis.toxicity > 0.7 || detectedScamPatterns.length >= 2) {
+    // Check content analysis regardless of domain - legitimate domains get bonus but not complete override
+    if (hfAnalysis.toxicity > 0.7 || detectedScamPatterns.length >= 2) {
       classification = 'spam';
       threatLevel = 'high';
       threatType = 'spam';
@@ -778,19 +774,33 @@ class RobustEmailClassifier {
       classification = 'spam';
       threatLevel = 'high';
       threatType = 'spam';
-    } else if (finalScore >= mediumThreshold || senderSecurity.suspiciousScore > 0.6) {
+    } else if (finalScore >= mediumThreshold) {
       classification = 'suspicious';
-      threatLevel = 'medium';  // Changed from 'high' to 'medium' for suspicious
+      threatLevel = 'medium';
       threatType = 'suspicious';
     } else if (finalScore >= lowThreshold || structureAnalysis.hasPhishingDomain || misspellingAnalysis.suspiciousScore > 0.3) {
       classification = 'questionable';
-      threatLevel = 'low';  // Changed from 'medium' to 'low' for questionable
+      threatLevel = 'low';
       threatType = 'questionable';
     } else {
-      // Most emails should be classified as legitimate with enhanced analysis
+      // Legitimate domain bonus applied in calculation, not as override
       classification = 'legitimate';
       threatLevel = 'safe';
       threatType = null;
+    }
+    
+    // Give extra legitimacy boost AFTER analysis if from trusted domain
+    if (senderSecurity.isLegitimate && classification !== 'spam') {
+      console.log(`✅ Legitimate sender detected: ${sender} - Applying domain trust bonus`);
+      // If borderline spam/suspicious from trusted domain, downgrade by one level
+      if (classification === 'suspicious') {
+        classification = 'questionable';
+        threatLevel = 'low';
+      } else if (classification === 'questionable') {
+        classification = 'legitimate';
+        threatLevel = 'safe';
+        threatType = null;
+      }
     }
     
     console.log(`Classification: ${classification}`);
