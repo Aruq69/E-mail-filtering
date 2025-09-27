@@ -189,21 +189,28 @@ serve(async (req) => {
     const graphData = await graphResponse.json();
     const emails = graphData.value || [];
     
-    // Clear all existing emails for this user to prevent duplicates
-    console.log('🗑️ Clearing existing emails to prevent duplicates...');
-    const { error: deleteError } = await supabase
+    // Get existing emails to check for duplicates by multiple criteria
+    console.log('🔍 Checking for existing emails to prevent duplicates...');
+    const { data: existingEmails } = await supabase
       .from('emails')
-      .delete()
+      .select('outlook_id, message_id, subject, sender, received_date')
       .eq('user_id', user.id);
     
-    if (deleteError) {
-      console.error('❌ Failed to clear existing emails:', deleteError);
-      // Continue anyway - we'll use upsert to handle duplicates
-    } else {
-      console.log('✅ Cleared existing emails for fresh sync');
-    }
+    console.log(`Found ${existingEmails?.length || 0} existing emails in database`);
     
-    console.log(`Found ${emails.length} total emails, processing all emails for fresh sync`);
+    // Create a set of unique identifiers for existing emails
+    const existingEmailIdentifiers = new Set();
+    existingEmails?.forEach(email => {
+      // Use multiple criteria to identify duplicates
+      const identifier1 = `${email.outlook_id}`;
+      const identifier2 = `${email.subject}|${email.sender}|${email.received_date}`;
+      existingEmailIdentifiers.add(identifier1);
+      existingEmailIdentifiers.add(identifier2);
+    });
+    
+    console.log(`Created ${existingEmailIdentifiers.size} unique identifiers for duplicate detection`);
+    
+    console.log(`Found ${emails.length} total emails, filtering for unique emails only`);
     
     if (emails.length === 0) {
       return new Response(
@@ -218,11 +225,37 @@ serve(async (req) => {
       );
     }
     
-    // Process all emails with HuggingFace-Powered Dataset-Based ML analysis
-    const processedEmails = [];
-    console.log(`🤖 Processing ${emails.length} emails with HuggingFace Dataset-Based ML Classifier...`);
+    // Filter out duplicate emails before processing
+    const uniqueEmails = [];
+    const processedIdentifiers = new Set();
     
     for (const email of emails) {
+      // Check for duplicates using multiple criteria
+      const identifier1 = `${email.id}`;
+      const identifier2 = `${email.subject}|${email.from?.emailAddress?.address}|${email.receivedDateTime}`;
+      
+      // Skip if this email already exists in database or in current batch
+      if (existingEmailIdentifiers.has(identifier1) || 
+          existingEmailIdentifiers.has(identifier2) ||
+          processedIdentifiers.has(identifier1) ||
+          processedIdentifiers.has(identifier2)) {
+        console.log(`⏭️ Skipping duplicate email: "${email.subject}" from ${email.from?.emailAddress?.address}`);
+        continue;
+      }
+      
+      // Add to processed set to prevent duplicates within current batch
+      processedIdentifiers.add(identifier1);
+      processedIdentifiers.add(identifier2);
+      uniqueEmails.push(email);
+    }
+    
+    console.log(`📧 Found ${uniqueEmails.length} unique emails out of ${emails.length} total (${emails.length - uniqueEmails.length} duplicates filtered)`);
+    
+    // Process only unique emails with HuggingFace-Powered Dataset-Based ML analysis
+    const processedEmails = [];
+    console.log(`🤖 Processing ${uniqueEmails.length} unique emails with HuggingFace Dataset-Based ML Classifier...`);
+    
+    for (const email of uniqueEmails) {
       try {
         console.log(`📧 Processing: "${email.subject}" from ${email.from?.emailAddress?.address}`);
 
@@ -277,13 +310,10 @@ serve(async (req) => {
           keywords: classificationData?.detailed_analysis?.detected_features || null,
         };
 
-        // Upsert email into database (insert or update if exists)
+        // Insert unique email into database
         const { data: insertedEmail, error: insertError } = await supabase
           .from('emails')
-          .upsert(emailData, { 
-            onConflict: 'message_id',
-            ignoreDuplicates: false 
-          })
+          .insert(emailData)
           .select()
           .single();
 
@@ -330,17 +360,18 @@ serve(async (req) => {
     }
 
     console.log(`🎯 === DATASET-BASED ML ANALYSIS COMPLETE ===`);
-    console.log(`📊 Processed ${processedEmails.length}/${emails.length} emails with Dataset-Based ML`);
+    console.log(`📊 Processed ${processedEmails.length}/${uniqueEmails.length} unique emails with Dataset-Based ML`);
     console.log(`🤖 All emails analyzed with same classifier as ML Analytics real-time testing`);
     console.log(`📈 Results: classification, threat levels, confidence scores, and detected features`);
     
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Successfully processed ${processedEmails.length} new emails out of ${emails.length} total`,
+        message: `Successfully processed ${processedEmails.length} new unique emails out of ${emails.length} total (${emails.length - uniqueEmails.length} duplicates filtered)`,
         emails_processed: processedEmails.length,
         total_emails_fetched: emails.length,
-        new_emails_found: emails.length,
+        new_emails_found: uniqueEmails.length,
+        duplicates_filtered: emails.length - uniqueEmails.length,
         emails: processedEmails, // Return processed emails for display
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
