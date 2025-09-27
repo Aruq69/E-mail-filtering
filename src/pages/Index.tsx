@@ -603,17 +603,19 @@ const Index = () => {
   });
 
   const threatStats = emailsToDisplay.reduce((acc, email) => {
-    // Map classification to threat levels for dashboard display
+    // More accurate threat level mapping based on actual threat_level field
     let displayCategory;
-    if (email.classification === 'spam' && email.threat_level === 'high') {
+    
+    if (email.threat_level === 'high') {
       displayCategory = 'high';
-    } else if (email.classification === 'spam' && email.threat_level === 'medium') {
-      displayCategory = 'medium'; 
-    } else if (email.classification === 'legitimate' || email.threat_level === 'low') {
-      displayCategory = 'low'; // Legitimate emails count as low risk
-    } else if (email.classification === 'pending') {
-      displayCategory = 'medium'; // Pending emails count as medium risk
+    } else if (email.threat_level === 'medium') {
+      displayCategory = 'medium';
+    } else if (email.threat_level === 'low') {
+      displayCategory = 'low';
+    } else if (email.threat_level === 'safe' || email.classification === 'legitimate') {
+      displayCategory = 'safe';
     } else {
+      // Fallback for unknown classifications
       displayCategory = 'unknown';
     }
     
@@ -786,7 +788,7 @@ const Index = () => {
             <CardContent className="pt-1 px-3 sm:px-6 pb-3 sm:pb-6">
               <div className="text-lg sm:text-xl font-bold text-destructive">{threatStats.high || 0}</div>
               <div className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">
-                {threatFilter === 'high' ? 'High threats filtered' : 'Critical alerts'}
+                {threatFilter === 'high' ? 'High threats filtered' : 'Critical security alerts'}
               </div>
             </CardContent>
           </Card>
@@ -816,7 +818,7 @@ const Index = () => {
               <CheckCircle className="h-2 w-2 sm:h-3 sm:w-3 text-accent" />
             </CardHeader>
             <CardContent className="pt-1 px-3 sm:px-6 pb-3 sm:pb-6">
-              <div className="text-lg sm:text-xl font-bold text-accent">{threatStats.low || 0}</div>
+              <div className="text-lg sm:text-xl font-bold text-accent">{(threatStats.safe || 0) + (threatStats.low || 0)}</div>
               <div className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">
                 {threatFilter === 'low' ? 'Safe emails filtered' : 'Verified clean'}
               </div>

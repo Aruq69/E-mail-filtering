@@ -711,11 +711,11 @@ class RobustEmailClassifier {
       threatType = 'spam';
     } else if (finalScore >= mediumThreshold || senderSecurity.suspiciousScore > 0.6) {
       classification = 'suspicious';
-      threatLevel = 'high';
+      threatLevel = 'medium';  // Changed from 'high' to 'medium' for suspicious
       threatType = 'suspicious';
     } else if (finalScore >= lowThreshold || structureAnalysis.hasPhishingDomain || misspellingAnalysis.suspiciousScore > 0.3) {
       classification = 'questionable';
-      threatLevel = 'medium';
+      threatLevel = 'low';  // Changed from 'medium' to 'low' for questionable
       threatType = 'questionable';
     } else {
       // Most emails should be classified as legitimate with enhanced analysis
