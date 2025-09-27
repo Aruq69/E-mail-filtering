@@ -379,9 +379,13 @@ const Index = () => {
         description: "All email data has been cleared. Outlook connection remains active.",
       });
       
-      // Refresh to show empty state
-      fetchEmails();
+      // Clear the local state immediately to show empty state
+      setEmails([]);
+      setSessionEmails([]);
+      setShowClearEmailsDialog(false);
+      
     } catch (error) {
+      console.error('Error clearing emails:', error);
       toast({
         title: "Error",
         description: "Failed to clear email data. Please try again.",
