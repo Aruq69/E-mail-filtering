@@ -34,6 +34,7 @@ interface Email {
   message_id: string;
   content: string | null;
   raw_content: string | null;
+  outlook_id: string | null; // Add outlook_id field for deduplication
 }
 
 const Index = () => {
@@ -596,19 +597,30 @@ const Index = () => {
     // Use stored emails as primary source, session emails for immediate feedback
     const displayEmails = emails.length > 0 ? emails : sessionEmails;
     
-    // DEDUPLICATE emails by ID to prevent any UI duplicates
+    // ENHANCED DEDUPLICATE emails by multiple criteria to prevent all types of duplicates
     const uniqueEmails = displayEmails.reduce((acc, email) => {
-      if (!acc.some(existing => existing.id === email.id)) {
+      // Check for duplicates using multiple criteria
+      const isDuplicate = acc.some(existing => 
+        existing.id === email.id || // Same database ID
+        (existing.outlook_id && email.outlook_id && existing.outlook_id === email.outlook_id) || // Same Outlook ID
+        existing.message_id === email.message_id || // Same message ID
+        (existing.subject === email.subject && 
+         existing.sender === email.sender && 
+         new Date(existing.received_date).getTime() === new Date(email.received_date).getTime()) // Same content and exact timing
+      );
+      
+      if (!isDuplicate) {
         acc.push(email);
       }
       return acc;
     }, [] as Email[]);
     
-    console.log('📧 Emails to display:', {
+    console.log('📧 Enhanced dedup results:', {
       sessionCount: sessionEmails.length,
       storedCount: emails.length,
       beforeDedup: displayEmails.length,
       afterDedup: uniqueEmails.length,
+      duplicatesRemoved: displayEmails.length - uniqueEmails.length,
       firstEmailId: uniqueEmails[0]?.id
     });
     return uniqueEmails;

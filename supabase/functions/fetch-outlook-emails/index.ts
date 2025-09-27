@@ -210,26 +210,38 @@ serve(async (req) => {
       console.log('✅ Successfully cleared all existing emails for fresh sync');
     }
     
-    console.log(`Found ${emails.length} total emails, processing all for fresh sync`);
-    
-    if (emails.length === 0) {
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: 'No emails found in Outlook',
-          emails_processed: 0,
-          total_emails_fetched: 0,
-          emails: [],
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    // Process all emails with HuggingFace-Powered Dataset-Based ML analysis
-    const processedEmails = [];
-    console.log(`🤖 Processing ${emails.length} emails with HuggingFace Dataset-Based ML Classifier...`);
+    // Filter out duplicate emails within the current batch before processing
+    const uniqueEmails = [];
+    const seenIdentifiers = new Set();
     
     for (const email of emails) {
+      // Create multiple unique identifiers to catch all types of duplicates
+      const identifiers = [
+        email.id, // Outlook ID
+        `${email.subject}|${email.from?.emailAddress?.address}|${email.receivedDateTime}`, // Subject + Sender + Date
+        `${email.subject}|${email.from?.emailAddress?.address}`, // Subject + Sender (for same emails with slight time differences)
+      ];
+      
+      // Check if any identifier already exists
+      const isDuplicate = identifiers.some(id => seenIdentifiers.has(id));
+      
+      if (isDuplicate) {
+        console.log(`⏭️ Skipping duplicate email: "${email.subject}" from ${email.from?.emailAddress?.address}`);
+        continue;
+      }
+      
+      // Add all identifiers to the set
+      identifiers.forEach(id => seenIdentifiers.add(id));
+      uniqueEmails.push(email);
+    }
+    
+    console.log(`📧 Found ${uniqueEmails.length} unique emails out of ${emails.length} total (${emails.length - uniqueEmails.length} duplicates filtered)`);
+    
+    // Process only unique emails with HuggingFace-Powered Dataset-Based ML analysis
+    const processedEmails = [];
+    console.log(`🤖 Processing ${uniqueEmails.length} unique emails with HuggingFace Dataset-Based ML Classifier...`);
+    
+    for (const email of uniqueEmails) {
       try {
         console.log(`📧 Processing: "${email.subject}" from ${email.from?.emailAddress?.address}`);
 
@@ -334,16 +346,17 @@ serve(async (req) => {
     }
 
     console.log(`🎯 === DATASET-BASED ML ANALYSIS COMPLETE ===`);
-    console.log(`📊 Processed ${processedEmails.length}/${emails.length} emails with Dataset-Based ML`);
+    console.log(`📊 Processed ${processedEmails.length}/${uniqueEmails.length} unique emails with Dataset-Based ML`);
     console.log(`🤖 All emails analyzed with same classifier as ML Analytics real-time testing`);
     console.log(`📈 Results: classification, threat levels, confidence scores, and detected features`);
     
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Successfully cleared existing emails and processed ${processedEmails.length} fresh emails`,
+        message: `Successfully cleared existing emails and processed ${processedEmails.length} unique emails (${emails.length - uniqueEmails.length} duplicates filtered)`,
         emails_processed: processedEmails.length,
         total_emails_fetched: emails.length,
+        duplicates_filtered: emails.length - uniqueEmails.length,
         emails: processedEmails, // Return processed emails for display
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
