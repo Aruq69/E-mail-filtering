@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock, LogOut, Plus, Brain, Bot, Cpu, Target, Radar, ScanLine, Database, ShieldX, Trash2, AlertCircle, Settings } from "lucide-react";
+import { Shield, Mail, AlertTriangle, CheckCircle, Clock, Search, User, Zap, Activity, Eye, Lock, LogOut, Plus, Brain, Bot, Cpu, Target, Radar, ScanLine, Database, ShieldX, Trash2, AlertCircle, Settings, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -708,41 +708,53 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Mobile-optimized Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:space-x-2">
+        {/* Enhanced Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             {outlookConnected && (
-              <Button 
-                onClick={fetchOutlookEmails} 
-                disabled={loading || isProcessing} 
-                variant="outline" 
-                className={`w-full sm:w-auto border-primary/30 hover:border-primary/50 hover-button text-xs sm:text-sm ${isProcessing ? 'animate-pulse' : ''}`}
-                size="sm"
-              >
-                {isProcessing ? (
-                  <div className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 border border-primary border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Activity className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <div className="relative group">
+                <Button 
+                  onClick={fetchOutlookEmails} 
+                  disabled={loading || isProcessing} 
+                  variant="outline" 
+                  className={`w-full sm:w-auto min-w-[140px] h-11 bg-gradient-to-r from-background to-background/90 border-2 border-primary/20 hover:border-primary/50 text-sm font-medium transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-primary/20 ${isProcessing ? 'animate-pulse border-primary/60' : 'hover:scale-105'} backdrop-blur-sm`}
+                  size="default"
+                >
+                  {isProcessing ? (
+                    <div className="h-4 w-4 mr-2 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Activity className="h-4 w-4 mr-2 text-primary" />
+                  )}
+                  <span className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+                    {isProcessing ? 'Processing...' : 'Sync Outlook'}
+                  </span>
+                </Button>
+                {!isProcessing && (
+                  <div className="absolute inset-0 rounded-md bg-gradient-to-r from-primary/10 to-primary-glow/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                 )}
-                {isProcessing ? 'Processing...' : 'Sync Outlook'}
-              </Button>
+              </div>
             )}
             {outlookConnected && (
-              <Button 
-                onClick={() => {
-                  // Reset stuck processing states
-                  setLoading(false);
-                  setIsProcessing(false);
-                  toast({
-                    title: "States Reset",
-                    description: "Processing states have been reset. You can now sync again.",
-                  });
-                }}
-                variant="ghost"
-                size="sm"
-                className="text-xs text-muted-foreground hover:text-foreground"
-              >
-                Reset if Stuck
-              </Button>
+              <div className="relative group">
+                <Button 
+                  onClick={() => {
+                    // Reset stuck processing states
+                    setLoading(false);
+                    setIsProcessing(false);
+                    toast({
+                      title: "States Reset",
+                      description: "Processing states have been reset. You can now sync again.",
+                      variant: "default",
+                    });
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="relative overflow-hidden bg-muted/30 hover:bg-muted/60 text-xs text-muted-foreground hover:text-foreground transition-all duration-300 border border-border/20 hover:border-border/40 backdrop-blur-sm hover:scale-105 hover:shadow-md"
+                >
+                  <RefreshCw className="h-3 w-3 mr-1.5 transition-transform duration-300 group-hover:rotate-180" />
+                  Reset if Stuck
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
+                </Button>
+              </div>
             )}
             {outlookConnected && (
               <AlertDialog open={showClearEmailsDialog} onOpenChange={setShowClearEmailsDialog}>
