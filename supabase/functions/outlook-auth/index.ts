@@ -54,7 +54,7 @@ serve(async (req) => {
       console.log('Origin header:', req.headers.get('origin'));
       console.log('Referer header:', req.headers.get('referer'));
       
-      const scopes = 'https://graph.microsoft.com/MailboxSettings.ReadWrite https://graph.microsoft.com/Mail.ReadWrite https://graph.microsoft.com/Mail.Read https://graph.microsoft.com/User.Read offline_access';
+      const scopes = 'https://graph.microsoft.com/MailboxSettings.ReadWrite https://graph.microsoft.com/Mail.ReadWrite https://graph.microsoft.com/Mail.Read https://graph.microsoft.com/Mail.Send https://graph.microsoft.com/User.Read offline_access';
       
       const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
         `client_id=${microsoftClientId}&` +
