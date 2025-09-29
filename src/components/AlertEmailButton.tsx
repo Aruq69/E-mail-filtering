@@ -25,7 +25,7 @@ interface AlertEmailButtonProps {
 export const AlertEmailButton = ({ 
   emailId, 
   size = 'sm', 
-  variant = 'outline' 
+  variant = 'destructive' 
 }: AlertEmailButtonProps) => {
   const [open, setOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
