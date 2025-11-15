@@ -210,6 +210,27 @@ serve(async (req) => {
       console.log('✅ Successfully cleared all existing emails for fresh sync');
     }
     
+    // Clear all existing email statistics for this user (fresh sync)
+    console.log('📊 Clearing all existing email statistics for fresh sync...');
+    const { error: statsDeleteError } = await supabase
+      .from('email_statistics')
+      .delete()
+      .eq('user_id', user.id);
+    
+    if (statsDeleteError) {
+      console.error('❌ Failed to clear existing email statistics:', statsDeleteError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to clear existing email statistics before sync',
+          success: false,
+          debug: statsDeleteError.message 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } else {
+      console.log('✅ Successfully cleared all existing email statistics for fresh sync');
+    }
+    
     // Filter out duplicate emails within the current batch before processing
     const uniqueEmails = [];
     const seenIdentifiers = new Set();
@@ -270,7 +291,7 @@ serve(async (req) => {
           console.error('❌ Dataset-Based ML Classification FAILED:', email.subject, classificationError);
           // Continue processing other emails even if one fails
         } else if (classificationData) {
-          console.log(`✅ HuggingFace ML RESULT:`, 
+          console.log(`✅ Local ML RESULT:`, 
                      `📧 "${email.subject}"`,
                      `🎯 Classification: ${classificationData?.classification?.toUpperCase()}`, 
                      `🔥 Confidence: ${(classificationData?.confidence * 100).toFixed(1)}%`,
