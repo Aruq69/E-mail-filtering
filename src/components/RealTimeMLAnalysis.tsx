@@ -278,8 +278,8 @@ export const RealTimeMLAnalysis: React.FC<MLAnalysisProps> = ({
             <div className="pt-2 border-t">
               <p className="text-xs text-muted-foreground">
                 {isSupported ? 
-                  '🚀 Powered by WebGPU-accelerated transformers' : 
-                  '⚡ Using optimized fallback analysis'
+                  'Powered by WebGPU-accelerated transformers' : 
+                  'Using optimized fallback analysis'
                 }
               </p>
             </div>
