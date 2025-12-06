@@ -186,12 +186,6 @@ export const MLDatasetTesting = () => {
                   </Badge>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">Confidence</div>
-                  <div className="font-mono text-sm">
-                    {(classificationResult.confidence * 100).toFixed(1)}%
-                  </div>
-                </div>
-                <div>
                   <div className="text-sm text-muted-foreground">Threat Level</div>
                   <Badge variant={
                     classificationResult.threat_level === 'high' ? 'destructive' :
