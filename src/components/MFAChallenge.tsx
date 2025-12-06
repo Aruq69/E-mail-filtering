@@ -33,7 +33,7 @@ export const MFAChallenge = ({ onSuccess, onCancel }: MFAChallengeProps) => {
     setError('');
     
     try {
-      console.log('🔐 Getting user MFA factors...');
+      console.log('Getting user MFA factors...');
       
       // Get the user's MFA factors
       const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
@@ -48,7 +48,7 @@ export const MFAChallenge = ({ onSuccess, onCancel }: MFAChallengeProps) => {
         throw new Error('No verified MFA factors found');
       }
       
-      console.log('🎯 Creating MFA challenge...');
+      console.log('Creating MFA challenge...');
       
       // Create a challenge for the verified TOTP factor
       const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
@@ -59,12 +59,12 @@ export const MFAChallenge = ({ onSuccess, onCancel }: MFAChallengeProps) => {
         throw challengeError;
       }
       
-      console.log('✅ MFA challenge created successfully');
+      console.log('MFA challenge created successfully');
       setChallengeId(challenge.id);
       setFactorId(totpFactor.id);
       
     } catch (error: any) {
-      console.error('❌ MFA challenge initialization error:', error);
+      console.error('MFA challenge initialization error:', error);
       setError(error.message || 'Failed to initialize MFA challenge');
     } finally {
       setLoading(false);
@@ -81,7 +81,7 @@ export const MFAChallenge = ({ onSuccess, onCancel }: MFAChallengeProps) => {
     setError('');
     
     try {
-      console.log('🔍 Verifying MFA code...');
+      console.log('Verifying MFA code...');
       
       const { data, error } = await supabase.auth.mfa.verify({
         factorId: factorId,
@@ -93,7 +93,7 @@ export const MFAChallenge = ({ onSuccess, onCancel }: MFAChallengeProps) => {
         throw error;
       }
       
-      console.log('✅ MFA verification successful');
+      console.log('MFA verification successful');
       toast({
         title: "Authentication Successful",
         description: "Welcome to Mail Guard!",
@@ -102,7 +102,7 @@ export const MFAChallenge = ({ onSuccess, onCancel }: MFAChallengeProps) => {
       onSuccess();
       
     } catch (error: any) {
-      console.error('❌ MFA verification error:', error);
+      console.error('MFA verification error:', error);
       setError(error.message || 'Invalid verification code. Please try again.');
       setVerificationCode('');
     } finally {

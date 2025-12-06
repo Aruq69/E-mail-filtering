@@ -127,15 +127,15 @@ When explaining email classifications, focus on:
     
     if (analysisData) {
       systemPrompt += `\n\nCURRENT EMAIL ANALYSIS (Dataset-Based ML Classification):
-      📧 Subject: "${analysisData.subject}"
-      👤 Sender: ${analysisData.sender}
-      🚨 Classification: ${analysisData.classification || 'Unknown'}
-      ⚠️ Threat Level: ${analysisData.threat_level || 'Unknown'}
-      🎯 Threat Type: ${analysisData.threat_type || 'None detected'}
-      📊 Confidence: ${Math.round((analysisData.confidence || 0) * 100)}%
-      🔍 Keywords: ${analysisData.keywords?.join(', ') || 'None detected'}
+      Subject: "${analysisData.subject}"
+      Sender: ${analysisData.sender}
+      Classification: ${analysisData.classification || 'Unknown'}
+      Threat Level: ${analysisData.threat_level || 'Unknown'}
+      Threat Type: ${analysisData.threat_type || 'None detected'}
+      Confidence: ${Math.round((analysisData.confidence || 0) * 100)}%
+      Keywords: ${analysisData.keywords?.join(', ') || 'None detected'}
       
-      ${classificationResult ? '✅ LIVE ANALYSIS: This email was just analyzed using the same Dataset-Based ML Email Classifier as used in the ML Analytics dashboard.' : ''}
+      ${classificationResult ? 'LIVE ANALYSIS: This email was just analyzed using the same Dataset-Based ML Email Classifier as used in the ML Analytics dashboard.' : ''}
       
       Use this context to provide specific, personalized analysis of THIS email. Answer based on what the user is actually asking about this specific email.`;
     }

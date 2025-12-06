@@ -364,7 +364,7 @@ function generateHTMLReport(emails: any[], userInfo: any, preferences: any, emai
     <div class="container">
         <div class="header">
             <div class="header-content">
-                <h1>🛡️ Mail Guard</h1>
+                <h1>Mail Guard</h1>
                 <p class="subtitle">Email Security Analysis Report</p>
                 <p class="date">Generated on ${currentDate}</p>
             </div>
@@ -372,7 +372,7 @@ function generateHTMLReport(emails: any[], userInfo: any, preferences: any, emai
         
         <div class="content">
             <div class="user-info">
-                <h3>👤 Account Information</h3>
+                <h3>Account Information</h3>
                 <div class="user-detail">
                     <span><strong>Email:</strong></span>
                     <span>${userInfo.email}</span>
@@ -387,15 +387,15 @@ function generateHTMLReport(emails: any[], userInfo: any, preferences: any, emai
                 </div>
                 <div class="user-detail">
                     <span><strong>2FA Status:</strong></span>
-                    <span>${userInfo.factors?.length > 0 ? 'Enabled ✅' : 'Disabled ⚠️'}</span>
+                    <span>${userInfo.factors?.length > 0 ? 'Enabled' : 'Disabled'}</span>
                 </div>
             </div>
 
             <div class="section">
-                <h2>📊 Email Security Overview</h2>
+                <h2>Email Security Overview</h2>
                 ${preferences?.never_store_data ? `
                 <div class="privacy-notice">
-                    <h3>🔒 Privacy-First Mode Active</h3>
+                    <h3>Privacy-First Mode Active</h3>
                     <p>
                         Your emails are analyzed in real-time but not permanently stored for maximum privacy. 
                         This report shows your current privacy settings and system status only.
@@ -424,7 +424,7 @@ function generateHTMLReport(emails: any[], userInfo: any, preferences: any, emai
 
             ${emails.length > 0 ? `
             <div class="section">
-                <h2>📧 Recent Email Analysis</h2>
+                <h2>Recent Email Analysis</h2>
                 <p style="color: #6b7280; margin-bottom: 20px;">Latest ${Math.min(emails.length, 10)} analyzed emails from your account</p>
                 <div class="email-list">
                     ${emails.slice(0, 10).map(email => `
@@ -446,9 +446,9 @@ function generateHTMLReport(emails: any[], userInfo: any, preferences: any, emai
             </div>
             ` : `
             <div class="section">
-                <h2>📧 Email Analysis</h2>
+                <h2>Email Analysis</h2>
                 <div class="privacy-notice">
-                    <h3>🔒 No Detailed Emails Stored</h3>
+                    <h3>No Detailed Emails Stored</h3>
                     <p>
                         Privacy-first mode is enabled. Only aggregated statistics are collected for security analysis 
                         while keeping your email content completely private.
@@ -458,7 +458,7 @@ function generateHTMLReport(emails: any[], userInfo: any, preferences: any, emai
             `}
 
             <div class="section">
-                <h2>🔒 Security Recommendations</h2>
+                <h2>Security Recommendations</h2>
                 <div class="recommendations">
                     <ul>
                         ${userInfo.factors?.length === 0 ? '<li><strong>Enable Two-Factor Authentication</strong> - Protect your account with 2FA for enhanced security</li>' : '<li>Two-Factor Authentication is enabled and protecting your account</li>'}

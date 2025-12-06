@@ -34,7 +34,7 @@ export const MFASetup = ({ onComplete, onSkip, showSkipOption = true }: MFASetup
     setError('');
     
     try {
-      console.log('🔐 Starting MFA enrollment...');
+      console.log('Starting MFA enrollment...');
       
       const { data, error } = await supabase.auth.mfa.enroll({
         factorType: 'totp',
@@ -45,14 +45,14 @@ export const MFASetup = ({ onComplete, onSkip, showSkipOption = true }: MFASetup
         throw error;
       }
       
-      console.log('✅ MFA enrollment started successfully');
+      console.log('MFA enrollment started successfully');
       setQrCode(data.totp.qr_code);
       setSecret(data.totp.secret);
       setFactorId(data.id);
       setStep('enroll');
       
     } catch (error: any) {
-      console.error('❌ MFA enrollment error:', error);
+      console.error('MFA enrollment error:', error);
       setError(error.message || 'Failed to start MFA setup');
     } finally {
       setLoading(false);
@@ -64,7 +64,7 @@ export const MFASetup = ({ onComplete, onSkip, showSkipOption = true }: MFASetup
     setError('');
     
     try {
-      console.log('🎯 Creating MFA challenge...');
+      console.log('Creating MFA challenge...');
       
       const { data, error } = await supabase.auth.mfa.challenge({
         factorId: factorId
@@ -74,12 +74,12 @@ export const MFASetup = ({ onComplete, onSkip, showSkipOption = true }: MFASetup
         throw error;
       }
       
-      console.log('✅ MFA challenge created successfully');
+      console.log('MFA challenge created successfully');
       setChallengeId(data.id);
       setStep('verify');
       
     } catch (error: any) {
-      console.error('❌ MFA challenge error:', error);
+      console.error('MFA challenge error:', error);
       setError(error.message || 'Failed to create verification challenge');
     } finally {
       setLoading(false);
@@ -96,7 +96,7 @@ export const MFASetup = ({ onComplete, onSkip, showSkipOption = true }: MFASetup
     setError('');
     
     try {
-      console.log('🔍 Verifying MFA code...');
+      console.log('Verifying MFA code...');
       
       const { data, error } = await supabase.auth.mfa.verify({
         factorId: factorId,
@@ -108,7 +108,7 @@ export const MFASetup = ({ onComplete, onSkip, showSkipOption = true }: MFASetup
         throw error;
       }
       
-      console.log('✅ MFA verification successful');
+      console.log('MFA verification successful');
       toast({
         title: "MFA Enabled!",
         description: "Your account is now protected with multi-factor authentication.",
@@ -117,7 +117,7 @@ export const MFASetup = ({ onComplete, onSkip, showSkipOption = true }: MFASetup
       onComplete?.();
       
     } catch (error: any) {
-      console.error('❌ MFA verification error:', error);
+      console.error('MFA verification error:', error);
       setError(error.message || 'Invalid verification code. Please try again.');
       setVerificationCode('');
     } finally {
@@ -148,9 +148,9 @@ export const MFASetup = ({ onComplete, onSkip, showSkipOption = true }: MFASetup
           )}
           
           <div className="text-sm text-muted-foreground space-y-2">
-            <p>✅ Protection against unauthorized access</p>
-            <p>✅ Works with Google Authenticator, Authy, and more</p>
-            <p>✅ Industry-standard TOTP security</p>
+            <p>Protection against unauthorized access</p>
+            <p>Works with Google Authenticator, Authy, and more</p>
+            <p>Industry-standard TOTP security</p>
           </div>
           
           <div className="flex flex-col gap-2">

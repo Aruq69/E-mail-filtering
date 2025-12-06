@@ -12,10 +12,10 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-console.log('🤖 Advanced Email Security Classifier');
-console.log('🔍 Multi-layered analysis: sender, content, linguistics, scam patterns');
-console.log('🧠 AI-powered misspelling detection and sentiment analysis');
-console.log('🛡️ Real-time threat assessment with advanced patterns');
+console.log('Advanced Email Security Classifier');
+console.log('Multi-layered analysis: sender, content, linguistics, scam patterns');
+console.log('AI-powered misspelling detection and sentiment analysis');
+console.log('Real-time threat assessment with advanced patterns');
 
 // Advanced Email Security Classifier
 class RobustEmailClassifier {
@@ -115,21 +115,21 @@ class RobustEmailClassifier {
     console.log('Starting dataset-based ML email classification');
     
     try {
-      console.log('🔄 Loading Local ML Powered Comprehensive Dataset...');
+      console.log('Loading Local ML Powered Comprehensive Dataset...');
       
       // Use comprehensive training data with 40+ real-world examples
       this.trainingData = this.getComprehensiveTrainingData();
       
-      console.log(`✅ Dataset loaded: ${this.trainingData.length} training samples`);
-      console.log(`📊 Distribution -> Ham: ${this.trainingData.filter(d => d.label === 'ham').length}, Spam: ${this.trainingData.filter(d => d.label === 'spam').length}`);
-      console.log(`🎯 Local ML tokenization and feature extraction ready`);
+      console.log(`Dataset loaded: ${this.trainingData.length} training samples`);
+      console.log(`Distribution -> Ham: ${this.trainingData.filter(d => d.label === 'ham').length}, Spam: ${this.trainingData.filter(d => d.label === 'spam').length}`);
+      console.log(`Local ML tokenization and feature extraction ready`);
       
       // Train the model with local ML techniques
       this.trainModel();
       this.isInitialized = true;
       
     } catch (error) {
-      console.error('❌ Error loading dataset, using minimal fallback:', error);
+      console.error('Error loading dataset, using minimal fallback:', error);
       
       // Ultra-minimal fallback
       this.trainingData = [
@@ -196,7 +196,7 @@ class RobustEmailClassifier {
 
   // Enhanced training with local ML feature extraction
   trainModel(): void {
-    console.log('🤖 Training Local Powered Dataset-Based ML Model...');
+    console.log('Training Local Powered Dataset-Based ML Model...');
     
     // Reset counters
     this.spamWordCounts.clear();
@@ -228,8 +228,8 @@ class RobustEmailClassifier {
       }
     }
 
-    console.log(`✅ Model trained on ${this.trainingData.length} samples`);
-    console.log(`📊 Vocabulary size: ${new Set([...this.spamWordCounts.keys(), ...this.hamWordCounts.keys()]).size}`);
+    console.log(`Model trained on ${this.trainingData.length} samples`);
+    console.log(`Vocabulary size: ${new Set([...this.spamWordCounts.keys(), ...this.hamWordCounts.keys()]).size}`);
   }
 
   // Enhanced tokenization with local ML preprocessing
@@ -398,7 +398,7 @@ class RobustEmailClassifier {
   // Advanced ML classification with local ML scoring
   calculateNaiveBayesScore(text: string): number {
     if (!this.isInitialized) {
-      console.log('⚠️ Model not initialized, using dataset-based fallback scoring');
+      console.log('Model not initialized, using dataset-based fallback scoring');
       return this.calculateDatasetBasedScore(text);
     }
 
@@ -427,7 +427,7 @@ class RobustEmailClassifier {
     // Convert to probability score (0-1)
     const spamProbability = Math.exp(spamScore) / (Math.exp(spamScore) + Math.exp(hamScore));
     
-    console.log(`🤖 Local ML Score: ${spamProbability.toFixed(4)} (${tokens.length} features processed)`);
+    console.log(`Local ML Score: ${spamProbability.toFixed(4)} (${tokens.length} features processed)`);
     
     return Math.min(Math.max(spamProbability, 0), 1);
   }
@@ -619,19 +619,19 @@ class RobustEmailClassifier {
     const cleanContent = this.preprocessText(content);
     const fullText = `${subject} ${cleanContent}`;
     
-    console.log('🔍 Running comprehensive email security analysis...');
+    console.log('Running comprehensive email security analysis...');
     
     // 1. Local ML Analysis
     const mlAnalysis = await this.analyzeWithLocalML(fullText);
-    console.log('🤖 Local ML Analysis:', mlAnalysis);
+    console.log('Local ML Analysis:', mlAnalysis);
     
     // 2. Advanced Sender Security Analysis
     const senderSecurity = await this.analyzeSenderSecurity(sender);
-    console.log('👤 Sender Security Analysis:', senderSecurity);
+    console.log('Sender Security Analysis:', senderSecurity);
     
     // 3. Misspelling Detection
     const misspellingAnalysis = this.detectMisspellings(fullText);
-    console.log('📝 Misspelling Analysis:', misspellingAnalysis);
+    console.log('Misspelling Analysis:', misspellingAnalysis);
     
     // 4. Scam Pattern Detection
     let scamScore = 0;
@@ -642,15 +642,15 @@ class RobustEmailClassifier {
         detectedScamPatterns.push(pattern.description);
       }
     }
-    console.log('🚨 Scam Pattern Analysis:', { score: scamScore, patterns: detectedScamPatterns });
+    console.log('Scam Pattern Analysis:', { score: scamScore, patterns: detectedScamPatterns });
     
     // 5. Traditional ML Analysis
     const spamProbability = this.calculateNaiveBayesScore(fullText);
-    console.log(`📊 Content ML Score: ${spamProbability}`);
+    console.log(`Content ML Score: ${spamProbability}`);
     
     // 6. Analyze email structure
     const structureAnalysis = this.analyzeEmailStructure(subject, sender, content);
-    console.log('🏗️ Structure analysis:', structureAnalysis);
+    console.log('Structure analysis:', structureAnalysis);
     
     // 7. Advanced feature extraction combining all analyses
     let featureScore = 0;
@@ -781,7 +781,7 @@ class RobustEmailClassifier {
     
     // Give extra legitimacy boost AFTER analysis if from trusted domain
     if (senderSecurity.isLegitimate && classification !== 'spam') {
-      console.log(`✅ Legitimate sender detected: ${sender} - Applying domain trust bonus`);
+      console.log(`Legitimate sender detected: ${sender} - Applying domain trust bonus`);
       // If borderline questionable from trusted domain, upgrade to legitimate
       // But keep suspicious emails as medium threat even from legitimate domains
       if (classification === 'questionable') {
@@ -830,7 +830,7 @@ class RobustEmailClassifier {
   }
 }
 
-console.log('🚀 Starting Local Dataset-Based ML Email Classifier');
+console.log('Starting Local Dataset-Based ML Email Classifier');
 
 // Initialize the robust classifier
 const robustClassifier = new RobustEmailClassifier();
@@ -841,7 +841,7 @@ serve(async (req: Request) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  console.log('📧 Email classification request received');
+  console.log('Email classification request received');
 
   try {
     const { subject, sender, content, user_id } = await req.json();
@@ -910,26 +910,26 @@ function generateRecommendations(result: any): string[] {
   const recommendations: string[] = [];
   
   if (result.classification === 'spam') {
-    recommendations.push('🚨 HIGH RISK: This email is likely spam or malicious');
-    recommendations.push('🚫 Do not click any links or download attachments');
-    recommendations.push('🗑️ Delete this email immediately');
-    recommendations.push('🛡️ Report to your IT security team if received at work');
+    recommendations.push('HIGH RISK: This email is likely spam or malicious');
+    recommendations.push('Do not click any links or download attachments');
+    recommendations.push('Delete this email immediately');
+    recommendations.push('Report to your IT security team if received at work');
   } else if (result.classification === 'suspicious') {
-    recommendations.push('⚠️ SUSPICIOUS: Proceed with extreme caution');
-    recommendations.push('🔍 Verify sender before taking any action');
-    recommendations.push('🚫 Avoid clicking links or downloading files');
+    recommendations.push('SUSPICIOUS: Proceed with extreme caution');
+    recommendations.push('Verify sender before taking any action');
+    recommendations.push('Avoid clicking links or downloading files');
     if (result.detailed_analysis?.structure_analysis?.hasPhishingDomain) {
-      recommendations.push('🏢 Contains known brand names - verify authenticity');
+      recommendations.push('Contains known brand names - verify authenticity');
     }
   } else if (result.classification === 'questionable') {
-    recommendations.push('👀 QUESTIONABLE: Exercise normal email caution');
-    recommendations.push('✅ Verify any requests before responding');
+    recommendations.push('QUESTIONABLE: Exercise normal email caution');
+    recommendations.push('Verify any requests before responding');
     if (result.detailed_analysis?.structure_analysis?.hasPhishingDomain) {
-      recommendations.push('🏢 Contains known brand names - verify authenticity');
+      recommendations.push('Contains known brand names - verify authenticity');
     }
   } else {
-    recommendations.push('✅ Email appears legitimate');
-    recommendations.push('📧 Normal email security practices apply');
+    recommendations.push('Email appears legitimate');
+    recommendations.push('Normal email security practices apply');
   }
   
   return recommendations;

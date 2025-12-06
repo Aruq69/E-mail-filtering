@@ -59,7 +59,7 @@ serve(async (req) => {
     console.log('User authenticated:', user.id);
 
     // Get the user's Outlook tokens
-    console.log('🔍 Fetching Outlook tokens for user...');
+    console.log('Fetching Outlook tokens for user...');
     const { data: tokenData, error: tokenError } = await supabase
       .from('outlook_tokens')
       .select('*')
@@ -67,7 +67,7 @@ serve(async (req) => {
       .maybeSingle();
 
     if (tokenError) {
-      console.error('❌ Token fetch error:', tokenError);
+      console.error('Token fetch error:', tokenError);
       return new Response(
         JSON.stringify({ 
           error: 'Error fetching Outlook tokens. Please reconnect your account.',
@@ -79,7 +79,7 @@ serve(async (req) => {
     }
 
     if (!tokenData) {
-      console.log('❌ No Outlook token found for user');
+      console.log('No Outlook token found for user');
       return new Response(
         JSON.stringify({ 
           error: 'No Outlook token found. Please connect your Outlook account first.',
@@ -89,7 +89,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('✅ Outlook tokens found, checking expiration...');
+    console.log('Outlook tokens found, checking expiration...');
 
     // Check if token is expired and attempt refresh if needed
     const now = new Date();
@@ -163,7 +163,7 @@ serve(async (req) => {
     }
 
     // Fetch ALL emails from Microsoft Graph API (no limit)
-    console.log('📧 Fetching ALL emails from Microsoft Graph API...');
+    console.log('Fetching ALL emails from Microsoft Graph API...');
     const graphResponse = await fetch('https://graph.microsoft.com/v1.0/me/messages?$orderby=receivedDateTime desc', {
       headers: {
         'Authorization': `Bearer ${tokenData.access_token}`,
@@ -173,7 +173,7 @@ serve(async (req) => {
 
     if (!graphResponse.ok) {
       const errorText = await graphResponse.text();
-      console.error('❌ Graph API Error:', graphResponse.status, errorText);
+      console.error('Graph API Error:', graphResponse.status, errorText);
       return new Response(
         JSON.stringify({ 
           error: `Failed to fetch emails: ${graphResponse.status} - ${errorText}`,
@@ -184,20 +184,20 @@ serve(async (req) => {
       );
     }
 
-    console.log('✅ Successfully connected to Microsoft Graph API');
+    console.log('Successfully connected to Microsoft Graph API');
 
     const graphData = await graphResponse.json();
     const emails = graphData.value || [];
     
     // Clear all existing emails for this user first (fresh sync)
-    console.log('🗑️ Clearing all existing emails for fresh sync...');
+    console.log('Clearing all existing emails for fresh sync...');
     const { error: deleteError } = await supabase
       .from('emails')
       .delete()
       .eq('user_id', user.id);
     
     if (deleteError) {
-      console.error('❌ Failed to clear existing emails:', deleteError);
+      console.error('Failed to clear existing emails:', deleteError);
       return new Response(
         JSON.stringify({ 
           error: 'Failed to clear existing emails before sync',
@@ -207,18 +207,18 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } else {
-      console.log('✅ Successfully cleared all existing emails for fresh sync');
+      console.log('Successfully cleared all existing emails for fresh sync');
     }
     
     // Clear all existing email statistics for this user (fresh sync)
-    console.log('📊 Clearing all existing email statistics for fresh sync...');
+    console.log('Clearing all existing email statistics for fresh sync...');
     const { error: statsDeleteError } = await supabase
       .from('email_statistics')
       .delete()
       .eq('user_id', user.id);
     
     if (statsDeleteError) {
-      console.error('❌ Failed to clear existing email statistics:', statsDeleteError);
+      console.error('Failed to clear existing email statistics:', statsDeleteError);
       return new Response(
         JSON.stringify({ 
           error: 'Failed to clear existing email statistics before sync',
@@ -228,7 +228,7 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } else {
-      console.log('✅ Successfully cleared all existing email statistics for fresh sync');
+      console.log('Successfully cleared all existing email statistics for fresh sync');
     }
     
     // Filter out duplicate emails within the current batch before processing
@@ -245,7 +245,7 @@ serve(async (req) => {
       if (seenIdentifiers.has(outlookId) || 
           seenIdentifiers.has(messageId) || 
           seenIdentifiers.has(subjectSender)) {
-        console.log(`⏭️ Skipping duplicate email: "${email.subject}" from ${email.from?.emailAddress?.address}`);
+        console.log(`Skipping duplicate email: "${email.subject}" from ${email.from?.emailAddress?.address}`);
         continue;
       }
       
@@ -256,15 +256,15 @@ serve(async (req) => {
       uniqueEmails.push(email);
     }
     
-    console.log(`📧 Found ${uniqueEmails.length} unique emails out of ${emails.length} total (${emails.length - uniqueEmails.length} duplicates filtered)`);
+    console.log(`Found ${uniqueEmails.length} unique emails out of ${emails.length} total (${emails.length - uniqueEmails.length} duplicates filtered)`);
     
     // Process only unique emails with HuggingFace-Powered Dataset-Based ML analysis
     const processedEmails = [];
-    console.log(`🤖 Processing ${uniqueEmails.length} unique emails with HuggingFace Dataset-Based ML Classifier...`);
+    console.log(`Processing ${uniqueEmails.length} unique emails with HuggingFace Dataset-Based ML Classifier...`);
     
     for (const email of uniqueEmails) {
       try {
-        console.log(`📧 Processing: "${email.subject}" from ${email.from?.emailAddress?.address}`);
+        console.log(`Processing: "${email.subject}" from ${email.from?.emailAddress?.address}`);
 
         // Extract text content
         let textContent = email.bodyPreview || '';
@@ -276,7 +276,7 @@ serve(async (req) => {
         }
 
         // Call Dataset-Based ML Email Classifier (same as ML Analytics real-time testing)
-        console.log(`🤖 Analyzing with Dataset-Based ML Email Classifier...`);
+        console.log(`Analyzing with Dataset-Based ML Email Classifier...`);
         
         const { data: classificationData, error: classificationError } = await supabase.functions.invoke('robust-email-classifier', {
           body: {
@@ -288,15 +288,15 @@ serve(async (req) => {
         });
 
         if (classificationError) {
-          console.error('❌ Dataset-Based ML Classification FAILED:', email.subject, classificationError);
+          console.error('Dataset-Based ML Classification FAILED:', email.subject, classificationError);
           // Continue processing other emails even if one fails
         } else if (classificationData) {
-          console.log(`✅ Local ML RESULT:`, 
-                     `📧 "${email.subject}"`,
-                     `🎯 Classification: ${classificationData?.classification?.toUpperCase()}`, 
-                     `🔥 Confidence: ${(classificationData?.confidence * 100).toFixed(1)}%`,
-                     `⚠️ Threat Level: ${classificationData?.threat_level?.toUpperCase()}`,
-                     `🏷️ Features: ${JSON.stringify(classificationData?.detailed_analysis?.detected_features || [])}`);
+          console.log(`Local ML RESULT:`, 
+                     `"${email.subject}"`,
+                     `Classification: ${classificationData?.classification?.toUpperCase()}`, 
+                     `Confidence: ${(classificationData?.confidence * 100).toFixed(1)}%`,
+                     `Threat Level: ${classificationData?.threat_level?.toUpperCase()}`,
+                     `Features: ${JSON.stringify(classificationData?.detailed_analysis?.detected_features || [])}`);
         }
 
         const emailData = {
@@ -373,7 +373,7 @@ serve(async (req) => {
                     is_active: true
                   });
                 
-                console.log(`🚫 AUTO-BLOCKED high threat email: "${email.subject}" from ${email.from?.emailAddress?.address}`);
+                console.log(`AUTO-BLOCKED high threat email: "${email.subject}" from ${email.from?.emailAddress?.address}`);
                 
                 // Try to create Outlook mail rule to block sender
                 try {
@@ -400,9 +400,9 @@ serve(async (req) => {
                     });
                     
                     if (ruleResponse.ok) {
-                      console.log(`✅ Outlook rule created to block sender: ${senderEmail}`);
+                      console.log(`Outlook rule created to block sender: ${senderEmail}`);
                     } else {
-                      console.log(`⚠️ Could not create Outlook rule: ${ruleResponse.status}`);
+                      console.log(`Could not create Outlook rule: ${ruleResponse.status}`);
                     }
                   }
                 } catch (ruleError) {
@@ -420,10 +420,10 @@ serve(async (req) => {
         }
     }
 
-    console.log(`🎯 === DATASET-BASED ML ANALYSIS COMPLETE ===`);
-    console.log(`📊 Processed ${processedEmails.length}/${uniqueEmails.length} unique emails with Dataset-Based ML`);
-    console.log(`🤖 All emails analyzed with same classifier as ML Analytics real-time testing`);
-    console.log(`📈 Results: classification, threat levels, confidence scores, and detected features`);
+    console.log(`=== DATASET-BASED ML ANALYSIS COMPLETE ===`);
+    console.log(`Processed ${processedEmails.length}/${uniqueEmails.length} unique emails with Dataset-Based ML`);
+    console.log(`All emails analyzed with same classifier as ML Analytics real-time testing`);
+    console.log(`Results: classification, threat levels, confidence scores, and detected features`);
     
     return new Response(
       JSON.stringify({
