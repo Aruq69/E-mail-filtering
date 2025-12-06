@@ -203,7 +203,7 @@ const Index = () => {
     queryFn: async () => {
       if (!user) return [];
       
-      console.log('🔍 Fetching emails for user:', user.id);
+      console.log('Fetching emails for user:', user.id);
       
       const { data, error } = await supabase
         .from('emails')
@@ -216,7 +216,7 @@ const Index = () => {
         throw error;
       }
       
-      console.log(`✅ Fetched ${data?.length || 0} emails`);
+      console.log(`Fetched ${data?.length || 0} emails`);
       return data || [];
     },
     enabled: !!user,
@@ -235,7 +235,7 @@ const Index = () => {
   const fetchEmails = async () => {
     if (!user) return;
     
-    console.log('🔍 Fetching emails for user:', user.id);
+    console.log('Fetching emails for user:', user.id);
     
     try {
       const { data, error } = await supabase
@@ -244,7 +244,7 @@ const Index = () => {
         .eq('user_id', user.id)
         .order('received_date', { ascending: false });
       
-      console.log('📧 Emails query result:', { data: data?.length, error });
+      console.log('Emails query result:', { data: data?.length, error });
       
       if (error) {
         console.error('Error fetching emails:', error);
@@ -257,16 +257,7 @@ const Index = () => {
       }
       
       // DISABLED ALL AUTO-CLASSIFICATION TO PREVENT DUPLICATES
-      console.log('📧 Auto-classification DISABLED to prevent duplicate emails');
-      
-      // const emailsNeedingUpdate = (data || []).filter(email => 
-      //   !email.processed_at || !email.classification
-      // );
-      
-      // if (emailsNeedingUpdate.length > 0) {
-      //   console.log(`🔄 Auto-updating ${emailsNeedingUpdate.length} emails with robust ML classifier (one-time only)`);
-      //   updateEmailsWithRobustClassifier(emailsNeedingUpdate);
-      // }
+      console.log('Auto-classification DISABLED to prevent duplicate emails');
       
       setEmails(data || []);
     } catch (error) {
@@ -307,7 +298,7 @@ const Index = () => {
             })
             .eq('id', email.id);
           
-          console.log(`✅ Updated email ${email.id} with robust classification: ${classificationData.classification} (${classificationData.threat_level})`);
+          console.log(`Updated email ${email.id} with robust classification: ${classificationData.classification} (${classificationData.threat_level})`);
         }
       } catch (error) {
         console.error(`Failed to update email ${email.id}:`, error);
@@ -348,7 +339,7 @@ const Index = () => {
     addRecentActivity("Outlook sync initiated", "Checking for new emails...");
     
     try {
-      console.log('🔄 Invoking Outlook email fetch...');
+      console.log('Invoking Outlook email fetch...');
       
       const { data, error } = await supabase.functions.invoke('fetch-outlook-emails', {
         body: { user_id: user.id },
@@ -357,7 +348,7 @@ const Index = () => {
         }
       });
 
-      console.log('🔄 Fetch response received:', { data, error, hasData: !!data, hasError: !!error });
+      console.log('Fetch response received:', { data, error, hasData: !!data, hasError: !!error });
 
       if (error) {
         console.error('Outlook fetch error:', error);
@@ -370,7 +361,7 @@ const Index = () => {
       }
 
       if (data.success) {
-        console.log('📧 Outlook fetch response:', data);
+        console.log('Outlook fetch response:', data);
         
         const processedCount = data.emails_processed || 0;
         const totalFetched = data.total_emails_fetched || 0;
@@ -650,12 +641,12 @@ const Index = () => {
       if (!isDuplicate) {
         acc.push(email);
       } else {
-        console.log(`🚫 Frontend dedup: Filtered duplicate "${email.subject}" from ${email.sender}`);
+        console.log(`Frontend dedup: Filtered duplicate "${email.subject}" from ${email.sender}`);
       }
       return acc;
     }, [] as Email[]);
     
-    console.log('📧 Enhanced dedup results:', {
+    console.log('Enhanced dedup results:', {
       sessionCount: sessionEmails.length,
       storedCount: emails.length,
       beforeDedup: displayEmails.length,
@@ -683,7 +674,7 @@ const Index = () => {
     });
   }, [emailsToDisplay, searchTerm, threatFilter]);
   
-  console.log('📧 Filter debug:', {
+  console.log('Filter debug:', {
     searchTerm,
     threatFilter,
     totalEmails: emailsToDisplay.length,
